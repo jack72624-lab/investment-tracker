@@ -796,7 +796,7 @@ async function doLogin() {
   btn.textContent = '驗證中...';
   err.style.display = 'none';
   try {
-    const r = await fetch(`${RAILWAY_URL}/api/screener/cache/stats`, {
+    const r = await fetch(`${RAILWAY_URL}/api/stocks/universe`, {
       headers: { 'X-API-Key': pw }
     });
     if (r.ok) {
