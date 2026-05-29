@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investment OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --blue:#006FFF; --blue-lt:#EAF2FF; --dark:#111827; --mid:#6B7280;
+  --light:#9CA3AF; --border:#E5E7EB; --bg:#F9FAFB; --white:#FFFFFF;
+  --green:#16A34A; --green-lt:#DCFCE7; --red:#DC2626; --red-lt:#FEE2E2;
+  --amber:#D97706; --amber-lt:#FEF3C7; --purple:#7C3AED; --purple-lt:#EDE9FE;
+  --radius:10px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.06);
+  --shadow-hover:0 4px 12px rgba(0,0,0,.10),0 12px 32px rgba(0,0,0,.09);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;background:var(--bg);color:var(--dark);-webkit-font-smoothing:antialiased;display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:216px;min-width:216px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;transition:width .22s cubic-bezier(.4,0,.2,1);overflow:hidden}
+.sidebar-logo{padding:18px 14px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;position:relative;flex-shrink:0}
+.logo-mark{width:30px;height:30px;min-width:30px;background:var(--dark);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-text{font-size:14px;font-weight:700;color:var(--dark);letter-spacing:-.3px}
+.logo-sub{font-size:10px;color:var(--light);margin-top:1px;letter-spacing:.02em;text-transform:uppercase}
+.logo-text-wrap{overflow:hidden;white-space:nowrap;transition:opacity .15s}
+.sidebar-toggle{margin-left:auto;width:26px;height:26px;min-width:26px;border-radius:6px;border:1px solid var(--border);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--light);transition:all .13s;flex-shrink:0}
+.sidebar-toggle:hover{background:var(--bg);color:var(--dark);border-color:var(--dark)}
+.sidebar-toggle svg{transition:transform .22s}
+.nav-section{padding:14px 10px 6px;overflow:hidden}
+.nav-label{font-size:10px;font-weight:600;color:var(--light);text-transform:uppercase;letter-spacing:.08em;padding:0 8px 8px;white-space:nowrap;overflow:hidden;transition:opacity .15s,height .15s}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:500;color:var(--mid);transition:all .13s;margin-bottom:1px;position:relative;white-space:nowrap}
+.nav-item:hover{background:var(--bg);color:var(--dark)}
+.nav-item.active{background:var(--blue-lt);color:var(--blue)}
+.nav-item.active .nav-icon,.nav-item:hover .nav-icon{color:inherit}
+.nav-icon{color:var(--light);transition:color .13s;flex-shrink:0}
+.nav-item-text{overflow:hidden;transition:opacity .15s}
+.sidebar-footer{margin-top:auto;padding:14px 16px;border-top:1px solid var(--border);overflow:hidden;transition:padding .22s}
+.sidebar-footer-text{overflow:hidden;white-space:nowrap;transition:opacity .15s}
+/* collapsed state */
+.sidebar.collapsed{width:52px;min-width:52px}
+.sidebar.collapsed .logo-text-wrap,.sidebar.collapsed .nav-label,.sidebar.collapsed .nav-item-text,.sidebar.collapsed .sidebar-footer-text{opacity:0;width:0;height:0;overflow:hidden}
+.sidebar.collapsed .nav-item{justify-content:center;padding:9px}
+.sidebar.collapsed .sidebar-logo{justify-content:center;padding:18px 0 14px;gap:0}
+.sidebar.collapsed .sidebar-toggle{margin-left:0}
+.sidebar.collapsed .sidebar-toggle svg{transform:rotate(180deg)}
+.sidebar.collapsed .sidebar-footer{padding:10px 0;display:flex;flex-direction:column;align-items:center}
+/* tooltip on hover when collapsed */
+.sidebar.collapsed .nav-item::after{content:attr(data-label);position:absolute;left:54px;top:50%;transform:translateY(-50%);background:var(--dark);color:#fff;font-size:11px;font-weight:600;padding:4px 9px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;z-index:200;transition:opacity .1s;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.sidebar.collapsed .nav-item:hover::after{opacity:1}
+/* mobile */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1);width:216px!important;min-width:216px!important}
+  .sidebar.mobile-open{transform:translateX(0)}
+  .sidebar.collapsed .logo-text-wrap,.sidebar.collapsed .nav-label,.sidebar.collapsed .nav-item-text,.sidebar.collapsed .sidebar-footer-text{opacity:1;width:auto;height:auto}
+  .sidebar.collapsed .nav-item{justify-content:flex-start;padding:8px 10px}
+  .sidebar.collapsed .sidebar-logo{justify-content:flex-start;padding:18px 14px 14px;gap:10px}
+  .sidebar.collapsed .sidebar-footer{padding:14px 16px;align-items:flex-start}
+  .sidebar.collapsed .nav-item::after{display:none}
+  .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:99;backdrop-filter:blur(1px)}
+  .sidebar-backdrop.show{display:block}
+  .main{margin-left:0!important}
+  .topbar-menu-btn{display:flex!important}
+  .sidebar-toggle{display:none}
+}
+.sync-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mid);margin-bottom:5px}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.footer-source{font-size:11px;color:var(--light)}
+
+/* MAIN */
+.main{margin-left:216px;flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left .22s cubic-bezier(.4,0,.2,1)}
+.main.sidebar-collapsed{margin-left:52px}
+.topbar-menu-btn{display:none;align-items:center;justify-content:center;width:34px;height:34px;border-radius:7px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--mid);margin-right:8px;flex-shrink:0}
+.topbar-menu-btn:hover{background:var(--bg);color:var(--dark)}
+.topbar{background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.page-breadcrumb{font-size:10px;color:var(--light);text-transform:uppercase;letter-spacing:.08em}
+.topbar-title{font-size:16px;font-weight:700;letter-spacing:-.3px}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.btn{height:34px;padding:0 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:all .13s;font-family:'Inter',sans-serif}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:#0060e0}
+.btn-ghost{background:transparent;color:var(--mid);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--bg);color:var(--dark);border-color:var(--dark)}
+.content{padding:24px 28px;flex:1}
+.page{display:none}.page.active{display:block}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.stat-label{font-size:10px;color:var(--mid);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.stat-value{font-size:24px;font-weight:700;color:var(--dark);letter-spacing:-.6px;line-height:1}
+.stat-change{font-size:12px;font-weight:500;margin-top:8px;display:flex;align-items:center;gap:4px}
+.stat-change.up{color:var(--green)}.stat-change.down{color:var(--red)}
+.stat-sub{font-size:11px;color:var(--light);margin-top:2px}
+
+/* CARD */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:13px;font-weight:700;letter-spacing:-.2px}
+.card-sub{font-size:11px;color:var(--light);margin-top:2px}
+.card-body{padding:18px 20px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-7030{display:grid;grid-template-columns:1fr 340px;gap:16px}
+.mb-16{margin-bottom:16px}.mb-20{margin-bottom:20px}
+
+/* CHARTS */
+.chart-wrap{position:relative;height:230px}
+.chart-wrap-sm{position:relative;height:170px}
+.chart-wrap-lg{position:relative;height:290px}
+.chart-wrap-xl{position:relative;height:340px}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 14px;background:var(--bg);border-bottom:1px solid var(--border);font-weight:600;font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;cursor:pointer;white-space:nowrap;user-select:none}
+th:hover{color:var(--blue)}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg)}
+.ticker{font-weight:700;color:var(--blue);font-family:'SF Mono','Fira Code',monospace;font-size:13px}
+.co-name{font-weight:500;font-size:13px}.co-sector{font-size:11px;color:var(--light)}
+
+/* TAGS */
+.tag{display:inline-flex;align-items:center;border-radius:5px;padding:2px 7px;font-size:11px;font-weight:600;letter-spacing:.02em}
+.tag-blue{background:var(--blue-lt);color:var(--blue)}.tag-green{background:var(--green-lt);color:var(--green)}
+.tag-red{background:var(--red-lt);color:var(--red)}.tag-amber{background:var(--amber-lt);color:var(--amber)}
+.tag-purple{background:var(--purple-lt);color:var(--purple)}.tag-gray{background:var(--bg);color:var(--mid);border:1px solid var(--border)}
+
+/* SCORE BAR */
+.score-bar-wrap{display:flex;align-items:center;gap:7px}
+.score-bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.score-fill{height:100%;border-radius:2px}
+.score-val{font-size:11px;font-weight:700;min-width:24px;text-align:right}
+
+/* FILTER */
+.filters-bar{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;box-shadow:var(--shadow);margin-bottom:16px}
+.filters-row{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.filter-group{display:flex;flex-direction:column;gap:4px}
+.filter-label{font-size:10px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.07em}
+.filter-input,.filter-select{height:32px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--dark);background:var(--bg);outline:none;font-family:'Inter',sans-serif;transition:border-color .13s;appearance:none;-webkit-appearance:none}
+.filter-input:focus,.filter-select:focus{border-color:var(--blue);background:var(--white)}
+.filter-input{width:88px}.filter-select{width:130px}
+
+/* ALLOC */
+.alloc-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.alloc-item:last-child{border-bottom:none}
+.alloc-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.alloc-name{flex:1;font-size:13px;font-weight:500}
+.alloc-sub{font-size:11px;color:var(--light)}
+.alloc-pct{font-size:14px;font-weight:700}
+.alloc-bar-wrap{width:64px}
+.alloc-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.alloc-bar-fill{height:100%;border-radius:2px}
+
+/* RISK */
+.risk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.risk-card{background:var(--bg);border-radius:8px;padding:14px 16px}
+.risk-metric-label{font-size:10px;color:var(--mid);font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.risk-metric-value{font-size:22px;font-weight:700;letter-spacing:-.5px}
+.risk-metric-desc{font-size:11px;color:var(--light);margin-top:4px}
+
+/* CHIPS + TIMEFRAME */
+.stock-chip{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--mid);transition:all .13s;font-family:'SF Mono','Fira Code',monospace}
+.stock-chip:hover{border-color:var(--blue);color:var(--blue)}
+.stock-chip.active{border-color:var(--blue);background:var(--blue);color:#fff}
+.timeframe-row{display:flex;gap:2px}
+.tf-btn{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--mid);transition:all .13s;font-family:'Inter',sans-serif}
+.tf-btn:hover{background:var(--bg);color:var(--dark)}
+.tf-btn.active{background:var(--blue-lt);color:var(--blue)}
+
+/* INSIGHT */
+.insight-box{background:#F0F6FF;border:1px solid #C7DCFF;border-radius:var(--radius);padding:14px 18px;margin-bottom:16px}
+.insight-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.insight-title{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.05em}
+.insight-text{font-size:13px;color:var(--dark);line-height:1.65}
+.insight-text strong{color:var(--blue);font-weight:600}
+
+/* CARD TABS */
+.card-tabs{display:flex;padding:0 20px;border-bottom:1px solid var(--border)}
+.card-tab{padding:10px 14px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--mid);transition:all .13s;margin-bottom:-1px;letter-spacing:.02em}
+.card-tab:hover{color:var(--dark)}.card-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-pane{display:none;padding:18px 20px}.tab-pane.active{display:block}
+
+/* REC CARD */
+.rec-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);margin-bottom:10px;transition:all .2s;cursor:pointer}
+.rec-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-hover)}
+.rec-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.rec-ticker{font-size:16px;font-weight:800;color:var(--dark);font-family:'SF Mono','Fira Code',monospace}
+.rec-name{font-size:11px;color:var(--mid);margin-top:1px}
+.rec-action{padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700}
+.rec-buy{background:var(--green-lt);color:var(--green)}
+.rec-hold{background:var(--amber-lt);color:var(--amber)}
+.rec-price{font-size:20px;font-weight:700;letter-spacing:-.4px}
+.rec-target{font-size:11px;color:var(--mid);margin-top:2px}
+
+/* ALERT */
+.alert-block{border-radius:8px;padding:12px 14px;border-left:3px solid;margin-bottom:8px}
+.alert-block:last-child{margin-bottom:0}
+.alert-title{font-weight:700;font-size:12px;margin-bottom:3px}
+.alert-text{font-size:12px;color:var(--dark)}
+
+/* LOADING */
+.loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay{position:absolute;inset:0;background:rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center;border-radius:var(--radius);z-index:10;gap:8px;font-size:13px;color:var(--mid)}
+
+/* SETUP MODAL */
+.modal-backdrop{position:fixed;inset:0;background:rgba(17,24,39,.5);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal{background:var(--white);border-radius:14px;padding:32px;width:480px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-size:18px;font-weight:700;letter-spacing:-.4px;margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--mid);margin-bottom:24px;line-height:1.6}
+.modal-field{margin-bottom:16px}
+.modal-label{font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.modal-input{width:100%;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color .13s;color:var(--dark)}
+.modal-input:focus{border-color:var(--blue)}
+.modal-hint{font-size:11px;color:var(--light);margin-top:4px}
+.modal-footer{display:flex;gap:8px;margin-top:24px;justify-content:flex-end}
+/* LOGIN SCREEN */
+.login-screen{position:fixed;inset:0;background:var(--bg);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:100%;max-width:380px;box-shadow:var(--shadow-hover)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
+.login-logo-mark{width:36px;height:36px;background:var(--dark);border-radius:9px;display:flex;align-items:center;justify-content:center}
+.login-title{font-size:20px;font-weight:700;letter-spacing:-.4px;margin-bottom:4px}
+.login-sub{font-size:13px;color:var(--mid);margin-bottom:28px;line-height:1.5}
+.login-label{font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.login-input{width:100%;height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color .13s;color:var(--dark);background:var(--white)}
+.login-input:focus{border-color:var(--blue)}
+.login-btn{width:100%;height:42px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:16px;transition:background .13s;letter-spacing:-.1px}
+.login-btn:hover{background:#0060e0}
+.login-btn:disabled{opacity:.6;cursor:default}
+.login-error{background:var(--red-lt);color:var(--red);padding:10px 14px;border-radius:8px;font-size:12px;margin-top:12px;display:none;line-height:1.4}
+
+/* ERROR */
+.error-row{background:var(--red-lt);color:var(--red);padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:12px;display:none}
+
+/* empty state */
+.empty-state{text-align:center;padding:40px 20px;color:var(--mid)}
+.empty-state .es-icon{font-size:32px;margin-bottom:12px;opacity:.4}
+.empty-state .es-text{font-size:14px;font-weight:500}
+.empty-state .es-sub{font-size:12px;margin-top:4px;color:var(--light)}
+
+/* ── SCREENER MODE TABS ─────────────────── */
+.screener-tabs{display:flex;gap:2px;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:3px;margin-bottom:16px;width:fit-content}
+.screener-tab{padding:6px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;color:var(--mid);border:none;background:transparent;transition:all .15s;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px}
+.screener-tab:hover{color:var(--dark)}
+.screener-tab.active{background:var(--white);color:var(--dark);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.screener-tab.active.tab-bos{color:var(--purple)}
+.screener-tab.active.tab-dgm{color:var(--green)}
+.screener-mode{display:none}.screener-mode.active{display:block}
+
+/* ── 加入關注按鈕（BOS card 底部）─── */
+.bos-watchlist-bar{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
+.bos-add-btn{height:28px;padding:0 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--mid);transition:all .13s;font-family:'Inter',sans-serif}
+.bos-add-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-lt)}
+.bos-add-btn.added{background:var(--green-lt);border-color:var(--green);color:var(--green);cursor:default}
+.bos-add-btn:disabled{opacity:.6;cursor:default}
+
+/* ── Toast 通知 ─── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--dark);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:500;z-index:9999;transform:translateY(12px);opacity:0;transition:all .22s cubic-bezier(.4,0,.2,1);pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.25)}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* ── BOS CARDS ──────────────────────────── */
+.bos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px}
+.bos-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:all .18s}
+.bos-card:hover{box-shadow:var(--shadow-hover)}
+.bos-card-header{padding:14px 16px 12px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--border)}
+.bos-ticker-col{flex:1}
+.bos-symbol{font-size:15px;font-weight:800;color:var(--dark);font-family:'SF Mono','Fira Code',monospace}
+.bos-name{font-size:11px;color:var(--mid);margin-top:1px}
+.bos-sector{font-size:10px;color:var(--light)}
+.bos-score-col{text-align:right}
+.bos-score-num{font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1}
+.bos-score-sub{font-size:10px;color:var(--light);margin-top:2px}
+.bos-score-bar{width:64px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:6px;margin-left:auto}
+.bos-score-fill{height:100%;border-radius:3px;transition:width .4s}
+.bos-badges{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.bos-body{padding:12px 16px}
+.bos-metrics-row{display:flex;gap:16px;margin-bottom:10px}
+.bos-metric{display:flex;flex-direction:column;gap:2px}
+.bos-metric-label{font-size:10px;color:var(--light);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.bos-metric-val{font-size:12px;font-weight:700;color:var(--dark)}
+.bos-signals{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.bos-signal{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mid)}
+.bos-signal strong{color:var(--dark)}
+.bos-lists{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.bos-list-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.bos-list-title.strength{color:var(--green)}.bos-list-title.risk{color:var(--red)}
+.bos-list-item{font-size:11px;color:var(--dark);padding:2px 0;display:flex;gap:4px;align-items:flex-start;line-height:1.4}
+.bos-summary{background:var(--blue-lt);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--dark);border-left:3px solid var(--blue);line-height:1.5}
+
+/* ── DGM TABLE ──────────────────────────── */
+.dgm-score-wrap{display:flex;align-items:center;gap:6px}
+.dgm-score-bar{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;min-width:44px}
+.dgm-score-fill{height:100%;border-radius:3px}
+.dgm-score-val{font-size:11px;font-weight:700;min-width:28px;text-align:right}
+.dgm-breakdown{display:none;padding:12px 16px 14px;background:var(--bg);border-top:1px solid var(--border)}
+.dgm-breakdown.open{display:block}
+.dgm-bd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px 16px}
+.dgm-bd-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px dashed var(--border);font-size:11px}
+.dgm-bd-item:last-child{border-bottom:none}
+.dgm-bd-name{color:var(--mid);flex:1}
+.dgm-bd-note{color:var(--light);font-size:10px;margin-left:4px;flex:1}
+.dgm-bd-pts{font-weight:700;min-width:28px;text-align:right}
+.expand-btn{background:none;border:none;cursor:pointer;color:var(--light);padding:2px 6px;border-radius:4px;font-size:11px;transition:all .13s}
+.expand-btn:hover{background:var(--border);color:var(--dark)}
+
+/* ── SYMBOLS INPUT ──────────────────────── */
+.sym-input-wrap{display:flex;gap:8px;align-items:center;flex:1}
+.sym-input{flex:1;max-width:460px;height:32px;padding:0 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--dark);background:var(--bg);outline:none;font-family:'SF Mono','Fira Code',monospace;transition:border-color .13s}
+.sym-input:focus{border-color:var(--blue);background:var(--white)}
+.sym-hint{font-size:11px;color:var(--light);margin-top:6px}
+</style>
+</head>
+<body>
+
+<!-- SETUP MODAL -->
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen" style="display:none">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-mark">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+          <polyline points="1,12 5,7 9,9 15,3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="15" cy="3" r="1.5" fill="white"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:15px;font-weight:700;letter-spacing:-.3px">Investment OS</div>
+        <div style="font-size:10px;color:var(--light);text-transform:uppercase;letter-spacing:.06em">Portfolio Tracker</div>
+      </div>
+    </div>
+    <div class="login-title">歡迎回來</div>
+    <div class="login-sub">輸入密碼以進入你的個人投資系統</div>
+    <div class="login-label">密碼</div>
+    <input class="login-input" id="loginPassword" type="password" placeholder="輸入密碼"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">登入</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL (保留給設定頁使用) -->
+<div class="modal-backdrop" id="setupModal" style="display:none">
+  <div class="modal">
+    <div class="modal-title">設定</div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="doLogout()">登出（切換帳號）</button>
+      <button class="btn btn-primary" onclick="closeModal()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <polyline points="1,12 5,7 9,9 15,3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="15" cy="3" r="1.5" fill="white"/>
+      </svg>
+    </div>
+    <div class="logo-text-wrap">
+      <div class="logo-text">Investment OS</div>
+      <div class="logo-sub">Portfolio Tracker</div>
+    </div>
+    <button class="sidebar-toggle" onclick="toggleSidebar()" title="收折側欄">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="10,3 5,8 10,13"/>
+      </svg>
+    </button>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Dashboard</div>
+    <div class="nav-item active" onclick="showPage('overview')" data-label="總覽">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg></span>
+      <span class="nav-item-text">總覽</span>
+    </div>
+    <div class="nav-item" onclick="showPage('screener')" data-label="選股篩選器">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="4" x2="15" y2="4"/><line x1="3" y1="8" x2="13" y2="8"/><line x1="6" y1="12" x2="10" y2="12"/></svg></span>
+      <span class="nav-item-text">選股篩選器</span>
+    </div>
+    <div class="nav-item" onclick="showPage('portfolio')" data-label="組合配置">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.5"/><path d="M8 8 L8 1.5 A6.5 6.5 0 0 1 14.5 8 Z" stroke="none" fill="currentColor" opacity="0.3"/></svg></span>
+      <span class="nav-item-text">組合配置</span>
+    </div>
+    <div class="nav-item" onclick="showPage('technical')" data-label="技術分析">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,12 4,7 7,9 10,5 13,8 15,3"/></svg></span>
+      <span class="nav-item-text">技術分析</span>
+    </div>
+    <div class="nav-item" onclick="showPage('risk')" data-label="風險評估">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5 L14.5 13.5 H1.5 Z"/><line x1="8" y1="6" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r=".6" fill="currentColor" stroke="none"/></svg></span>
+      <span class="nav-item-text">風險評估</span>
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-text">
+      <div class="sync-row"><div class="sync-dot"></div><span id="syncStatus">已連接</span></div>
+      <div class="footer-source" id="footerApiUrl">yfinance · Supabase</div>
+    </div>
+    <div style="margin-top:6px">
+      <button class="btn btn-ghost" style="height:26px;font-size:11px;padding:0 8px" onclick="doLogout()" title="登出">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/><polyline points="10 11 14 8 10 5"/><line x1="14" y1="8" x2="6" y2="8"/></svg>
+        <span class="nav-item-text">登出</span>
+      </button>
+    </div>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileSidebar()"></div>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="topbar-menu-btn" onclick="openMobileSidebar()" title="開啟選單">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="1" y1="4" x2="15" y2="4"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="12" x2="15" y2="12"/></svg>
+      </button>
+      <div>
+        <div class="page-breadcrumb" id="page-breadcrumb">Dashboard</div>
+        <div class="topbar-title" id="page-title">資產總覽</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost" id="refreshBtn" onclick="refreshAll()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8A6 6 0 1 1 8 2a6 6 0 0 1 4.24 1.76L14 2v4h-4"/></svg>
+        Refresh
+      </button>
+      <button class="btn btn-primary" onclick="showAddHolding()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+        新增持倉
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+  <!-- PAGE: 總覽 -->
+  <div class="page active" id="page-overview">
+    <div class="stats-grid" id="summaryStats">
+      <div class="stat-card"><div class="stat-label">Total Net Worth</div><div class="stat-value" id="s-totalMv">—</div><div class="stat-change" id="s-pnl">Loading...</div><div class="stat-sub">Unrealized P&L</div></div>
+      <div class="stat-card"><div class="stat-label">Total Cost Basis</div><div class="stat-value" id="s-cost">—</div><div class="stat-change" id="s-ret">—</div><div class="stat-sub">Return</div></div>
+      <div class="stat-card"><div class="stat-label">Day Change</div><div class="stat-value" id="s-dayChg">—</div><div class="stat-change" id="s-dayPct">—</div><div class="stat-sub">Today's P&L</div></div>
+      <div class="stat-card"><div class="stat-label">Positions</div><div class="stat-value" id="s-count">—</div><div class="stat-change" style="color:var(--mid)">Active holdings</div><div class="stat-sub">&nbsp;</div></div>
+    </div>
+
+    <div class="grid-7030 mb-20">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Net Worth Trend</div><div class="card-sub" id="trendSub">Loading data...</div></div>
+          <div class="timeframe-row">
+            <button class="tf-btn active" onclick="setHistTF(this,'1y')">1Y</button>
+            <button class="tf-btn" onclick="setHistTF(this,'6mo')">6M</button>
+            <button class="tf-btn" onclick="setHistTF(this,'3mo')">3M</button>
+            <button class="tf-btn" onclick="setHistTF(this,'1mo')">1M</button>
+          </div>
+        </div>
+        <div class="card-body" style="position:relative">
+          <div class="chart-wrap"><canvas id="netWorthChart"></canvas></div>
+          <div class="loading-overlay" id="trendLoading"><div class="loading-spinner"></div> Loading</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Sector Allocation</div><div class="card-sub">By market value</div></div>
+        <div class="card-body">
+          <div class="chart-wrap-sm"><canvas id="sectorChart"></canvas></div>
+          <div id="sectorList" style="margin-top:14px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-20">
+      <div class="card-header">
+        <div><div class="card-title">Holdings</div><div class="card-sub" id="holdingsSub">Loading...</div></div>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th>Ticker</th><th>Company</th><th>Price</th><th>Change</th>
+          <th>Shares</th><th>Mkt Value</th><th>P&L</th><th>Return</th><th>Sector</th>
+        </tr></thead>
+        <tbody id="holdingsTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="insight-box" id="aiInsight" style="display:none">
+      <div class="insight-header">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5.5" x2="8" y2="8.5"/><circle cx="8" cy="11" r=".6" fill="var(--blue)" stroke="none"/></svg>
+        <span class="insight-title">AI Insight</span>
+        <span class="tag tag-gray" style="margin-left:auto;font-size:10px" id="insightDate"></span>
+      </div>
+      <div class="insight-text" id="insightText"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: 篩選器 -->
+  <div class="page" id="page-screener">
+
+    <!-- 頂部 Tab 切換器 -->
+    <div class="screener-tabs">
+      <button class="screener-tab active" id="stab-general" onclick="switchScreenerTab('general')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="1" y1="4" x2="15" y2="4"/><line x1="3" y1="8" x2="13" y2="8"/><line x1="6" y1="12" x2="10" y2="12"/></svg>
+        通用篩選
+      </button>
+      <button class="screener-tab tab-bos" id="stab-bos" onclick="switchScreenerTab('bos')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6"/></svg>
+        BOS 價值投資
+      </button>
+      <button class="screener-tab tab-dgm" id="stab-dgm" onclick="switchScreenerTab('dgm')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="1,13 5,8 8,10 11,6 15,9"/><circle cx="15" cy="5" r="1.5" fill="currentColor" stroke="none"/></svg>
+        DGM 股息成長
+      </button>
+    </div>
+
+    <!-- ── 通用篩選 ── -->
+    <div class="screener-mode active" id="smode-general">
+      <div class="filters-bar">
+        <div class="filters-row">
+          <div class="filter-group"><div class="filter-label">Sector</div>
+            <select class="filter-select" id="f-sector"><option value="">All Sectors</option><option>Technology</option><option>Financials</option><option>Healthcare</option><option>Consumer Cyclical</option><option>Energy</option></select>
+          </div>
+          <div class="filter-group"><div class="filter-label">P/E max</div><input class="filter-input" id="f-pe" type="number" placeholder="50"></div>
+          <div class="filter-group"><div class="filter-label">ROE min %</div><input class="filter-input" id="f-roe" type="number" placeholder="15"></div>
+          <div class="filter-group"><div class="filter-label">Div min %</div><input class="filter-input" id="f-div" type="number" placeholder="0" step="0.1"></div>
+          <div class="filter-group"><div class="filter-label">Beta max</div><input class="filter-input" id="f-beta" type="number" placeholder="1.5" step="0.1"></div>
+          <div class="filter-group"><div class="filter-label">AI Score min</div>
+            <select class="filter-select" id="f-score"><option value="">All</option><option value="80">80+ Buy</option><option value="60">60+ Watch</option></select>
+          </div>
+          <div class="filter-group"><div class="filter-label">&nbsp;</div>
+            <button class="btn btn-primary" onclick="runScreener()" style="height:32px">Run Screen</button>
+          </div>
+          <div class="filter-group"><div class="filter-label">&nbsp;</div>
+            <button class="btn btn-ghost" onclick="resetScreener()" style="height:32px">Reset</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Screening Results</div><div class="card-sub" id="screenerCount">—</div></div>
+        </div>
+        <div class="table-wrap" style="position:relative">
+          <div class="loading-overlay" id="screenerLoading" style="position:relative;min-height:80px;display:none"><div class="loading-spinner"></div> Fetching data...</div>
+          <table id="screenerTable"><thead><tr>
+            <th>Ticker</th><th>Company / Sector</th><th>Price</th><th>P/E</th>
+            <th>ROE</th><th>Div%</th><th>EPS Gr.</th><th>Beta</th><th>Mkt Cap</th>
+            <th>AI Score</th><th>Signal</th>
+          </tr></thead>
+          <tbody id="screenerTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BOS 價值投資 ── -->
+    <div class="screener-mode" id="smode-bos">
+      <div class="filters-bar">
+        <div class="filters-row" style="align-items:flex-start;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div class="sym-input-wrap">
+              <input class="sym-input" id="bos-symbols" placeholder="AAPL, MSFT, GOOGL, NVDA （逗號分隔，不填使用預設清單）">
+            </div>
+            <button class="btn btn-primary" onclick="runBosScreen()" style="height:32px;background:var(--purple)">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 2a6 6 0 0 1 6 6 6 6 0 0 1-6 6 6 6 0 0 1-6-6 6 6 0 0 1 6-6z"/><path d="M8 6v2l1.5 1.5"/></svg>
+              AI 分析
+            </button>
+            <button class="btn btn-primary" onclick="runBosDiscover()" style="height:32px;background:linear-gradient(135deg,#7C3AED,#006FFF)">
+              AI 推薦
+            </button>
+            <button class="btn btn-ghost" onclick="resetBosScreen()" style="height:32px">Reset</button>
+          </div>
+          <div class="sym-hint">AI 分析每支股票約需 2–3 秒 · 每次建議不超過 10 支 · 使用 Claude AI（需設定 ANTHROPIC_API_KEY）</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">BOS 價值投資篩選結果</div><div class="card-sub" id="bosCount">—</div></div>
+          <div style="display:flex;gap:12px;font-size:11px;color:var(--mid)">
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--green);margin-right:4px"></span>建議購買</span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--amber);margin-right:4px"></span>等待進場</span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--light);margin-right:4px"></span>暫不考慮</span>
+          </div>
+        </div>
+        <div style="position:relative">
+          <div class="loading-overlay" id="bosLoading" style="display:none;min-height:80px"><div class="loading-spinner"></div><span id="bosLoadingText" style="font-size:13px;color:var(--mid)">分析中...</span></div>
+          <div class="table-wrap">
+            <table id="bosTable"><thead><tr>
+              <th>Ticker</th><th>Company</th><th>Price</th><th>P/E</th>
+              <th>ROE</th><th>BOS Score</th><th>淨利率趨勢</th><th>護城河</th><th>進場訊號</th><th></th>
+            </tr></thead>
+            <tbody id="bosResults"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DGM 股息成長 ── -->
+    <div class="screener-mode" id="smode-dgm">
+      <div class="filters-bar">
+        <div class="filters-row" style="align-items:flex-start;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div class="sym-input-wrap">
+              <input class="sym-input" id="dgm-symbols" placeholder="KO, JNJ, PG, MSFT （逗號分隔，不填使用股息股 Universe）">
+            </div>
+            <button class="btn btn-primary" onclick="runDgmScreen()" style="height:32px;background:var(--green)">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1,12 5,7 9,9 15,3"/></svg>
+              DGM 評分
+            </button>
+            <button class="btn btn-primary" onclick="runDgmDiscover()" style="height:32px;background:linear-gradient(135deg,#16A34A,#006FFF)">
+              AI 推薦
+            </button>
+            <button class="btn btn-ghost" onclick="resetDgmScreen()" style="height:32px">Reset</button>
+          </div>
+          <div class="sym-hint">FREEBIRDS 企業品質（≥ 7/14 = 好公司）→ 買入時機（≥ 7/11 = 好買點）· 資料來源：yfinance</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">DGM 股息成長篩選結果</div><div class="card-sub" id="dgmCount">—</div></div>
+          <div style="display:flex;gap:12px;font-size:11px;color:var(--mid)">
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--green);margin-right:4px"></span>建議購買</span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--blue);margin-right:4px"></span>潛力股</span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--light);margin-right:4px"></span>觀察</span>
+          </div>
+        </div>
+        <div style="position:relative">
+          <div class="loading-overlay" id="dgmLoading" style="display:none;min-height:80px"><div class="loading-spinner"></div> 計算評分中...</div>
+          <div class="table-wrap">
+            <table id="dgmTable"><thead><tr>
+              <th>Ticker</th><th>Company</th><th>Price</th><th>Div%</th>
+              <th>連續成長</th><th>FREEBIRDS</th><th>買入時機</th><th>推薦</th><th></th>
+            </tr></thead>
+            <tbody id="dgmTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 篩選器底部觀察清單 ── -->
+    <div class="card" id="screenerWatchlistCard" style="margin-top:20px">
+      <div class="card-header">
+        <div>
+          <div class="card-title">觀察清單</div>
+          <div class="card-sub" id="screenerWatchlistSub">—</div>
+        </div>
+        <button class="btn btn-ghost" onclick="loadScreenerWatchlist()" style="font-size:12px">重新整理</button>
+      </div>
+      <div id="screenerWatchlistBody">
+        <div class="empty-state" style="padding:28px">
+          <div class="es-text">觀察清單是空的</div>
+          <div class="es-sub">在上方篩選結果中點「加入關注」即可追蹤</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PAGE: 組合 -->
+  <div class="page" id="page-portfolio">
+    <div class="grid-7030 mb-20">
+      <div>
+        <div class="card mb-16">
+          <div class="card-header"><div class="card-title">Portfolio Allocation</div><div class="card-sub">By market value</div></div>
+          <div class="card-body"><div class="chart-wrap"><canvas id="allocChart"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Top Picks from Screener</div><div class="card-sub">AI score ≥ 80</div></div>
+          <div class="card-body" id="recCards"><div class="loading-spinner"></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="card mb-16">
+          <div class="card-header"><div class="card-title">Position Breakdown</div></div>
+          <div class="card-body" id="allocList"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Portfolio Stats</div></div>
+          <div class="card-body" id="portfolioStats">
+            <div class="risk-grid">
+              <div class="risk-card"><div class="risk-metric-label">Expected Return</div><div class="risk-metric-value" id="ps-ret" style="color:var(--green)">—</div><div class="risk-metric-desc">Annualized</div></div>
+              <div class="risk-card"><div class="risk-metric-label">Volatility</div><div class="risk-metric-value" id="ps-vol" style="color:var(--amber)">—</div><div class="risk-metric-desc">Annualized std dev</div></div>
+              <div class="risk-card"><div class="risk-metric-label">Sharpe Ratio</div><div class="risk-metric-value" id="ps-sharpe" style="color:var(--blue)">—</div><div class="risk-metric-desc">Risk-free rate 5.25%</div></div>
+              <div class="risk-card"><div class="risk-metric-label">Max Drawdown</div><div class="risk-metric-value" id="ps-dd" style="color:var(--red)">—</div><div class="risk-metric-desc">Historical worst</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: 技術分析 -->
+  <div class="page" id="page-technical">
+    <div class="card mb-16">
+      <div class="card-header">
+        <div style="display:flex;align-items:center;gap:12px;flex:1">
+          <div id="techChips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        </div>
+        <div class="timeframe-row">
+          <button class="tf-btn active" onclick="setChartTF(this,'1y')">1Y</button>
+          <button class="tf-btn" onclick="setChartTF(this,'6mo')">6M</button>
+          <button class="tf-btn" onclick="setChartTF(this,'3mo')">3M</button>
+        </div>
+      </div>
+      <div style="padding:14px 20px 0;border-bottom:1px solid var(--border)">
+        <div style="margin-bottom:2px">
+          <span style="font-size:16px;font-weight:800;letter-spacing:-.4px" id="techTicker">—</span>
+          <span style="font-size:13px;color:var(--mid);margin-left:10px" id="techName">—</span>
+        </div>
+        <div id="techMeta" style="display:flex;gap:16px;padding-bottom:12px;font-size:12px;color:var(--mid)"></div>
+      </div>
+      <div class="card-tabs">
+        <div class="card-tab active" onclick="switchTab(this,'price')">Price / MA</div>
+        <div class="card-tab" onclick="switchTab(this,'rsi')">RSI (14)</div>
+        <div class="card-tab" onclick="switchTab(this,'volume')">Volume</div>
+      </div>
+      <div class="tab-pane active" id="chart-price" style="position:relative">
+        <div class="chart-wrap-xl"><canvas id="priceChart"></canvas></div>
+        <div class="loading-overlay" id="priceLoading"><div class="loading-spinner"></div> Loading</div>
+      </div>
+      <div class="tab-pane" id="chart-rsi">
+        <div style="font-size:11px;color:var(--mid);margin-bottom:12px">RSI &gt; 70 = Overbought &nbsp;|&nbsp; RSI &lt; 30 = Oversold</div>
+        <div class="chart-wrap-lg"><canvas id="rsiChart"></canvas></div>
+      </div>
+      <div class="tab-pane" id="chart-volume">
+        <div class="chart-wrap-lg"><canvas id="volumeChart"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-3">
+      <div class="card"><div class="card-header"><div class="card-title">Indicators</div></div><div class="card-body" id="techIndicators"></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Support / Resistance</div></div><div class="card-body" id="techLevels"></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Signal Summary</div></div><div class="card-body" id="techSignals"></div></div>
+    </div>
+  </div>
+
+  <!-- PAGE: 風險 -->
+  <div class="page" id="page-risk">
+    <div class="stats-grid mb-20">
+      <div class="stat-card"><div class="stat-label">Portfolio Beta</div><div class="stat-value" id="r-beta">—</div><div class="stat-change" id="r-betaLabel" style="color:var(--amber)">—</div><div class="stat-sub">vs. S&P 500</div></div>
+      <div class="stat-card"><div class="stat-label">Sharpe Ratio</div><div class="stat-value" id="r-sharpe" style="color:var(--blue)">—</div><div class="stat-change up" id="r-sharpeLabel">—</div><div class="stat-sub">Risk-adjusted return</div></div>
+      <div class="stat-card"><div class="stat-label">Max Drawdown</div><div class="stat-value" id="r-dd" style="color:var(--red)">—</div><div class="stat-change down">Historical worst loss</div><div class="stat-sub">&nbsp;</div></div>
+      <div class="stat-card"><div class="stat-label">Annualized Vol</div><div class="stat-value" id="r-vol">—</div><div class="stat-change" style="color:var(--amber)">12-month rolling</div><div class="stat-sub">&nbsp;</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><div class="card-header"><div class="card-title">Position Risk Score</div></div><div class="card-body" id="riskScoreList"></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Risk Alerts</div></div><div class="card-body" id="riskAlerts"></div></div>
+    </div>
+  </div>
+
+  <!-- PAGE: 觀察清單 -->
+  <div class="page" id="page-watchlist">
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Watchlist</div><div class="card-sub" id="watchlistSub">—</div></div>
+        <button class="btn btn-ghost" onclick="showAddWatchlist()">+ Add</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th>Ticker</th><th>Company</th><th>Price</th><th>Change</th>
+          <th>52W H/L</th><th>P/E</th><th>Target</th><th>Upside</th><th>Signal</th>
+        </tr></thead>
+        <tbody id="watchlistTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  </div>
+</main>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+const RAILWAY_URL = 'https://api-production-03c0.up.railway.app';
+let API_BASE = RAILWAY_URL;
+let API_KEY  = localStorage.getItem('app_password') || '';
+let DEMO_MODE = false;
+
+// ── INIT ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  if (!API_KEY) {
+    document.getElementById('loginScreen').style.display = 'flex';
+  } else {
+    initApp();
+  }
+});
+
+async function doLogin() {
+  const pw  = document.getElementById('loginPassword').value.trim();
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginError');
+  if (!pw) return;
+  btn.disabled = true;
+  btn.textContent = '驗證中...';
+  err.style.display = 'none';
+  try {
+    const r = await fetch(`${RAILWAY_URL}/api/screener/cache/stats`, {
+      headers: { 'X-API-Key': pw }
+    });
+    if (r.ok) {
+      localStorage.setItem('app_password', pw);
+      API_KEY = pw;
+      document.getElementById('loginScreen').style.display = 'none';
+      initApp();
+    } else {
+      err.textContent = '密碼錯誤，請再試一次';
+      err.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = '登入';
+    }
+  } catch(e) {
+    err.textContent = '無法連線到伺服器，請確認網路後再試';
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '登入';
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('app_password');
+  API_KEY = '';
+  document.getElementById('setupModal').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+function closeModal() {
+  document.getElementById('setupModal').style.display = 'none';
+  document.getElementById('footerApiUrl').textContent = 'Railway · Supabase';
+  document.getElementById('syncStatus').textContent = '已連接';
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────
+const PAGE_META = {
+  overview:  ['資產總覽','Dashboard'],
+  screener:  ['選股篩選器','Screener'],
+  portfolio: ['組合配置','Portfolio'],
+  technical: ['技術分析','Technical Analysis'],
+  risk:      ['風險評估','Risk'],
+  watchlist: ['觀察清單','Watchlist'],
+};
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelector(`.nav-item[onclick="showPage('${id}')"]`)?.classList.add('active');
+  const [t,b] = PAGE_META[id];
+  document.getElementById('page-title').textContent = t;
+  document.getElementById('page-breadcrumb').textContent = b;
+  if (id === 'screener') loadScreenerWatchlist();
+  closeMobileSidebar(); // 手機上導覽後自動關閉 sidebar
+}
+
+// ── SIDEBAR TOGGLE ─────────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const main    = document.querySelector('.main');
+  sidebar.classList.toggle('collapsed');
+  main.classList.toggle('sidebar-collapsed');
+  // persist state
+  localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
+}
+function openMobileSidebar() {
+  document.getElementById('sidebar').classList.add('mobile-open');
+  document.getElementById('sidebarBackdrop').classList.add('show');
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebarBackdrop').classList.remove('show');
+}
+// restore sidebar state on load
+(function(){
+  if (localStorage.getItem('sidebarCollapsed') === '1') {
+    document.getElementById('sidebar')?.classList.add('collapsed');
+    document.querySelector('.main')?.classList.add('sidebar-collapsed');
+  }
+})();
+
+// ── API HELPERS ───────────────────────────────────────────────
+async function api(path, options = {}) {
+  if (DEMO_MODE) return null;
+  const headers = { ...(options.headers || {}) };
+  if (API_KEY) headers['X-API-Key'] = API_KEY;
+  const r = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  if (!r.ok) throw new Error(`API error ${r.status}`);
+  return r.json();
+}
+
+// ── DEMO DATA (fallback) ──────────────────────────────────────
+const DEMO_HOLDINGS = [
+  {symbol:'NVDA',name:'NVIDIA Corp',sector:'Technology',shares:15,avg_cost:620,current_price:875.50,change_pct:2.3,market_value:13132.5,unrealized_pnl:3832.5,unrealized_pnl_pct:41.3},
+  {symbol:'AAPL',name:'Apple Inc',sector:'Technology',shares:40,avg_cost:165,current_price:189.20,change_pct:-0.4,market_value:7568,unrealized_pnl:968,unrealized_pnl_pct:14.7},
+  {symbol:'MSFT',name:'Microsoft Corp',sector:'Technology',shares:20,avg_cost:370,current_price:415.80,change_pct:0.8,market_value:8316,unrealized_pnl:916,unrealized_pnl_pct:12.4},
+  {symbol:'VOO',name:'Vanguard S&P 500',sector:'ETF',shares:30,avg_cost:430,current_price:498.20,change_pct:0.6,market_value:14946,unrealized_pnl:2046,unrealized_pnl_pct:15.9},
+  {symbol:'JPM',name:'JPMorgan Chase',sector:'Financials',shares:25,avg_cost:178,current_price:198.40,change_pct:1.1,market_value:4960,unrealized_pnl:510,unrealized_pnl_pct:11.5},
+];
+const DEMO_SUMMARY = {total_market_value:84327,total_cost:77485,total_unrealized_pnl:6842,total_unrealized_pnl_pct:8.8,day_change:412,day_change_pct:0.49,holdings_count:5,sector_allocation:{Technology:34.5,ETF:28.6,Financials:18.2,Healthcare:12.4,Other:6.3}};
+const DEMO_RISK = {beta:1.18,sharpe_ratio:0.87,max_drawdown:-22.1,annualized_volatility:18.4,position_risks:[{symbol:'NVDA',concentration_pct:15.6,beta:1.72,risk_score:82},{symbol:'AAPL',concentration_pct:9.0,beta:1.19,risk_score:55},{symbol:'MSFT',concentration_pct:9.9,beta:0.92,risk_score:50},{symbol:'VOO',concentration_pct:17.7,beta:1.00,risk_score:42},{symbol:'JPM',concentration_pct:5.9,beta:1.18,risk_score:48}]};
+
+function seededRand(s){return()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff}}
+function genPrices(start,n,seed,vol=0.018,trend=0.0007){const rng=seededRand(seed),out=[start];for(let i=1;i<n;i++)out.push(Math.max(out[i-1]*(1+(rng()-.48)*vol+trend),1));return out}
+function genDates(n){const dates=[],end=new Date(2026,4,27);for(let i=n-1;i>=0;i--){const d=new Date(end);d.setDate(d.getDate()-i);dates.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'}))}return dates}
+
+// ── INIT APP ──────────────────────────────────────────────────
+async function initApp() {
+  await loadOverview();
+  buildTechChips([]);
+  loadTechnical('NVDA','1y');
+}
+
+async function refreshAll() {
+  const btn=document.getElementById('refreshBtn');
+  btn.disabled=true;
+  btn.innerHTML='<div class="loading-spinner"></div> Refreshing';
+  await loadOverview();
+  btn.disabled=false;
+  btn.innerHTML='<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8A6 6 0 1 1 8 2a6 6 0 0 1 4.24 1.76L14 2v4h-4"/></svg> Refresh';
+}
+
+// ── OVERVIEW ──────────────────────────────────────────────────
+let nwChart, secChart;
+async function loadOverview() {
+  try {
+    const [holdings, summary] = DEMO_MODE
+      ? [DEMO_HOLDINGS, DEMO_SUMMARY]
+      : await Promise.all([api('/api/portfolio'), api('/api/portfolio/summary')]);
+
+    renderSummaryCards(summary);
+    renderHoldings(holdings);
+    renderSectorChart(summary.sector_allocation);
+    renderNetWorthChart('1y');
+    renderAiInsight(summary);
+    await loadPortfolioPage(holdings, summary);
+    await loadRiskPage();
+    await loadWatchlistPage();
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function renderSummaryCards(s) {
+  document.getElementById('s-totalMv').textContent = '$'+s.total_market_value.toLocaleString('en',{maximumFractionDigits:0});
+  document.getElementById('s-cost').textContent    = '$'+s.total_cost.toLocaleString('en',{maximumFractionDigits:0});
+  document.getElementById('s-count').textContent   = s.holdings_count;
+  const pnl=s.total_unrealized_pnl, up=pnl>=0;
+  document.getElementById('s-pnl').innerHTML = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="${up?'2,9 6,3 10,9':'2,3 6,9 10,3'}"/></svg> ${up?'+':''}$${Math.abs(pnl).toLocaleString('en',{maximumFractionDigits:0})} (${up?'+':''}${s.total_unrealized_pnl_pct.toFixed(1)}%)`;
+  document.getElementById('s-pnl').className = 'stat-change '+(up?'up':'down');
+  document.getElementById('s-ret').textContent = (up?'+':'')+s.total_unrealized_pnl_pct.toFixed(1)+'%';
+  document.getElementById('s-ret').className = 'stat-change '+(up?'up':'down');
+  const dc=s.day_change, dup=dc>=0;
+  document.getElementById('s-dayChg').textContent = (dup?'+':'')+'$'+Math.abs(dc).toLocaleString('en',{maximumFractionDigits:0});
+  document.getElementById('s-dayChg').style.color = dup?'var(--green)':'var(--red)';
+  document.getElementById('s-dayPct').textContent  = (dup?'+':'')+s.day_change_pct.toFixed(2)+'%';
+  document.getElementById('s-dayPct').className    = 'stat-change '+(dup?'up':'down');
+}
+
+function renderHoldings(holdings) {
+  const tbody=document.getElementById('holdingsTbody');
+  document.getElementById('holdingsSub').textContent = `${holdings.length} positions`;
+  if(!holdings.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="es-text">No holdings yet</div><div class="es-sub">Click "+ 新增持倉" to add your first position</div></div></td></tr>`;return}
+  tbody.innerHTML='';
+  holdings.forEach(h=>{
+    const up=(h.unrealized_pnl||0)>=0, cup=(h.change_pct||0)>=0;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><span class="ticker">${h.symbol}</span></td>
+      <td><div class="co-name">${h.name||h.symbol}</div><div class="co-sector">${h.sector||''}</div></td>
+      <td><strong>$${(h.current_price||0).toFixed(2)}</strong></td>
+      <td style="color:${cup?'var(--green)':'var(--red)'}">${cup?'+':''}${(h.change_pct||0).toFixed(2)}%</td>
+      <td style="color:var(--mid)">${h.shares}</td>
+      <td><strong>$${(h.market_value||0).toLocaleString('en',{maximumFractionDigits:0})}</strong></td>
+      <td style="color:${up?'var(--green)':'var(--red)'}"><strong>${up?'+':''}$${Math.abs(h.unrealized_pnl||0).toLocaleString('en',{maximumFractionDigits:0})}</strong></td>
+      <td><span class="tag ${up?'tag-green':'tag-red'}">${up?'+':''}${(h.unrealized_pnl_pct||0).toFixed(1)}%</span></td>
+      <td><span class="tag tag-gray" style="font-size:10px">${h.sector||'—'}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderSectorChart(allocation) {
+  const labels=Object.keys(allocation), values=Object.values(allocation);
+  const colors=['#006FFF','#16A34A','#7C3AED','#D97706','#DC2626','#0891B2'];
+  const ctx=document.getElementById('sectorChart').getContext('2d');
+  if(secChart) secChart.destroy();
+  secChart=new Chart(ctx,{type:'doughnut',data:{labels:labels.map((k,i)=>`${k} ${values[i]}%`),datasets:[{data:values,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8,color:'#6B7280'}}}}});
+  const list=document.getElementById('sectorList'); list.innerHTML='';
+  labels.forEach((k,i)=>{list.innerHTML+=`<div class="alloc-item"><div class="alloc-dot" style="background:${colors[i%colors.length]}"></div><div class="alloc-name">${k}</div><div class="alloc-pct">${values[i]}%</div></div>`;});
+}
+
+async function renderNetWorthChart(period) {
+  document.getElementById('trendLoading').style.display='flex';
+  const ctx=document.getElementById('netWorthChart').getContext('2d');
+  if(nwChart) nwChart.destroy();
+
+  let dates, prices;
+  if(DEMO_MODE){
+    const nMap={'1y':252,'6mo':126,'3mo':63,'1mo':21};
+    const n=nMap[period]||252;
+    dates=genDates(n); prices=genPrices(77000,n,42);
+  } else {
+    try {
+      const data = await api(`/api/stocks/history/VOO?period=${period}`);
+      dates=data.dates; prices=data.prices;
+    } catch { dates=genDates(252); prices=genPrices(77000,252,42); }
+  }
+
+  document.getElementById('trendSub').textContent=`${dates[0]} — ${dates[dates.length-1]}`;
+  nwChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'Portfolio',data:prices,borderColor:'#006FFF',backgroundColor:'rgba(0,111,255,0.07)',fill:true,tension:0.4,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+Math.round(c.raw).toLocaleString('en')}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:7,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K',font:{size:11},color:'#9CA3AF'}}}}});
+  document.getElementById('trendLoading').style.display='none';
+}
+
+function setHistTF(btn,period){
+  document.querySelectorAll('[onclick^="setHistTF"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNetWorthChart(period);
+}
+
+function renderAiInsight(summary) {
+  const box=document.getElementById('aiInsight'); box.style.display='block';
+  const alloc=summary.sector_allocation||{};
+  const topSector=Object.entries(alloc).sort((a,b)=>b[1]-a[1])[0];
+  const date=new Date().toLocaleDateString('zh-TW');
+  document.getElementById('insightDate').textContent=date;
+  let text='';
+  if(topSector&&topSector[1]>35) text+=`<strong>${topSector[0]}</strong> 板塊佔比 <strong>${topSector[1]}%</strong>，集中度偏高，建議適度分散。`;
+  if(summary.total_unrealized_pnl_pct>10) text+=` 整體未實現報酬 <strong>+${summary.total_unrealized_pnl_pct.toFixed(1)}%</strong>，表現良好，可定期再平衡維持目標配置。`;
+  else if(summary.total_unrealized_pnl_pct<0) text+=` 目前帳面虧損 <strong>${summary.total_unrealized_pnl_pct.toFixed(1)}%</strong>，建議檢視各持倉基本面是否改變。`;
+  document.getElementById('insightText').innerHTML=text||'組合狀態良好，繼續追蹤各持倉基本面變化。';
+}
+
+// ── PORTFOLIO PAGE ────────────────────────────────────────────
+let allocChart;
+async function loadPortfolioPage(holdings, summary) {
+  const ctx=document.getElementById('allocChart').getContext('2d');
+  if(allocChart) allocChart.destroy();
+  const colors=['#006FFF','#7C3AED','#16A34A','#D97706','#DC2626','#0891B2','#EA580C','#65A30D','#9CA3AF'];
+  const total=summary.total_market_value||1;
+  const labels=holdings.map(h=>`${h.symbol} ${((h.market_value/total)*100).toFixed(0)}%`);
+  const data=holdings.map(h=>h.market_value);
+  allocChart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:8,color:'#6B7280'}}}}});
+
+  const list=document.getElementById('allocList'); list.innerHTML='';
+  holdings.forEach((h,i)=>{const pct=((h.market_value/total)*100).toFixed(1);list.innerHTML+=`<div class="alloc-item"><div class="alloc-dot" style="background:${colors[i%colors.length]}"></div><div><div class="alloc-name">${h.symbol}</div><div class="alloc-sub">${h.name||''}</div></div><div class="alloc-bar-wrap"><div class="alloc-bar"><div class="alloc-bar-fill" style="width:${pct*100/30}%;background:${colors[i%colors.length]}"></div></div></div><div class="alloc-pct">${pct}%</div></div>`;});
+
+  // Top screener picks
+  const recDiv=document.getElementById('recCards'); recDiv.innerHTML='';
+  const topPicks=DEMO_MODE?[{symbol:'NVDA',name:'NVIDIA Corp',ai_score:92,price:875.50,target_price:1150,signal:'買入'},{symbol:'MSFT',name:'Microsoft Corp',ai_score:88,price:415.80,target_price:480,signal:'買入'},{symbol:'VOO',name:'Vanguard S&P 500',ai_score:90,price:498.20,target_price:560,signal:'買入'},{symbol:'META',name:'Meta Platforms',ai_score:86,price:510.60,target_price:600,signal:'買入'}]:[];
+  (topPicks.length?topPicks:[]).forEach(s=>{
+    const upside=s.target_price?((s.target_price/s.price-1)*100).toFixed(1):null;
+    recDiv.innerHTML+=`<div class="rec-card"><div class="rec-card-header"><div><div class="rec-ticker">${s.symbol}</div><div class="rec-name">${s.name}</div></div><div class="rec-action rec-buy">BUY</div></div><div style="display:flex;justify-content:space-between;align-items:flex-end"><div><div class="rec-price">$${(s.price||0).toFixed(2)}</div><div class="rec-target">${upside?`Target $${s.target_price} +${upside}%`:''}</div></div><div style="text-align:right"><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">AI Score</div><div style="font-size:22px;font-weight:800;color:var(--blue)">${s.ai_score}</div></div></div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-top:10px;margin-bottom:4px">Score</div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:${s.ai_score}%;background:var(--blue)"></div></div><span class="score-val" style="color:var(--blue)">${s.ai_score}</span></div></div>`;
+  });
+  if(!topPicks.length) recDiv.innerHTML='<div class="empty-state"><div class="es-text">Run the screener to see top picks</div></div>';
+}
+
+// ── RISK PAGE ─────────────────────────────────────────────────
+async function loadRiskPage() {
+  try {
+    const risk = DEMO_MODE ? DEMO_RISK : await api('/api/portfolio/risk');
+    document.getElementById('r-beta').textContent    = risk.beta.toFixed(2);
+    document.getElementById('r-sharpe').textContent  = risk.sharpe_ratio.toFixed(2);
+    document.getElementById('r-dd').textContent      = risk.max_drawdown.toFixed(1)+'%';
+    document.getElementById('r-vol').textContent     = risk.annualized_volatility.toFixed(1)+'%';
+    document.getElementById('r-betaLabel').textContent  = risk.beta>1.2?'High Risk':risk.beta>0.8?'Medium Risk':'Low Risk';
+    document.getElementById('r-sharpeLabel').textContent= risk.sharpe_ratio>1?'Excellent':risk.sharpe_ratio>0.5?'Good (>0.5)':'Below average';
+
+    const riskList=document.getElementById('riskScoreList'); riskList.innerHTML='';
+    risk.position_risks.forEach(p=>{const col=p.risk_score>=70?'var(--red)':p.risk_score>=40?'var(--amber)':'var(--green)';riskList.innerHTML+=`<div class="alloc-item"><div class="alloc-name"><span class="ticker">${p.symbol}</span><div class="alloc-sub">β ${p.beta} · ${p.concentration_pct}% of portfolio</div></div><div class="score-bar-wrap" style="width:110px"><div class="score-bar"><div class="score-fill" style="width:${p.risk_score}%;background:${col}"></div></div><span class="score-val" style="color:${col}">${p.risk_score}</span></div></div>`;});
+
+    const alerts=document.getElementById('riskAlerts');
+    let html='';
+    const sectors=DEMO_SUMMARY.sector_allocation;
+    const topSec=Object.entries(sectors).sort((a,b)=>b[1]-a[1])[0];
+    if(topSec&&topSec[1]>35) html+=`<div class="alert-block" style="background:var(--amber-lt);border-color:var(--amber)"><div class="alert-title" style="color:var(--amber)">Sector Concentration</div><div class="alert-text">${topSec[0]} at ${topSec[1]}% — recommend reducing to below 35%</div></div>`;
+    if(risk.beta>1.2) html+=`<div class="alert-block" style="background:#EFF6FF;border-color:var(--blue)"><div class="alert-title" style="color:var(--blue)">Elevated Beta</div><div class="alert-text">Portfolio Beta ${risk.beta} — drawdowns may exceed market by ${((risk.beta-1)*100).toFixed(0)}%</div></div>`;
+    if(risk.sharpe_ratio>0.5) html+=`<div class="alert-block" style="background:var(--green-lt);border-color:var(--green)"><div class="alert-title" style="color:var(--green)">Sharpe Ratio Healthy</div><div class="alert-text">${risk.sharpe_ratio} exceeds the 0.5 threshold — risk/reward is acceptable</div></div>`;
+    alerts.innerHTML=html||'<div class="alert-block" style="background:var(--green-lt);border-color:var(--green)"><div class="alert-title" style="color:var(--green)">All Clear</div><div class="alert-text">No significant risk alerts detected.</div></div>';
+  } catch(e){ console.error(e); }
+}
+
+// ── SCREENER ──────────────────────────────────────────────────
+async function runScreener() {
+  const params = new URLSearchParams();
+  const sector = document.getElementById('f-sector').value;
+  const pe   = document.getElementById('f-pe').value;
+  const roe  = document.getElementById('f-roe').value;
+  const div  = document.getElementById('f-div').value;
+  const beta = document.getElementById('f-beta').value;
+  const score= document.getElementById('f-score').value;
+  if(sector) params.set('sector',sector);
+  if(pe)     params.set('pe_max',pe);
+  if(roe)    params.set('roe_min',roe);
+  if(div)    params.set('div_min',div);
+  if(beta)   params.set('beta_max',beta);
+  if(score)  params.set('score_min',score);
+
+  document.getElementById('screenerLoading').style.display='flex';
+  document.getElementById('screenerTbody').innerHTML='';
+
+  try {
+    let results;
+    if(DEMO_MODE){
+      // Demo: generate fake screener results
+      await new Promise(r=>setTimeout(r,600));
+      results=[
+        {symbol:'NVDA',name:'NVIDIA Corp',sector:'Technology',price:875.50,change_pct:2.3,pe_ratio:45.2,roe:98.3,dividend_yield:0.03,eps_growth:168,beta:1.72,market_cap:2180000000000,target_price:1150,ai_score:92,signal:'買入'},
+        {symbol:'MSFT',name:'Microsoft Corp',sector:'Technology',price:415.80,change_pct:0.8,pe_ratio:35.1,roe:36.4,dividend_yield:0.74,eps_growth:12.8,beta:0.92,market_cap:3090000000000,target_price:480,ai_score:88,signal:'買入'},
+        {symbol:'VOO',name:'Vanguard S&P 500',sector:'ETF',price:498.20,change_pct:0.6,pe_ratio:23.4,roe:null,dividend_yield:1.38,eps_growth:null,beta:1.00,market_cap:460000000000,target_price:560,ai_score:90,signal:'買入'},
+        {symbol:'META',name:'Meta Platforms',sector:'Technology',price:510.60,change_pct:1.4,pe_ratio:26.4,roe:32.8,dividend_yield:0.39,eps_growth:21.4,beta:1.28,market_cap:1310000000000,target_price:600,ai_score:86,signal:'買入'},
+        {symbol:'GOOGL',name:'Alphabet Inc',sector:'Technology',price:176.40,change_pct:0.5,pe_ratio:23.8,roe:24.2,dividend_yield:0,eps_growth:14.6,beta:1.05,market_cap:2210000000000,target_price:210,ai_score:84,signal:'買入'},
+        {symbol:'JPM',name:'JPMorgan Chase',sector:'Financials',price:198.40,change_pct:1.1,pe_ratio:11.8,roe:14.2,dividend_yield:2.35,eps_growth:8.4,beta:1.18,market_cap:570000000000,target_price:225,ai_score:80,signal:'買入'},
+        {symbol:'UNH',name:'UnitedHealth Group',sector:'Healthcare',price:492.60,change_pct:0.3,pe_ratio:19.4,roe:27.8,dividend_yield:1.62,eps_growth:12.8,beta:0.68,market_cap:454000000000,target_price:560,ai_score:78,signal:'買入'},
+        {symbol:'AAPL',name:'Apple Inc',sector:'Technology',price:189.20,change_pct:-0.4,pe_ratio:29.4,roe:147.8,dividend_yield:0.52,eps_growth:8.2,beta:1.19,market_cap:2920000000000,target_price:210,ai_score:85,signal:'持有'},
+      ];
+      const s=sector,pm=parseFloat(pe)||999,rm=parseFloat(roe)||0,dm=parseFloat(div)||0,bm=parseFloat(beta)||999,sm=parseInt(score)||0;
+      results=results.filter(r=>{
+        if(s&&r.sector!==s)return false;
+        if(r.pe_ratio&&r.pe_ratio>pm)return false;
+        if((r.roe||0)<rm)return false;
+        if((r.dividend_yield||0)<dm)return false;
+        if((r.beta||1)>bm)return false;
+        if(r.ai_score<sm)return false;
+        return true;
+      });
+    } else {
+      const data = await api(`/api/stocks/screener?${params}`);
+      results = data.results;
+    }
+
+    document.getElementById('screenerCount').textContent = `${results.length} results`;
+    const tbody=document.getElementById('screenerTbody'); tbody.innerHTML='';
+    results.forEach(s=>{
+      const sc=s.ai_score||0;
+      const scColor=sc>=80?'var(--green)':sc>=60?'var(--amber)':'var(--mid)';
+      const aMap={'買入':'tag-green','持有':'tag-amber','觀察':'tag-blue'};
+      const mcap=s.market_cap;
+      const mcStr=mcap>=200e9?'Mega':mcap>=20e9?'Large':'Mid';
+      const tr=document.createElement('tr'); tr.innerHTML=`
+        <td><span class="ticker">${s.symbol}</span></td>
+        <td><div class="co-name">${s.name||s.symbol}</div><div class="co-sector">${s.sector||''}</div></td>
+        <td><strong>$${(s.price||0).toFixed(2)}</strong></td>
+        <td>${s.pe_ratio?s.pe_ratio.toFixed(1):'—'}</td>
+        <td>${s.roe?s.roe.toFixed(1)+'%':'—'}</td>
+        <td>${s.dividend_yield?s.dividend_yield.toFixed(2)+'%':'—'}</td>
+        <td style="color:${(s.eps_growth||0)>=0?'var(--green)':'var(--red)'}">${s.eps_growth!=null?(s.eps_growth>=0?'+':'')+s.eps_growth.toFixed(1)+'%':'—'}</td>
+        <td>${(s.beta||1).toFixed(2)}</td>
+        <td><span class="tag tag-gray" style="font-size:10px">${mcStr}</span></td>
+        <td><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:${sc}%;background:${scColor}"></div></div><span class="score-val" style="color:${scColor}">${sc}</span></div></td>
+        <td><span class="tag ${aMap[s.signal]||'tag-gray'}">${s.signal||'—'}</span></td>
+      `; tbody.appendChild(tr);
+    });
+  } catch(e){ console.error(e); }
+  finally { document.getElementById('screenerLoading').style.display='none'; }
+}
+
+function resetScreener(){
+  ['f-sector','f-score'].forEach(id=>document.getElementById(id).value='');
+  ['f-pe','f-roe','f-div','f-beta'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('screenerTbody').innerHTML='';
+  document.getElementById('screenerCount').textContent='—';
+}
+
+// ── TECHNICAL ─────────────────────────────────────────────────
+let pChart,rChart,vChart,curTechSym='NVDA',curTechTF='1y';
+
+function buildTechChips(holdings=[]) {
+  const syms=[...new Set([...holdings.map(h=>h.symbol),'NVDA','AAPL','MSFT','VOO','META'])].slice(0,8);
+  const div=document.getElementById('techChips'); div.innerHTML='';
+  syms.forEach(sym=>{
+    const c=document.createElement('div');
+    c.className='stock-chip'+(sym===curTechSym?' active':'');
+    c.textContent=sym;
+    c.onclick=()=>{curTechSym=sym;buildTechChips(holdings);loadTechnical(sym,curTechTF)};
+    div.appendChild(c);
+  });
+}
+
+function setChartTF(btn,tf){
+  document.querySelectorAll('[onclick^="setChartTF"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  curTechTF=tf; loadTechnical(curTechSym,tf);
+}
+
+function switchTab(el,tab){
+  document.querySelectorAll('.card-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('chart-'+tab).classList.add('active');
+}
+
+async function loadTechnical(symbol, period) {
+  document.getElementById('priceLoading').style.display='flex';
+  document.getElementById('techTicker').textContent=symbol;
+  document.getElementById('techName').textContent='Loading...';
+
+  let data;
+  if(DEMO_MODE){
+    await new Promise(r=>setTimeout(r,400));
+    const nMap={'1y':252,'6mo':126,'3mo':63};
+    const n=nMap[period]||252;
+    const seed=symbol.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+    const prices=genPrices(200,n,seed);
+    const dates=genDates(n);
+    const sma20=prices.map((_,i,a)=>i<19?null:a.slice(i-19,i+1).reduce((x,v)=>x+v,0)/20);
+    const sma50=prices.map((_,i,a)=>i<49?null:a.slice(i-49,i+1).reduce((x,v)=>x+v,0)/50);
+    const rsi=calcRSI(prices);
+    const vols=prices.map((_,i)=>Math.round(seededRand(seed+i)()*50e6+10e6));
+    data={symbol,dates,prices,sma20,sma50,rsi,volumes:vols};
+    const demoInfo={NVDA:{name:'NVIDIA Corp',price:875.50,change:2.3,pe:45.2,beta:1.72},AAPL:{name:'Apple Inc',price:189.20,change:-0.4,pe:29.4,beta:1.19},MSFT:{name:'Microsoft Corp',price:415.80,change:0.8,pe:35.1,beta:0.92},VOO:{name:'Vanguard S&P 500',price:498.20,change:0.6,pe:23.4,beta:1.00},META:{name:'Meta Platforms',price:510.60,change:1.4,pe:26.4,beta:1.28}};
+    const info=demoInfo[symbol]||{name:symbol,price:200,change:0,pe:20,beta:1};
+    document.getElementById('techName').textContent=info.name;
+    document.getElementById('techMeta').innerHTML=`<span><strong style="font-size:16px;font-weight:700">$${info.price.toFixed(2)}</strong></span><span style="color:${info.change>=0?'var(--green)':'var(--red)'};font-weight:600">${info.change>=0?'+':''}${info.change}%</span><span>P/E ${info.pe}</span><span>Beta ${info.beta}</span>`;
+  } else {
+    try {
+      data = await api(`/api/stocks/history/${symbol}?period=${period}`);
+      const quote = await api(`/api/stocks/quote/${symbol}`);
+      document.getElementById('techName').textContent=quote.name||symbol;
+      document.getElementById('techMeta').innerHTML=`<span><strong style="font-size:16px;font-weight:700">$${(quote.price||0).toFixed(2)}</strong></span><span style="color:${(quote.change_pct||0)>=0?'var(--green)':'var(--red)'};font-weight:600">${(quote.change_pct||0)>=0?'+':''}${(quote.change_pct||0).toFixed(2)}%</span><span>P/E ${quote.pe_ratio||'—'}</span><span>Beta ${quote.beta||'—'}</span><span>${quote.sector||''}</span>`;
+    } catch(e){ console.error(e); document.getElementById('priceLoading').style.display='none'; return; }
+  }
+
+  const {dates,prices,sma20,sma50,rsi,volumes}=data;
+  const ctx=document.getElementById('priceChart').getContext('2d');
+  if(pChart) pChart.destroy();
+  pChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'Price',data:prices,borderColor:'#006FFF',backgroundColor:'rgba(0,111,255,0.05)',fill:true,tension:0.3,pointRadius:0,borderWidth:2},{label:'SMA 20',data:sma20,borderColor:'#D97706',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},{label:'SMA 50',data:sma50,borderColor:'#DC2626',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#6B7280'}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: $${c.raw?.toFixed(2)??'—'}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>'$'+v.toFixed(0),font:{size:11},color:'#9CA3AF'}}}}});
+
+  const ctx2=document.getElementById('rsiChart').getContext('2d');
+  if(rChart) rChart.destroy();
+  rChart=new Chart(ctx2,{type:'line',data:{labels:dates,datasets:[{label:'RSI (14)',data:rsi,borderColor:'#006FFF',fill:false,tension:0.3,pointRadius:0,borderWidth:2},{label:'Overbought',data:Array(dates.length).fill(70),borderColor:'rgba(220,38,38,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1},{label:'Oversold',data:Array(dates.length).fill(30),borderColor:'rgba(22,163,74,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#6B7280'}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9CA3AF'}},y:{min:0,max:100,grid:{color:'#F3F4F6'},ticks:{font:{size:11},color:'#9CA3AF'}}}}});
+
+  const volColors=prices.map((p,i)=>i===0?'rgba(0,111,255,.6)':p>=prices[i-1]?'rgba(22,163,74,.65)':'rgba(220,38,38,.65)');
+  const ctx3=document.getElementById('volumeChart').getContext('2d');
+  if(vChart) vChart.destroy();
+  vChart=new Chart(ctx3,{type:'bar',data:{labels:dates,datasets:[{label:'Volume',data:volumes,backgroundColor:volColors}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>(v/1e6).toFixed(0)+'M',font:{size:11},color:'#9CA3AF'}}}}});
+
+  const lastRSI=rsi.filter(v=>v!=null).pop();
+  const lastSMA20=sma20.filter(v=>v!=null).pop();
+  const lastSMA50=sma50.filter(v=>v!=null).pop();
+  const cur=prices[prices.length-1];
+  const hi=Math.max(...prices.filter(Boolean)), lo=Math.min(...prices.filter(Boolean));
+
+  document.getElementById('techIndicators').innerHTML=`
+    <div class="alloc-item"><div class="alloc-name">RSI (14)</div><span class="tag ${lastRSI>70?'tag-red':lastRSI<30?'tag-green':'tag-blue'}">${lastRSI?.toFixed(1)??'—'}</span></div>
+    <div class="alloc-item"><div class="alloc-name">SMA 20</div><div style="font-weight:600;font-family:monospace">$${lastSMA20?.toFixed(2)??'—'}</div></div>
+    <div class="alloc-item"><div class="alloc-name">SMA 50</div><div style="font-weight:600;font-family:monospace">$${lastSMA50?.toFixed(2)??'—'}</div></div>
+    <div class="alloc-item"><div class="alloc-name">Price vs SMA 20</div><span class="tag ${cur>lastSMA20?'tag-green':'tag-red'}">${cur>lastSMA20?'Above':'Below'}</span></div>
+    <div class="alloc-item"><div class="alloc-name">MA Cross</div><span class="tag ${lastSMA20>lastSMA50?'tag-green':'tag-red'}">${lastSMA20>lastSMA50?'Golden Cross':'Death Cross'}</span></div>`;
+  document.getElementById('techLevels').innerHTML=`
+    <div class="alloc-item"><div class="alloc-name">Current</div><div style="font-weight:700;font-family:monospace">$${cur.toFixed(2)}</div></div>
+    <div class="alloc-item"><div class="alloc-name">52W High</div><div style="color:var(--green);font-weight:600;font-family:monospace">$${hi.toFixed(2)}</div></div>
+    <div class="alloc-item"><div class="alloc-name">52W Low</div><div style="color:var(--red);font-weight:600;font-family:monospace">$${lo.toFixed(2)}</div></div>
+    <div class="alloc-item"><div class="alloc-name">Resistance</div><div style="color:var(--red);font-weight:600;font-family:monospace">$${(cur*1.08).toFixed(2)}</div></div>
+    <div class="alloc-item"><div class="alloc-name">Support</div><div style="color:var(--green);font-weight:600;font-family:monospace">$${(cur*0.93).toFixed(2)}</div></div>`;
+  const sig=lastSMA20>lastSMA50&&lastRSI<70?'Hold / Accumulate':lastRSI>70?'Caution — Overbought':'Neutral — Wait for signal';
+  document.getElementById('techSignals').innerHTML=`
+    <div class="alloc-item"><div class="alloc-name">Trend</div><span class="tag ${lastSMA20>lastSMA50?'tag-green':'tag-red'}">${lastSMA20>lastSMA50?'Bullish':'Bearish'}</span></div>
+    <div class="alloc-item"><div class="alloc-name">RSI Status</div><span class="tag ${lastRSI>70?'tag-red':lastRSI<30?'tag-green':'tag-blue'}">${lastRSI>70?'Overbought':lastRSI<30?'Oversold':'Neutral'}</span></div>
+    <div class="alloc-item"><div class="alloc-name">MA Signal</div><span class="tag ${lastSMA20>lastSMA50?'tag-green':'tag-red'}">${lastSMA20>lastSMA50?'Golden Cross':'Death Cross'}</span></div>
+    <div style="margin-top:12px;padding:11px 13px;background:var(--blue-lt);border-radius:7px;border-left:3px solid var(--blue)">
+      <div style="font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">AI Recommendation</div>
+      <div style="font-size:12px;color:var(--dark);font-weight:500">${sig}</div>
+    </div>`;
+
+  document.getElementById('priceLoading').style.display='none';
+}
+
+function calcRSI(prices,period=14){
+  const rsi=Array(prices.length).fill(null);
+  for(let i=period;i<prices.length;i++){
+    const ch=prices.slice(i-period,i+1).map((v,j,a)=>j===0?0:v-a[j-1]);
+    const g=ch.filter(c=>c>0).reduce((a,v)=>a+v,0)/period;
+    const l=Math.abs(ch.filter(c=>c<0).reduce((a,v)=>a+v,0))/period;
+    if(!l){rsi[i]=100;continue;} rsi[i]=100-100/(1+g/l);
+  }
+  return rsi;
+}
+
+// ── WATCHLIST ─────────────────────────────────────────────────
+async function loadWatchlistPage(){
+  try{
+    const items = DEMO_MODE
+      ? [{symbol:'AMD',name:'Advanced Micro Devices',current_price:168.40,change_pct:1.2,fifty_two_week_high:227,fifty_two_week_low:94,pe_ratio:45.8,target_price:220,upside_pct:30.6,signal:'買入'},{symbol:'PLTR',name:'Palantir Technologies',current_price:28.60,change_pct:2.1,fifty_two_week_high:34,fifty_two_week_low:12,pe_ratio:178.2,target_price:40,upside_pct:39.9,signal:'買入'},{symbol:'CRWD',name:'CrowdStrike Holdings',current_price:342.80,change_pct:-0.3,fifty_two_week_high:398,fifty_two_week_low:148,pe_ratio:382.4,target_price:430,upside_pct:25.4,signal:'買入'},{symbol:'AVGO',name:'Broadcom Inc',current_price:1420,change_pct:0.9,fifty_two_week_high:1978,fifty_two_week_low:774,pe_ratio:34.2,target_price:1800,upside_pct:26.8,signal:'買入'}]
+      : await api('/api/watchlist');
+    document.getElementById('watchlistSub').textContent=`${items.length} stocks tracked`;
+    const tbody=document.getElementById('watchlistTbody'); tbody.innerHTML='';
+    const aMap={'買入':'tag-green','持有':'tag-amber','觀察':'tag-blue'};
+    items.forEach(w=>{
+      const up=(w.change_pct||0)>=0;
+      tbody.innerHTML+=`<tr>
+        <td><span class="ticker">${w.symbol}</span></td>
+        <td><div class="co-name">${w.name||w.symbol}</div></td>
+        <td><strong>$${(w.current_price||0).toFixed(2)}</strong></td>
+        <td style="color:${up?'var(--green)':'var(--red)'}">${up?'+':''}${(w.change_pct||0).toFixed(2)}%</td>
+        <td style="font-family:monospace;font-size:12px;color:var(--mid)">$${w.fifty_two_week_high||'—'} / $${w.fifty_two_week_low||'—'}</td>
+        <td>${w.pe_ratio?w.pe_ratio.toFixed(1):'—'}</td>
+        <td style="color:var(--blue);font-weight:600">${w.target_price?'$'+w.target_price:'—'}</td>
+        <td>${w.upside_pct!=null?`<span class="tag tag-green">+${w.upside_pct.toFixed(1)}%</span>`:'—'}</td>
+        <td><span class="tag ${aMap[w.signal]||'tag-gray'}">${w.signal||'—'}</span></td>
+      </tr>`;
+    });
+  } catch(e){ console.error(e); }
+}
+
+// ── PLACEHOLDER ACTIONS ────────────────────────────────────────
+function showAddHolding(){ alert('串接後端後，此按鈕將開啟新增持倉表單，呼叫 POST /api/portfolio'); }
+function showAddWatchlist(){ alert('串接後端後，此按鈕將開啟觀察清單新增表單，呼叫 POST /api/watchlist'); }
+
+// ── 篩選器內嵌觀察清單 ───────────────────────────────────────
+let _screenerWatchlistDemo = [];
+
+async function loadScreenerWatchlist() {
+  const body = document.getElementById('screenerWatchlistBody');
+  const sub  = document.getElementById('screenerWatchlistSub');
+  if (!body) return;
+  const tab = _currentScreenerTab || 'general';
+  try {
+    const items = DEMO_MODE ? _screenerWatchlistDemo : await api('/api/watchlist');
+    sub.textContent = `${items.length} 支股票`;
+    if (items.length === 0) {
+      body.innerHTML = `<div class="empty-state" style="padding:28px"><div class="es-text">觀察清單是空的</div><div class="es-sub">在上方篩選結果中點「加入關注」即可追蹤</div></div>`;
+      return;
+    }
+
+    const SIG_TAG = { '買入':'tag-green','持有':'tag-amber','觀察':'tag-blue','建議購買':'tag-green','等待更好進場點':'tag-amber','暫不考慮':'tag-gray' };
+    const SC = _bosScoreColor || (s => s >= 8 ? 'var(--green)' : s >= 6 ? 'var(--amber)' : 'var(--red)');
+
+    // 依目前 tab 決定額外欄位
+    const extraHeader = tab === 'bos'
+      ? '<th>BOS Score</th><th>進場訊號</th>'
+      : tab === 'dgm'
+      ? '<th>FREEBIRDS</th><th>買入時機</th><th>推薦</th>'
+      : '<th>訊號</th>';
+
+    const rows = items.map(w => {
+      const d   = (w._data) || {};
+      const up  = (w.change_pct || 0) >= 0;
+      let extra = '';
+      if (tab === 'bos') {
+        const sc = d.bos_score;
+        const scColor = sc != null ? _bosScoreColor(sc) : 'var(--mid)';
+        const eTag = SIG_TAG[d.entry_signal] || SIG_TAG[w.signal] || 'tag-blue';
+        extra = `<td><span style="color:${scColor};font-weight:700">${sc != null ? sc+'/10' : '—'}</span></td>
+                 <td><span class="tag ${eTag}" style="font-size:10px">${d.entry_signal || w.signal || '—'}</span></td>`;
+      } else if (tab === 'dgm') {
+        const fbColor = d.freebirds_score != null ? _dgmScoreColor(d.freebirds_score, d.freebirds_max||14) : 'var(--mid)';
+        const tColor  = d.timing_score != null ? _dgmScoreColor(d.timing_score, d.timing_max||11) : 'var(--mid)';
+        const recMap  = { '建議購買':'tag-green','潛力股':'tag-blue','繼續觀察':'tag-gray' };
+        extra = `<td style="color:${fbColor};font-weight:700">${d.freebirds_score != null ? d.freebirds_score+'/'+(d.freebirds_max||14) : '—'}</td>
+                 <td style="color:${tColor};font-weight:700">${d.timing_score != null ? d.timing_score+'/'+(d.timing_max||11) : '—'}</td>
+                 <td>${d.recommendation ? `<span class="tag ${recMap[d.recommendation]||'tag-gray'}" style="font-size:10px">${d.recommendation}</span>` : '—'}</td>`;
+      } else {
+        const sTag = SIG_TAG[w.signal] || 'tag-blue';
+        extra = `<td><span class="tag ${sTag}" style="font-size:10px">${w.signal || '—'}</span></td>`;
+      }
+      return `<tr>
+        <td><span class="ticker" style="font-size:12px">${w.symbol}</span></td>
+        <td>
+          <div class="co-name">${w.name || ''}</div>
+          ${w.notes ? `<div class="co-sector">${w.notes}</div>` : ''}
+        </td>
+        <td><strong>${w.current_price ? '$'+w.current_price.toFixed(2) : '—'}</strong></td>
+        <td style="color:${up?'var(--green)':'var(--red)'};font-size:11px">${up?'+':''}${(w.change_pct||0).toFixed(2)}%</td>
+        ${extra}
+        <td>
+          <button onclick="removeFromScreenerWatchlist('${w.symbol}',this)"
+            style="border:none;background:none;cursor:pointer;color:var(--light);font-size:13px;padding:2px 6px;border-radius:4px;hover:background:var(--bg)"
+            title="移除">移除</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    const legend = tab === 'bos'
+      ? '綠色建議購買 = 進場訊號出現 · 橘色等待 = 持續觀察'
+      : tab === 'dgm'
+      ? '進場時機 >= 7/11 表示買入條件成立'
+      : '點重新整理取得最新報價';
+
+    body.innerHTML = `
+      <div class="table-wrap" style="padding:0 0 4px">
+        <table>
+          <thead><tr>
+            <th>Ticker</th><th>Company</th><th>Price</th><th>Change</th>
+            ${extraHeader}
+            <th></th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--light);padding:8px 16px 12px;border-top:1px solid var(--border)">${legend}</div>`;
+  } catch(e) {
+    console.error(e);
+    body.innerHTML = `<div style="padding:20px;text-align:center;color:var(--light);font-size:13px">載入失敗：${e.message}</div>`;
+  }
+}
+
+async function removeFromScreenerWatchlist(symbol, btn) {
+  btn.disabled = true;
+  try {
+    if (DEMO_MODE) {
+      _screenerWatchlistDemo = _screenerWatchlistDemo.filter(w => w.symbol !== symbol);
+    } else {
+      const headers = {};
+      if (API_KEY) headers['X-API-Key'] = API_KEY;
+      await fetch(`${API_BASE}/api/watchlist/${symbol}`, { method:'DELETE', headers });
+    }
+    loadScreenerWatchlist();
+    showToast(`${symbol} 已從觀察清單移除`);
+  } catch(e) {
+    btn.disabled = false;
+    showToast(`移除失敗：${e.message}`, 'error');
+  }
+}
+
+// ── SCREENER TAB SWITCH ────────────────────────────────────────
+let _currentScreenerTab = 'general';
+
+function switchScreenerTab(mode) {
+  _currentScreenerTab = mode;
+  ['general','bos','dgm'].forEach(m => {
+    document.getElementById('stab-'+m).classList.toggle('active', m === mode);
+    document.getElementById('smode-'+m).classList.toggle('active', m === mode);
+  });
+  loadScreenerWatchlist();
+}
+
+// ── BOS 篩選 ──────────────────────────────────────────────────
+
+// 顏色對照
+const BOS_VERDICT_TAG = {
+  '潛力股':   'tag-purple',
+  '繼續觀察': 'tag-gray',
+  '不建議':   'tag-red',
+};
+const BOS_ENTRY_TAG = {
+  '建議購買':       'tag-green',
+  '等待更好進場點': 'tag-amber',
+  '暫不考慮':       'tag-gray',
+};
+const BOS_MOAT_COLOR = { '強':'var(--green)', '中':'var(--amber)', '弱':'var(--red)' };
+const BOS_TREND_COLOR = { '上升':'var(--green)', '穩定':'var(--amber)', '下降':'var(--red)' };
+
+function _bosScoreColor(s) {
+  if (s >= 8) return 'var(--green)';
+  if (s >= 6) return 'var(--amber)';
+  return 'var(--red)';
+}
+
+// 全域資料暫存，供觀察清單 tab-aware 顯示使用
+const _screenerDataStore = {};
+
+function _bosMiniSparkline(values, color) {
+  if (!values || values.length < 2) return '';
+  const pts = [...values].reverse(); // oldest first (left → right)
+  const min = Math.min(...pts), max = Math.max(...pts);
+  const range = max - min || 0.1;
+  const W = 56, H = 22, P = 2;
+  const coords = pts.map((v, i) => {
+    const x = (P + (i / (pts.length - 1)) * (W - P*2)).toFixed(1);
+    const y = (P + (1 - (v - min) / range) * (H - P*2)).toFixed(1);
+    return `${x},${y}`;
+  }).join(' ');
+  // fill area under the line
+  const first = pts[0], last = pts[pts.length-1];
+  const x0 = P, x1 = (W - P).toFixed(1);
+  const y0 = (P + (1 - (first - min) / range) * (H - P*2)).toFixed(1);
+  const y1 = (P + (1 - (last - min) / range) * (H - P*2)).toFixed(1);
+  const fillPoly = `${x0},${H} ${coords} ${x1},${H}`;
+  return `<svg width="${W}" height="${H}" style="display:block;overflow:visible">
+    <polygon points="${fillPoly}" fill="${color}" opacity="0.08"/>
+    <polyline points="${coords}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function renderBosRow(s, idx) {
+  const scoreColor = _bosScoreColor(s.bos_score || 0);
+  const fillPct    = Math.min((s.bos_score || 0) * 10, 100);
+  const entryTag   = BOS_ENTRY_TAG[s.entry_signal]  || 'tag-gray';
+  const moatColor  = BOS_MOAT_COLOR[s.competitive_moat]  || 'var(--mid)';
+  const trendColor = BOS_TREND_COLOR[s.net_margin_trend] || 'var(--mid)';
+  const bdId = `bos-bd-${idx}`;
+  const nameEsc = (s.name||s.symbol).replace(/'/g,"\\'").replace(/"/g,'\\"');
+
+  const netMargins = (s.net_margins_4yr || []).map(v => v != null ? v.toFixed(1)+'%' : '—').join(' → ');
+  const sparkline  = _bosMiniSparkline(s.net_margins_4yr, trendColor);
+  const strengths = (s.strengths || []).map(t =>
+    `<div class="bos-list-item"><span style="color:var(--green);font-weight:700;margin-right:3px">+</span>${t}</div>`
+  ).join('');
+  const risks = (s.risks || []).map(t =>
+    `<div class="bos-list-item"><span style="color:var(--red);font-weight:700;margin-right:3px">-</span>${t}</div>`
+  ).join('');
+  const hotBadge = s.is_hot_concept ? `<span class="tag tag-red" style="font-size:10px;margin-left:4px">概念股風險</span>` : '';
+
+  // BOS 六大原則個別評分
+  const epsPts   = (s.eps_growth_pct||0) > 10 ? 2 : (s.eps_growth_pct||0) > 0 ? 1 : -1;
+  const revPts   = (s.revenue_growth_pct||0) > 10 ? 2 : (s.revenue_growth_pct||0) > 0 ? 1 : 0;
+  const trendPts = s.net_margin_trend==='上升' ? 2 : s.net_margin_trend==='穩定' ? 1 : (s.net_margin_trend==='下降' ? -1 : 0);
+  const moatPts  = s.competitive_moat==='強' ? 2 : s.competitive_moat==='中' ? 1 : 0;
+  const hotPts   = s.is_hot_concept ? -2 : 1;
+  const roePts   = (s.roe||0) > 20 ? 2 : (s.roe||0) > 15 ? 1 : 0;
+  function ptColor(p) { return p > 0 ? 'var(--green)' : p < 0 ? 'var(--red)' : 'var(--light)'; }
+  function ptLabel(p) { return p > 0 ? '+'+p : String(p); }
+
+  const principlesHtml = `
+    <div class="dgm-bd-item" style="align-items:center">
+      <span class="dgm-bd-name">1. 淨利率趨勢</span>
+      <span class="dgm-bd-note" style="display:flex;align-items:center;gap:6px">
+        ${_bosMiniSparkline(s.net_margins_4yr, trendColor)}
+        <span style="font-size:10px;color:var(--light)">${(s.net_margins_4yr||[]).length ? s.net_margins_4yr[s.net_margins_4yr.length-1].toFixed(1)+'% → '+s.net_margins_4yr[0].toFixed(1)+'%' : '—'}</span>
+      </span>
+      <span class="dgm-bd-pts" style="color:${trendColor}">${s.net_margin_trend || '—'} (${ptLabel(trendPts)})</span>
+    </div>
+    <div class="dgm-bd-item">
+      <span class="dgm-bd-name">2. EPS 穩定成長</span>
+      <span class="dgm-bd-note">${s.eps_growth_pct != null ? (s.eps_growth_pct>=0?'+':'')+s.eps_growth_pct.toFixed(1)+'%' : '—'}</span>
+      <span class="dgm-bd-pts" style="color:${ptColor(epsPts)}">${ptLabel(epsPts)}</span>
+    </div>
+    <div class="dgm-bd-item">
+      <span class="dgm-bd-name">3. 營收成長</span>
+      <span class="dgm-bd-note">${s.revenue_growth_pct != null ? (s.revenue_growth_pct>=0?'+':'')+s.revenue_growth_pct.toFixed(1)+'%' : '—'}</span>
+      <span class="dgm-bd-pts" style="color:${ptColor(revPts)}">${ptLabel(revPts)}</span>
+    </div>
+    <div class="dgm-bd-item">
+      <span class="dgm-bd-name">4. 護城河強度</span>
+      <span class="dgm-bd-note" style="color:${moatColor}">${s.competitive_moat || '—'}</span>
+      <span class="dgm-bd-pts" style="color:${ptColor(moatPts)}">${ptLabel(moatPts)}</span>
+    </div>
+    <div class="dgm-bd-item">
+      <span class="dgm-bd-name">5. 非熱門概念股</span>
+      <span class="dgm-bd-note">${s.is_hot_concept ? '概念股風險' : '符合標準'}</span>
+      <span class="dgm-bd-pts" style="color:${ptColor(hotPts)}">${ptLabel(hotPts)}</span>
+    </div>
+    <div class="dgm-bd-item">
+      <span class="dgm-bd-name">6. 財務健康 ROE</span>
+      <span class="dgm-bd-note">${s.roe != null ? s.roe.toFixed(1)+'%' : '—'} ｜ P/E ${s.pe_ratio ? s.pe_ratio.toFixed(1) : '—'}</span>
+      <span class="dgm-bd-pts" style="color:${ptColor(roePts)}">${ptLabel(roePts)}</span>
+    </div>`;
+
+  _screenerDataStore[s.symbol] = { source: 'BOS', data: s };
+
+  return `
+<tr onclick="toggleBosBd('${bdId}',this)" style="cursor:pointer">
+  <td><span class="ticker">${s.symbol}</span>${hotBadge}</td>
+  <td>
+    <div class="co-name">${s.name || s.symbol}</div>
+    <div class="co-sector">${s.sector || ''}</div>
+  </td>
+  <td>${s.price ? '$'+s.price.toFixed(2) : '—'}</td>
+  <td>${s.pe_ratio ? s.pe_ratio.toFixed(1) : '—'}</td>
+  <td>${s.roe != null ? s.roe.toFixed(1)+'%' : '—'}</td>
+  <td>
+    <div class="dgm-score-wrap">
+      <div class="dgm-score-bar">
+        <div class="dgm-score-fill" style="width:${fillPct}%;background:${scoreColor}"></div>
+      </div>
+      <span class="dgm-score-val" style="color:${scoreColor}">${s.bos_score ?? '—'}/10</span>
+    </div>
+  </td>
+  <td>
+    <div style="display:flex;flex-direction:column;gap:2px;align-items:flex-start">
+      <strong style="color:${trendColor};font-size:11px">${s.net_margin_trend || '—'}</strong>
+      ${sparkline}
+    </div>
+  </td>
+  <td><strong style="color:${moatColor}">${s.competitive_moat || '—'}</strong></td>
+  <td><span class="tag ${entryTag}">${s.entry_signal || '—'}</span></td>
+  <td><button class="expand-btn" title="查看詳細">▼</button></td>
+</tr>
+<tr id="${bdId}" style="display:none">
+  <td colspan="10" style="padding:0;border-bottom:1px solid var(--border)">
+    <div class="dgm-breakdown open">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.06em">BOS 六大原則評估</div>
+        <span class="tag ${BOS_VERDICT_TAG[s.verdict]||'tag-gray'}" style="font-size:10px">${s.verdict || '—'}</span>
+      </div>
+      <div class="dgm-bd-grid" style="margin-bottom:14px">${principlesHtml}</div>
+      <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">護城河分析（AI）</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div>
+          <div class="bos-list-title strength">優勢</div>
+          ${strengths || '<div class="bos-list-item" style="color:var(--light)">—</div>'}
+        </div>
+        <div>
+          <div class="bos-list-title risk">風險</div>
+          ${risks || '<div class="bos-list-item" style="color:var(--light)">—</div>'}
+        </div>
+      </div>
+      ${s.summary ? `<div class="bos-summary" style="margin-bottom:10px">${s.summary}</div>` : ''}
+      <div style="display:flex;justify-content:flex-end">
+        <button class="bos-add-btn"
+          onclick="event.stopPropagation();addToWatchlist('${s.symbol}','${nameEsc}',this,'BOS')">
+          加入關注
+        </button>
+      </div>
+    </div>
+  </td>
+</tr>`;
+}
+
+function toggleBosBd(id, row) {
+  const bd = document.getElementById(id);
+  if (!bd) return;
+  const open = bd.style.display !== 'none';
+  bd.style.display = open ? 'none' : 'table-row';
+  const btn = row.querySelector('.expand-btn');
+  if (btn) btn.textContent = open ? '▼' : '▲';
+}
+
+async function runBosScreen() {
+  const raw     = document.getElementById('bos-symbols').value.trim();
+  const symbols = raw ? raw.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean) : [];
+  const loading = document.getElementById('bosLoading');
+  const tbody   = document.getElementById('bosResults');
+  const count   = document.getElementById('bosCount');
+
+  loading.style.display = 'flex';
+  tbody.innerHTML = '';
+  count.textContent = '—';
+
+  try {
+    if (DEMO_MODE) {
+      await new Promise(r => setTimeout(r, 1200));
+      const demoData = [
+        { symbol:'AAPL', name:'Apple Inc', sector:'Technology', price:189.20, pe_ratio:29.4, roe:147.8, eps_growth_pct:8.2, revenue_growth_pct:5.1, net_margin_pct:26.4, net_margins_4yr:[26.4,25.3,25.9,21.7], bos_score:8, verdict:'潛力股', entry_signal:'等待更好進場點', strengths:['強大品牌護城河','持續股份回購','高ROE產出效率'], risks:['估值偏高PE近30','成長趨緩'], net_margin_trend:'穩定', competitive_moat:'強', is_hot_concept:false, summary:'蘋果生態黏著度高，財務極健康，等待估值回落後建倉更理想' },
+        { symbol:'MSFT', name:'Microsoft Corp', sector:'Technology', price:415.80, pe_ratio:35.1, roe:36.4, eps_growth_pct:12.8, revenue_growth_pct:17.0, net_margin_pct:34.1, net_margins_4yr:[34.1,33.2,31.0,28.2], bos_score:9, verdict:'潛力股', entry_signal:'建議購買', strengths:['雲端Azure強勁成長','淨利率持續上升','AI整合競爭力顯著'], risks:['估值稍高'], net_margin_trend:'上升', competitive_moat:'強', is_hot_concept:false, summary:'基本面優秀，淨利率持續上升，AI佈局明確，為價值投資首選' },
+        { symbol:'META', name:'Meta Platforms', sector:'Technology', price:510.60, pe_ratio:26.4, roe:32.8, eps_growth_pct:21.4, revenue_growth_pct:22.0, net_margin_pct:29.0, net_margins_4yr:[29.0,23.0,14.5,29.2], bos_score:7, verdict:'潛力股', entry_signal:'等待更好進場點', strengths:['廣告收入大幅回升','成本效率大幅提升'], risks:['VR/元宇宙持續燒錢','監管風險'], net_margin_trend:'上升', competitive_moat:'強', is_hot_concept:false, summary:'廣告業務回暖，利潤大幅改善，但元宇宙投入仍為不確定因素' },
+        { symbol:'NVDA', name:'NVIDIA Corp', sector:'Technology', price:875.50, pe_ratio:45.2, roe:98.3, eps_growth_pct:168.0, revenue_growth_pct:122.0, net_margin_pct:55.0, net_margins_4yr:[55.0,16.0,26.0,26.0], bos_score:6, verdict:'繼續觀察', entry_signal:'等待更好進場點', strengths:['AI晶片市場絕對龍頭','利潤率爆發式成長'], risks:['估值極高PE>40','熱門概念股波動大','淨利率歷史波動大'], net_margin_trend:'上升', competitive_moat:'強', is_hot_concept:true, summary:'AI景氣週期性風險高，BOS原則下熱門概念股需等估值合理後再考慮' },
+      ];
+      const filtered = symbols.length ? demoData.filter(d => symbols.includes(d.symbol)) : demoData;
+      tbody.innerHTML = filtered.map((r,i) => renderBosRow(r,i)).join('');
+      count.textContent = `${filtered.length} 支股票`;
+    } else {
+      const sym_param = symbols.length ? `?symbols=${symbols.join(',')}` : '';
+      const data = await api(`/api/screener/bos${sym_param}`);
+      if (!data || !data.results) throw new Error('No results');
+      count.textContent = `${data.results.length} 支股票`;
+      if (data.results.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--light)">沒有找到結果，請輸入有效的股票代號</td></tr>';
+      } else {
+        tbody.innerHTML = data.results.map((r,i) => renderBosRow(r,i)).join('');
+      }
+    }
+  } catch(e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--red)">${e.message}</td></tr>`;
+  } finally {
+    loading.style.display = 'none';
+  }
+}
+
+function resetBosScreen() {
+  document.getElementById('bos-symbols').value = '';
+  document.getElementById('bosResults').innerHTML = '';
+  document.getElementById('bosCount').textContent = '—';
+}
+
+// ── DGM 篩選 ──────────────────────────────────────────────────
+
+function _dgmScoreColor(s, max) {
+  const ratio = s / max;
+  if (ratio >= 0.5) return 'var(--green)';
+  if (ratio >= 0.35) return 'var(--amber)';
+  return 'var(--light)';
+}
+
+function renderDgmRow(s, idx, opts = {}) {
+  const fbColor = _dgmScoreColor(s.freebirds_score, s.freebirds_max || 14);
+  const tColor  = _dgmScoreColor(s.timing_score, s.timing_max || 11);
+  const fbPct   = Math.round((s.freebirds_score / (s.freebirds_max || 14)) * 100);
+  const tPct    = Math.round((s.timing_score / (s.timing_max || 11)) * 100);
+
+  const recMap = { '建議購買':'tag-green', '潛力股':'tag-blue', '繼續觀察':'tag-gray' };
+  const recTag = recMap[s.recommendation] || 'tag-gray';
+  const bdId   = `dgm-bd-${idx}`;
+
+  // 整合 FREEBIRDS + Timing breakdown
+  const allBd = { ...s.freebirds_breakdown, ...s.timing_breakdown };
+  const bdHtml = Object.entries(allBd).map(([k, v]) => {
+    const ptsColor = v.score > 0 ? 'var(--green)' : v.score < 0 ? 'var(--red)' : 'var(--light)';
+    return `
+      <div class="dgm-bd-item">
+        <span class="dgm-bd-name">${k.replace(/_/g,' ')}</span>
+        <span class="dgm-bd-note">${v.note || ''}</span>
+        <span class="dgm-bd-pts" style="color:${ptsColor}">${v.score > 0 ? '+'+v.score : v.score}</span>
+      </div>`;
+  }).join('');
+
+  const dg5 = s['5yr_dg_rate'] != null ? s['5yr_dg_rate'].toFixed(1)+'%' : '—';
+  const consec = s.consecutive_years || 0;
+
+  _screenerDataStore[s.symbol] = { source: 'DGM', data: s };
+
+  return `
+<tr onclick="toggleDgmBd('${bdId}', this)" style="cursor:pointer">
+  <td><span class="ticker">${s.symbol}</span></td>
+  <td>
+    <div class="co-name">${s.name || s.symbol}</div>
+    <div class="co-sector">${s.sector || ''}</div>
+  </td>
+  <td>${s.price ? '$'+s.price.toFixed(2) : '—'}</td>
+  <td>${s.dividend_yield != null ? s.dividend_yield.toFixed(2)+'%' : '—'}
+    ${dg5 !== '—' ? `<div style="font-size:10px;color:var(--light)">5yr +${dg5}</div>` : ''}
+  </td>
+  <td>
+    <span class="tag ${consec >= 25 ? 'tag-purple' : consec >= 10 ? 'tag-blue' : consec >= 5 ? 'tag-green' : 'tag-gray'}"
+          style="font-size:10px">${consec} 年</span>
+  </td>
+  <td>
+    <div class="dgm-score-wrap">
+      <div class="dgm-score-bar">
+        <div class="dgm-score-fill" style="width:${fbPct}%;background:${fbColor}"></div>
+      </div>
+      <span class="dgm-score-val" style="color:${fbColor}">${s.freebirds_score}/${s.freebirds_max||14}</span>
+    </div>
+    ${s.is_quality ? '<div style="font-size:10px;color:var(--green);margin-top:2px">品質達標</div>' : ''}
+  </td>
+  <td>
+    <div class="dgm-score-wrap">
+      <div class="dgm-score-bar">
+        <div class="dgm-score-fill" style="width:${tPct}%;background:${tColor}"></div>
+      </div>
+      <span class="dgm-score-val" style="color:${tColor}">${s.timing_score}/${s.timing_max||11}</span>
+    </div>
+    ${s.is_buy ? '<div style="font-size:10px;color:var(--green);margin-top:2px">進場時機佳</div>' : ''}
+  </td>
+  <td>
+    <span class="tag ${recTag}">${s.recommendation}</span>
+    <div style="margin-top:6px">
+      <button class="bos-add-btn"
+        onclick="addToWatchlist('${s.symbol}','${(s.name||s.symbol).replace(/'/g,"\\'").replace(/"/g,'\\"')}',this,'DGM')">
+        加入關注
+      </button>
+    </div>
+  </td>
+  <td>
+    <button class="expand-btn" title="查看詳細評分">▼</button>
+  </td>
+</tr>
+<tr id="${bdId}" style="display:none">
+  <td colspan="9" style="padding:0;border-bottom:1px solid var(--border)">
+    <div class="dgm-breakdown open">
+      <div style="font-size:11px;font-weight:700;color:var(--mid);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">詳細評分明細</div>
+      <div class="dgm-bd-grid">${bdHtml}</div>
+    </div>
+  </td>
+</tr>`;
+}
+
+function toggleDgmBd(id, row) {
+  const bd  = document.getElementById(id);
+  const btn = row.querySelector('.expand-btn');
+  if (!bd) return;
+  const open = bd.style.display !== 'none';
+  bd.style.display = open ? 'none' : 'table-row';
+  if (btn) btn.textContent = open ? '▼' : '▲';
+}
+
+async function runDgmScreen() {
+  const raw     = document.getElementById('dgm-symbols').value.trim();
+  const symbols = raw ? raw.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean) : [];
+  const loading = document.getElementById('dgmLoading');
+  const tbody   = document.getElementById('dgmTbody');
+  const count   = document.getElementById('dgmCount');
+
+  loading.style.display = 'flex';
+  tbody.innerHTML = '';
+  count.textContent = '—';
+
+  try {
+    let results;
+    if (DEMO_MODE) {
+      await new Promise(r => setTimeout(r, 900));
+      results = [
+        { symbol:'KO', name:'Coca-Cola Co', sector:'Consumer Defensive', price:60.10, dividend_yield:3.10, consecutive_years:62, '5yr_dg_rate':4.2, freebirds_score:9.5, freebirds_max:14, is_quality:true, timing_score:7.5, timing_max:11, is_buy:true, recommendation:'建議購買', freebirds_breakdown:{'D_div_growth':{score:0.5,value:'4.2%',note:'>6%未達但連續62年'},'E_quality':{score:4,value:'62年',note:'Dividend King'}}, timing_breakdown:{'Y_vs_inflation':{score:1,value:'3.1%',note:'>4%未達但接近'},'C_chowder':{score:0,value:'7.3%',note:'<15%'},'P_piotroski':{score:1,value:'6/9',note:'>5'}} },
+        { symbol:'MSFT', name:'Microsoft Corp', sector:'Technology', price:415.80, dividend_yield:0.74, consecutive_years:21, '5yr_dg_rate':10.2, freebirds_score:8.5, freebirds_max:14, is_quality:true, timing_score:4.0, timing_max:11, is_buy:false, recommendation:'潛力股', freebirds_breakdown:{'D_div_growth':{score:1,value:'10.2%',note:'>10%'},'E_quality':{score:2,value:'21年',note:'Dividend Contender'},'R_roe':{score:1,value:'36.4%',note:'>15%'}}, timing_breakdown:{'Y_vs_inflation':{score:0,value:'0.74%',note:'<4%'},'P_pe':{score:0,value:'35.1',note:'≥15'}} },
+        { symbol:'NVDA', name:'NVIDIA Corp', sector:'Technology', price:875.50, dividend_yield:0.03, consecutive_years:3, '5yr_dg_rate':18.0, freebirds_score:3.0, freebirds_max:14, is_quality:false, timing_score:1.5, timing_max:11, is_buy:false, recommendation:'繼續觀察', freebirds_breakdown:{'D_div_growth':{score:1,value:'18%',note:'>10%'},'E_quality':{score:0,value:'3年',note:'<5年'}, 'I_income_payout':{score:0,value:'N/A',note:'幾乎無股息'}}, timing_breakdown:{'Y_vs_inflation':{score:0,value:'0.03%',note:'<4%'},'P_pe':{score:0,value:'45.2',note:'≥15'}} },
+      ];
+      const filtered = symbols.length ? results.filter(r=>symbols.includes(r.symbol)) : results;
+      tbody.innerHTML = filtered.map((r,i)=>renderDgmRow(r,i)).join('');
+      count.textContent = `${filtered.length} 支股票`;
+    } else {
+      const sym_param = symbols.length ? `?symbols=${symbols.join(',')}` : '';
+      const data = await api(`/api/screener/dgm${sym_param}`);
+      if (!data || !data.results) throw new Error('No results');
+      count.textContent = `${data.results.length} 支股票`;
+      if (data.results.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--light)">沒有找到股息股資料</td></tr>';
+      } else {
+        tbody.innerHTML = data.results.map((r,i)=>renderDgmRow(r,i)).join('');
+      }
+    }
+  } catch(e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red)">${e.message}</td></tr>`;
+  } finally {
+    loading.style.display = 'none';
+  }
+}
+
+function resetDgmScreen() {
+  document.getElementById('dgm-symbols').value = '';
+  document.getElementById('dgmTbody').innerHTML = '';
+  document.getElementById('dgmCount').textContent = '—';
+}
+
+// ── TOAST 通知 ─────────────────────────────────────────────────
+let _toastTimer;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? 'var(--red)' : type === 'warn' ? 'var(--amber)' : 'var(--dark)';
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ── 加入關注清單 ────────────────────────────────────────────────
+async function addToWatchlist(symbol, name, btn, source = 'AI 推薦') {
+  if (DEMO_MODE) {
+    if (_screenerWatchlistDemo.some(w => w.symbol === symbol)) {
+      showToast(`${symbol} 已在觀察清單`, 'warn');
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = '已加入';
+    btn.classList.add('added');
+    const stored = _screenerDataStore[symbol] || {};
+    _screenerWatchlistDemo.push({
+      symbol, name,
+      notes: `${source} - ${name}`,
+      current_price: stored.data?.price || null,
+      change_pct: 0,
+      signal: stored.data?.entry_signal || stored.data?.recommendation || '觀察',
+      _source: source,
+      _data: stored.data || {},
+    });
+    loadScreenerWatchlist();
+    showToast(`${symbol} 已加入觀察清單`);
+    return;
+  }
+  try {
+    btn.disabled = true;
+    btn.textContent = '加入中...';
+    await api('/api/watchlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbol: symbol, notes: `${source} - ${name}` }),
+    });
+    btn.textContent = '已加入';
+    btn.classList.add('added');
+    showToast(`${symbol} 已加入觀察清單`);
+    loadScreenerWatchlist();
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '加入關注';
+    const msg = e.message.includes('409') ? `${symbol} 已在關注清單` : `加入失敗：${e.message}`;
+    showToast(msg, e.message.includes('409') ? 'warn' : 'error');
+  }
+}
+
+// ── BOS AI 推薦 ────────────────────────────────────────────────
+
+// Demo 假資料（BOS AI 推薦模式）
+const DEMO_BOS_DISCOVER_FLAT = [
+  { symbol:'MSFT', name:'Microsoft Corp', sector:'Technology', price:415.80, pe_ratio:35.1, roe:36.4, eps_growth_pct:12.8, revenue_growth_pct:17.0, net_margin_pct:34.1, net_margins_4yr:[34.1,33.2,31.0,28.2], beta:0.92, dividend_yield:0.74, bos_score:9, verdict:'潛力股', entry_signal:'建議購買', strengths:['雲端Azure強勁成長','淨利率持續上升','AI整合競爭力顯著'], risks:['估值稍高'], net_margin_trend:'上升', competitive_moat:'強', is_hot_concept:false, summary:'基本面優秀，淨利率持續上升，AI佈局明確，為價值投資首選' },
+  { symbol:'V',    name:'Visa Inc', sector:'Financial Services', price:279.60, pe_ratio:31.4, roe:46.2, eps_growth_pct:15.4, net_margin_pct:53.8, net_margins_4yr:[53.8,51.2,49.1,47.3], bos_score:9, verdict:'潛力股', entry_signal:'等待更好進場點', strengths:['支付網路護城河','淨利率超50%','資本輕'], risks:['估值偏高'], net_margin_trend:'上升', competitive_moat:'強', is_hot_concept:false, summary:'支付基礎設施壟斷，全球消費持續推動成長' },
+  { symbol:'COST', name:'Costco Wholesale', sector:'Consumer Defensive', price:782.40, pe_ratio:52.1, roe:31.7, eps_growth_pct:11.2, net_margin_pct:2.9, net_margins_4yr:[2.9,2.7,2.6,2.5], bos_score:8, verdict:'潛力股', entry_signal:'等待更好進場點', strengths:['會員制護城河','極低成本結構','持續成長中'], risks:['估值偏高PE>50'], net_margin_trend:'上升', competitive_moat:'強', is_hot_concept:false, summary:'會員制黏著度極高，長期複利首選，等待估值修正' },
+  { symbol:'AAPL', name:'Apple Inc', sector:'Technology', price:189.20, pe_ratio:29.4, roe:147.8, eps_growth_pct:8.2, net_margin_pct:26.4, net_margins_4yr:[26.4,25.3,25.9,21.7], bos_score:8, verdict:'潛力股', entry_signal:'等待更好進場點', strengths:['強大品牌護城河','持續股份回購','高ROE產出效率'], risks:['估值偏高','成長趨緩'], net_margin_trend:'穩定', competitive_moat:'強', is_hot_concept:false, summary:'蘋果生態黏著度高，財務極健康，等待估值回落後建倉更理想' },
+];
+
+async function runBosDiscover() {
+  const loading = document.getElementById('bosLoading');
+  const tbody   = document.getElementById('bosResults');
+  const count   = document.getElementById('bosCount');
+  loading.style.display = 'flex';
+  tbody.innerHTML = '';
+  count.textContent = '—';
+  document.getElementById('bosLoadingText').textContent = 'AI 正在推薦 BOS 品質股 · 約需 30-60 秒...';
+
+  try {
+    if (DEMO_MODE) {
+      await new Promise(r => setTimeout(r, 1500));
+      tbody.innerHTML = DEMO_BOS_DISCOVER_FLAT.map((r,i) => renderBosRow(r,i)).join('');
+      count.textContent = `AI 推薦 ${DEMO_BOS_DISCOVER_FLAT.length} 支品質股`;
+    } else {
+      const data = await api('/api/screener/bos/discover');
+      if (!data || !data.results) throw new Error('No results returned');
+      const n = data.results.length;
+      if (n === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--light)">沒有找到結果</td></tr>';
+      } else {
+        tbody.innerHTML = data.results.map((r,i) => renderBosRow(r,i)).join('');
+        count.textContent = `AI 推薦 ${n} 支品質股`;
+      }
+    }
+  } catch(e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--red)">${e.message}</td></tr>`;
+  } finally {
+    loading.style.display = 'none';
+    document.getElementById('bosLoadingText').textContent = '分析中...';
+  }
+}
+
+// ── DGM AI 推薦 ────────────────────────────────────────────────
+// Demo 假資料（DGM AI 推薦模式）
+const DEMO_DGM_DISCOVER = [
+  { symbol:'KO', name:'Coca-Cola Co', sector:'Consumer Defensive', price:60.10, dividend_yield:3.10, consecutive_years:62, '5yr_dg_rate':4.2, freebirds_score:9.5, freebirds_max:14, is_quality:true, timing_score:7.5, timing_max:11, is_buy:true, recommendation:'建議購買', freebirds_breakdown:{'D_div_growth':{score:0.5,value:'4.2%',note:'>6%未達但連續62年'},'E_quality':{score:4,value:'62年',note:'Dividend King'}}, timing_breakdown:{'Y_vs_inflation':{score:1,value:'3.1%',note:'>4%接近'},'P_piotroski':{score:1,value:'6/9',note:'>5'}} },
+  { symbol:'JNJ', name:'Johnson & Johnson', sector:'Healthcare', price:158.40, dividend_yield:3.25, consecutive_years:61, '5yr_dg_rate':5.8, freebirds_score:10.0, freebirds_max:14, is_quality:true, timing_score:8.0, timing_max:11, is_buy:true, recommendation:'建議購買', freebirds_breakdown:{'D_div_growth':{score:1,value:'5.8%',note:'>5%'},'E_quality':{score:4,value:'61年',note:'Dividend King'},'R_roe':{score:1,value:'24.1%',note:'>15%'}}, timing_breakdown:{'Y_vs_inflation':{score:1,value:'3.25%',note:'接近4%'},'P_pe':{score:1,value:'14.8',note:'<15'}} },
+  { symbol:'MSFT', name:'Microsoft Corp', sector:'Technology', price:415.80, dividend_yield:0.74, consecutive_years:21, '5yr_dg_rate':10.2, freebirds_score:8.5, freebirds_max:14, is_quality:true, timing_score:4.0, timing_max:11, is_buy:false, recommendation:'潛力股', freebirds_breakdown:{'D_div_growth':{score:1,value:'10.2%',note:'>10%'},'E_quality':{score:2,value:'21年',note:'Dividend Contender'},'R_roe':{score:1,value:'36.4%',note:'>15%'}}, timing_breakdown:{'Y_vs_inflation':{score:0,value:'0.74%',note:'<4%'},'P_pe':{score:0,value:'35.1',note:'≥15'}} },
+];
+
+async function runDgmDiscover() {
+  const loading = document.getElementById('dgmLoading');
+  const tbody   = document.getElementById('dgmTbody');
+  const count   = document.getElementById('dgmCount');
+  loading.style.display = 'flex';
+  tbody.innerHTML = '';
+  count.textContent = '—';
+
+  try {
+    if (DEMO_MODE) {
+      await new Promise(r => setTimeout(r, 1200));
+      tbody.innerHTML = DEMO_DGM_DISCOVER.map((r, i) => renderDgmRow(r, i, { showWatchlistBtn: true })).join('');
+      count.textContent = `AI 推薦 ${DEMO_DGM_DISCOVER.length} 支股息股`;
+    } else {
+      const data = await api('/api/screener/dgm/discover');
+      if (!data || !data.results) throw new Error('No results returned');
+      const n = data.results.length;
+      count.textContent = `AI 推薦 ${n} 支股息股`;
+      if (n === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--light)">AI 未找到合適的股息股</td></tr>';
+      } else {
+        tbody.innerHTML = data.results.map((r, i) => renderDgmRow(r, i, { showWatchlistBtn: true })).join('');
+      }
+    }
+  } catch(e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red)">${e.message}</td></tr>`;
+  } finally {
+    loading.style.display = 'none';
+  }
+}
+</script>
+<!-- Toast 通知 -->
+<div class="toast" id="toast"></div>
+</body>
+</html>
