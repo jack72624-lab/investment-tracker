@@ -290,8 +290,17 @@ tr:hover td{background:var(--bg)}
 .bos-lists{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .bos-list-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
 .bos-list-title.strength{color:var(--green)}.bos-list-title.risk{color:var(--red)}
-.bos-list-item{font-size:11px;color:var(--dark);padding:2px 0;display:flex;gap:4px;align-items:flex-start;line-height:1.4}
+.bos-list-item{font-size:11px;color:var(--dark);padding:2px 0;display:flex;gap:4px;align-items:flex-start;line-height:1.4;word-break:break-word;overflow-wrap:anywhere}
 .bos-summary{background:var(--blue-lt);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--dark);border-left:3px solid var(--blue);line-height:1.5}
+/* ── SECTOR DISCOVER CARDS ────────────────── */
+.sector-discover-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;padding:16px}
+.sector-card{border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.sector-card-hdr{padding:9px 14px;background:var(--accent);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.sector-card-title{font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.04em}
+.sector-stock-row{display:grid;grid-template-columns:44px 1fr 38px 70px;gap:6px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--border);font-size:11px;cursor:pointer;transition:background .1s}
+.sector-stock-row:last-child{border-bottom:none}
+.sector-stock-row:hover{background:var(--accent)}
+@media(max-width:640px){.sector-discover-grid{grid-template-columns:1fr;padding:10px}}
 
 /* ── DGM TABLE ──────────────────────────── */
 .dgm-score-wrap{display:flex;align-items:center;gap:6px}
@@ -567,7 +576,10 @@ tr:hover td{background:var(--bg)}
               AI 分析
             </button>
             <button class="btn btn-primary" onclick="runBosDiscover()" style="height:32px;background:linear-gradient(135deg,#7C3AED,#006FFF)">
-              AI 推薦
+              AI 推薦（全市場）
+            </button>
+            <button class="btn btn-primary" onclick="runBosDiscoverSectors()" style="height:32px;background:linear-gradient(135deg,#0073BB,#16A34A)">
+              分領域各5名
             </button>
             <button class="btn btn-ghost" onclick="resetBosScreen()" style="height:32px">Reset</button>
           </div>
@@ -585,7 +597,7 @@ tr:hover td{background:var(--bg)}
         </div>
         <div style="position:relative">
           <div class="loading-overlay" id="bosLoading" style="display:none;min-height:80px"><div class="loading-spinner"></div><span id="bosLoadingText" style="font-size:13px;color:var(--mid)">分析中...</span></div>
-          <div class="table-wrap">
+          <div id="bosTableView" class="table-wrap">
             <table id="bosTable"><thead><tr>
               <th>Ticker</th><th>Company</th><th>Price</th><th>P/E</th>
               <th>ROE</th><th>BOS Score</th><th>淨利率趨勢</th><th>護城河</th><th>進場訊號</th><th></th>
@@ -593,6 +605,7 @@ tr:hover td{background:var(--bg)}
             <tbody id="bosResults"></tbody>
             </table>
           </div>
+          <div id="bosSectorView" style="display:none"></div>
         </div>
       </div>
     </div>
@@ -1608,6 +1621,7 @@ function toggleBosBd(id, row) {
 }
 
 async function runBosScreen() {
+  _showBosTableView();
   const raw     = document.getElementById('bos-symbols').value.trim();
   const symbols = raw ? raw.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean) : [];
   const loading = document.getElementById('bosLoading');
@@ -1653,6 +1667,8 @@ function resetBosScreen() {
   document.getElementById('bos-symbols').value = '';
   document.getElementById('bosResults').innerHTML = '';
   document.getElementById('bosCount').textContent = '—';
+  document.getElementById('bosSectorView').innerHTML = '';
+  _showBosTableView();
 }
 
 // ── DGM 篩選 ──────────────────────────────────────────────────
@@ -1870,6 +1886,7 @@ const DEMO_BOS_DISCOVER_FLAT = [
 ];
 
 async function runBosDiscover() {
+  _showBosTableView();
   const loading = document.getElementById('bosLoading');
   const tbody   = document.getElementById('bosResults');
   const count   = document.getElementById('bosCount');
@@ -1897,6 +1914,121 @@ async function runBosDiscover() {
   } catch(e) {
     console.error(e);
     tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--red)">${e.message}</td></tr>`;
+  } finally {
+    loading.style.display = 'none';
+    document.getElementById('bosLoadingText').textContent = '分析中...';
+  }
+}
+
+// ── BOS 分領域 AI 推薦 ─────────────────────────────────────────
+
+const SECTOR_COLORS = {
+  tech:'#7C3AED', healthcare:'#059669', finance:'#0073BB',
+  food:'#D97706', defense:'#64748B', energy:'#DC2626',
+};
+
+const DEMO_BOS_SECTOR_DISCOVER = [
+  { sector_key:'tech', sector_label:'科技 Technology', stocks:[
+    { symbol:'MSFT', name:'Microsoft Corp',       bos_score:9, entry_signal:'建議購買',       price:415.80, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'AAPL', name:'Apple Inc',            bos_score:8, entry_signal:'等待更好進場點', price:189.20, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'GOOGL',name:'Alphabet Inc',         bos_score:8, entry_signal:'等待更好進場點', price:176.40, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'AVGO', name:'Broadcom Inc',         bos_score:7, entry_signal:'等待更好進場點', price:1380.50,competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'TXN',  name:'Texas Instruments',    bos_score:7, entry_signal:'等待更好進場點', price:182.30, competitive_moat:'中', verdict:'潛力股' },
+  ]},
+  { sector_key:'healthcare', sector_label:'醫療保健 Healthcare', stocks:[
+    { symbol:'UNH',  name:'UnitedHealth Group',   bos_score:8, entry_signal:'建議購買',       price:492.60, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'JNJ',  name:'Johnson & Johnson',    bos_score:7, entry_signal:'等待更好進場點', price:158.40, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'ABBV', name:'AbbVie Inc',           bos_score:7, entry_signal:'建議購買',       price:168.20, competitive_moat:'中', verdict:'潛力股' },
+    { symbol:'MDT',  name:'Medtronic',            bos_score:6, entry_signal:'等待更好進場點', price:88.50,  competitive_moat:'中', verdict:'繼續觀察' },
+    { symbol:'ABT',  name:'Abbott Laboratories',  bos_score:7, entry_signal:'等待更好進場點', price:114.80, competitive_moat:'強', verdict:'潛力股' },
+  ]},
+  { sector_key:'finance', sector_label:'金融 Finance', stocks:[
+    { symbol:'V',    name:'Visa Inc',             bos_score:9, entry_signal:'等待更好進場點', price:279.60, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'MA',   name:'Mastercard',           bos_score:9, entry_signal:'等待更好進場點', price:472.30, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'JPM',  name:'JPMorgan Chase',       bos_score:8, entry_signal:'建議購買',       price:198.40, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'AXP',  name:'American Express',     bos_score:7, entry_signal:'等待更好進場點', price:228.70, competitive_moat:'中', verdict:'潛力股' },
+    { symbol:'BRK-B',name:'Berkshire Hathaway',   bos_score:8, entry_signal:'建議購買',       price:438.20, competitive_moat:'強', verdict:'潛力股' },
+  ]},
+  { sector_key:'food', sector_label:'食品消費 Consumer', stocks:[
+    { symbol:'COST', name:'Costco Wholesale',     bos_score:8, entry_signal:'等待更好進場點', price:782.40, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'KO',   name:'Coca-Cola Co',         bos_score:7, entry_signal:'建議購買',       price:60.10,  competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'PEP',  name:'PepsiCo Inc',          bos_score:7, entry_signal:'建議購買',       price:164.80, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'MCD',  name:'McDonald\'s Corp',     bos_score:7, entry_signal:'等待更好進場點', price:298.50, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'WMT',  name:'Walmart Inc',          bos_score:6, entry_signal:'等待更好進場點', price:78.20,  competitive_moat:'中', verdict:'潛力股' },
+  ]},
+  { sector_key:'defense', sector_label:'國防軍工 Defense', stocks:[
+    { symbol:'LMT',  name:'Lockheed Martin',      bos_score:7, entry_signal:'建議購買',       price:462.10, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'RTX',  name:'RTX Corporation',      bos_score:7, entry_signal:'建議購買',       price:124.30, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'GD',   name:'General Dynamics',     bos_score:7, entry_signal:'等待更好進場點', price:312.80, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'NOC',  name:'Northrop Grumman',     bos_score:6, entry_signal:'等待更好進場點', price:472.60, competitive_moat:'中', verdict:'繼續觀察' },
+    { symbol:'TDG',  name:'TransDigm Group',      bos_score:7, entry_signal:'等待更好進場點', price:1364.00,competitive_moat:'強', verdict:'潛力股' },
+  ]},
+  { sector_key:'energy', sector_label:'能源 Energy', stocks:[
+    { symbol:'XOM',  name:'ExxonMobil',           bos_score:7, entry_signal:'建議購買',       price:112.40, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'CVX',  name:'Chevron Corp',         bos_score:7, entry_signal:'建議購買',       price:154.20, competitive_moat:'強', verdict:'潛力股' },
+    { symbol:'COP',  name:'ConocoPhillips',       bos_score:7, entry_signal:'等待更好進場點', price:96.80,  competitive_moat:'中', verdict:'潛力股' },
+    { symbol:'PSX',  name:'Phillips 66',          bos_score:6, entry_signal:'等待更好進場點', price:132.50, competitive_moat:'中', verdict:'繼續觀察' },
+    { symbol:'EOG',  name:'EOG Resources',        bos_score:6, entry_signal:'等待更好進場點', price:124.30, competitive_moat:'中', verdict:'繼續觀察' },
+  ]},
+];
+
+function renderSectorCards(sectors) {
+  const entryColor = { '建議購買':'var(--green)', '等待更好進場點':'var(--amber)', '不建議':'var(--red)' };
+  const moatColor  = { '強':'var(--green)', '中':'var(--amber)', '弱':'var(--red)' };
+
+  return `<div class="sector-discover-grid">${sectors.map(sec => {
+    const color = SECTOR_COLORS[sec.sector_key] || 'var(--blue)';
+    const rows = (sec.stocks || []).slice(0,5).map(s => `
+      <div class="sector-stock-row" onclick="_screenerDataStore['${s.symbol}']&&openBosDetail('${s.symbol}')">
+        <span class="ticker" style="font-size:11px">${s.symbol}</span>
+        <span style="color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name||''}</span>
+        <span style="font-weight:700;color:${s.bos_score>=8?'var(--green)':s.bos_score>=6?'var(--amber)':'var(--light)'};text-align:right">${s.bos_score??'—'}/10</span>
+        <span style="text-align:right"><span style="font-size:10px;font-weight:600;color:${entryColor[s.entry_signal]||'var(--mid)'}">${s.entry_signal||'—'}</span></span>
+      </div>`).join('');
+    return `<div class="sector-card">
+      <div class="sector-card-hdr" style="border-top:3px solid ${color}">
+        <span class="sector-card-title">${sec.sector_label}</span>
+        <span style="font-size:10px;color:var(--light)">${(sec.stocks||[]).length} 支</span>
+      </div>
+      <div style="display:grid;grid-template-columns:44px 1fr 38px 70px;gap:6px;padding:5px 14px 4px;font-size:10px;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)">
+        <span>Ticker</span><span>Company</span><span style="text-align:right">BOS</span><span style="text-align:right">Signal</span>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function _showBosTableView() {
+  document.getElementById('bosTableView').style.display = '';
+  document.getElementById('bosSectorView').style.display = 'none';
+}
+function _showBosSectorView() {
+  document.getElementById('bosTableView').style.display = 'none';
+  document.getElementById('bosSectorView').style.display = '';
+}
+
+async function runBosDiscoverSectors() {
+  const loading = document.getElementById('bosLoading');
+  const count   = document.getElementById('bosCount');
+  loading.style.display = 'flex';
+  document.getElementById('bosLoadingText').textContent = 'AI 正在為各領域推薦品質股 · 約需 60-120 秒...';
+  count.textContent = '—';
+  _showBosSectorView();
+
+  try {
+    if (DEMO_MODE) {
+      await new Promise(r => setTimeout(r, 1800));
+      document.getElementById('bosSectorView').innerHTML = renderSectorCards(DEMO_BOS_SECTOR_DISCOVER);
+      count.textContent = `分領域推薦：6 大板塊 × 5 支`;
+    } else {
+      const data = await api('/api/screener/discover?sectors=tech,healthcare,finance,food,defense,energy');
+      if (!data || !data.results) throw new Error('No results returned');
+      document.getElementById('bosSectorView').innerHTML = renderSectorCards(data.results);
+      count.textContent = `分領域推薦：${data.results.length} 大板塊`;
+    }
+  } catch(e) {
+    console.error(e);
+    document.getElementById('bosSectorView').innerHTML = `<div style="padding:32px;text-align:center;color:var(--red)">${e.message}</div>`;
   } finally {
     loading.style.display = 'none';
     document.getElementById('bosLoadingText').textContent = '分析中...';
