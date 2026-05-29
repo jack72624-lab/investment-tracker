@@ -364,6 +364,32 @@ tr:hover td{background:var(--bg)}
   </div>
 </div>
 
+<!-- 新增/編輯持倉 Modal -->
+<div class="modal-backdrop" id="holdingModal" style="display:none" onclick="if(event.target===this)closeHoldingModal()">
+  <div class="modal">
+    <div class="modal-title" id="holdingModalTitle">新增持倉</div>
+    <div class="modal-sub">輸入股票代號、持股數量和平均成本</div>
+    <div class="modal-field">
+      <div class="modal-label">股票代號</div>
+      <input class="modal-input" id="hm-symbol" placeholder="例：NVDA" style="text-transform:uppercase" onkeydown="if(event.key==='Enter')document.getElementById('hm-shares').focus()">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">持股數量（股）</div>
+      <input class="modal-input" id="hm-shares" type="number" min="0.0001" step="any" placeholder="例：10" onkeydown="if(event.key==='Enter')document.getElementById('hm-cost').focus()">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">平均成本（USD）</div>
+      <input class="modal-input" id="hm-cost" type="number" min="0.01" step="any" placeholder="例：150.00" onkeydown="if(event.key==='Enter')submitHoldingForm()">
+      <div class="modal-hint">加倉時系統會自動計算加權平均成本</div>
+    </div>
+    <div id="holdingModalError" style="display:none;color:var(--red);font-size:12px;margin-top:4px;padding:6px 10px;background:#FEF2F2;border-radius:4px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeHoldingModal()">取消</button>
+      <button class="btn btn-primary" id="holdingModalSubmit" onclick="submitHoldingForm()">新增</button>
+    </div>
+  </div>
+</div>
+
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
@@ -488,7 +514,7 @@ tr:hover td{background:var(--bg)}
       <div class="table-wrap">
         <table><thead><tr>
           <th>Ticker</th><th>Company</th><th>Price</th><th>Change</th>
-          <th>Shares</th><th>Mkt Value</th><th>P&L</th><th>Return</th><th>Sector</th>
+          <th>Shares</th><th>Mkt Value</th><th>P&L</th><th>Return</th><th>Sector</th><th></th>
         </tr></thead>
         <tbody id="holdingsTbody"></tbody>
         </table>
@@ -893,12 +919,19 @@ function closeMobileSidebar() {
 })();
 
 // ── API HELPERS ───────────────────────────────────────────────
-async function api(path, options = {}) {
-  if (DEMO_MODE) return null;
-  const headers = { ...(options.headers || {}) };
+async function api(path, method = 'GET', body = null) {
+  if (DEMO_MODE && method === 'GET') return null;
+  const headers = {};
   if (API_KEY) headers['X-API-Key'] = API_KEY;
-  const r = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  if (!r.ok) throw new Error(`API error ${r.status}`);
+  if (body) headers['Content-Type'] = 'application/json';
+  const opts = { method, headers };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(`${API_BASE}${path}`, opts);
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.detail || `API error ${r.status}`);
+  }
+  if (r.status === 204) return null;
   return r.json();
 }
 
@@ -973,11 +1006,12 @@ function renderSummaryCards(s) {
 function renderHoldings(holdings) {
   const tbody=document.getElementById('holdingsTbody');
   document.getElementById('holdingsSub').textContent = `${holdings.length} positions`;
-  if(!holdings.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="es-text">No holdings yet</div><div class="es-sub">Click "+ 新增持倉" to add your first position</div></div></td></tr>`;return}
+  if(!holdings.length){tbody.innerHTML=`<tr><td colspan="10"><div class="empty-state"><div class="es-text">No holdings yet</div><div class="es-sub">Click "+ 新增持倉" to add your first position</div></div></td></tr>`;return}
   tbody.innerHTML='';
   holdings.forEach(h=>{
     const up=(h.unrealized_pnl||0)>=0, cup=(h.change_pct||0)>=0;
     const tr=document.createElement('tr');
+    const id=h.id||'';
     tr.innerHTML=`
       <td><span class="ticker">${h.symbol}</span></td>
       <td><div class="co-name">${h.name||h.symbol}</div><div class="co-sector">${h.sector||''}</div></td>
@@ -988,6 +1022,10 @@ function renderHoldings(holdings) {
       <td style="color:${up?'var(--green)':'var(--red)'}"><strong>${up?'+':''}$${Math.abs(h.unrealized_pnl||0).toLocaleString('en',{maximumFractionDigits:0})}</strong></td>
       <td><span class="tag ${up?'tag-green':'tag-red'}">${up?'+':''}${(h.unrealized_pnl_pct||0).toFixed(1)}%</span></td>
       <td><span class="tag tag-gray" style="font-size:10px">${h.sector||'—'}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px" onclick="editHolding('${id}','${h.symbol}',${h.shares},${h.avg_cost})">編輯</button>
+        <button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px;color:var(--red)" onclick="deleteHolding('${id}','${h.symbol}')">刪除</button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
@@ -1316,8 +1354,92 @@ async function loadWatchlistPage(){
   } catch(e){ console.error(e); }
 }
 
-// ── PLACEHOLDER ACTIONS ────────────────────────────────────────
-function showAddHolding(){ alert('串接後端後，此按鈕將開啟新增持倉表單，呼叫 POST /api/portfolio'); }
+// ── HOLDING MODAL ──────────────────────────────────────────────
+let _editingHoldingId = null;
+
+function showAddHolding() {
+  _editingHoldingId = null;
+  document.getElementById('holdingModalTitle').textContent = '新增持倉';
+  document.getElementById('holdingModalSubmit').textContent = '新增';
+  document.getElementById('hm-symbol').value = '';
+  document.getElementById('hm-symbol').disabled = false;
+  document.getElementById('hm-shares').value = '';
+  document.getElementById('hm-cost').value = '';
+  document.getElementById('holdingModalError').style.display = 'none';
+  document.getElementById('holdingModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('hm-symbol').focus(), 50);
+}
+
+function editHolding(id, symbol, shares, avgCost) {
+  _editingHoldingId = id;
+  document.getElementById('holdingModalTitle').textContent = '編輯持倉：' + symbol;
+  document.getElementById('holdingModalSubmit').textContent = '儲存';
+  document.getElementById('hm-symbol').value = symbol;
+  document.getElementById('hm-symbol').disabled = true;
+  document.getElementById('hm-shares').value = shares;
+  document.getElementById('hm-cost').value = avgCost;
+  document.getElementById('holdingModalError').style.display = 'none';
+  document.getElementById('holdingModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('hm-shares').focus(), 50);
+}
+
+function closeHoldingModal() {
+  document.getElementById('holdingModal').style.display = 'none';
+}
+
+async function submitHoldingForm() {
+  const symbol = document.getElementById('hm-symbol').value.trim().toUpperCase();
+  const shares = parseFloat(document.getElementById('hm-shares').value);
+  const cost   = parseFloat(document.getElementById('hm-cost').value);
+  const errEl  = document.getElementById('holdingModalError');
+  const btn    = document.getElementById('holdingModalSubmit');
+
+  if (!symbol)           { errEl.textContent = '請輸入股票代號'; errEl.style.display = 'block'; return; }
+  if (!shares || shares <= 0) { errEl.textContent = '持股數量必須大於 0'; errEl.style.display = 'block'; return; }
+  if (!cost   || cost   <= 0) { errEl.textContent = '平均成本必須大於 0'; errEl.style.display = 'block'; return; }
+
+  btn.disabled = true;
+  btn.textContent = '處理中...';
+  errEl.style.display = 'none';
+
+  try {
+    if (_editingHoldingId) {
+      await api(`/api/portfolio/${_editingHoldingId}`, 'PUT', { shares, avg_cost: cost });
+    } else {
+      await api('/api/portfolio', 'POST', { symbol, shares, avg_cost: cost });
+    }
+    closeHoldingModal();
+    await refreshPortfolio();
+  } catch(e) {
+    errEl.textContent = e.message || '操作失敗，請稍後再試';
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = _editingHoldingId ? '儲存' : '新增';
+  }
+}
+
+async function deleteHolding(id, symbol) {
+  if (!confirm(`確定要刪除 ${symbol} 持倉？此操作無法復原。`)) return;
+  try {
+    await api(`/api/portfolio/${id}`, 'DELETE');
+    await refreshPortfolio();
+  } catch(e) {
+    alert('刪除失敗：' + (e.message || '未知錯誤'));
+  }
+}
+
+async function refreshPortfolio() {
+  try {
+    const [holdings, summary] = await Promise.all([api('/api/portfolio'), api('/api/portfolio/summary')]);
+    renderSummaryCards(summary);
+    renderHoldings(holdings);
+    renderSectorChart(summary.sector_allocation);
+    await loadPortfolioPage(holdings, summary);
+  } catch(e) {
+    console.error('refreshPortfolio failed', e);
+  }
+}
+
 function showAddWatchlist(){ alert('串接後端後，此按鈕將開啟觀察清單新增表單，呼叫 POST /api/watchlist'); }
 
 // ── 篩選器內嵌觀察清單 ───────────────────────────────────────
