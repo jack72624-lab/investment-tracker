@@ -203,6 +203,38 @@ tr:hover td{background:var(--bg)}
 .alert-block:last-child{margin-bottom:0}
 .alert-title{font-weight:700;font-size:12px;margin-bottom:3px}
 .alert-text{font-size:12px;color:var(--dark)}
+/* ── TWD toggle ── */
+.twd-btn{height:32px;padding:0 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--mid);transition:all .13s;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:5px}
+.twd-btn.active{border-color:var(--blue);color:var(--blue);background:var(--blue-lt)}
+.twd-rate-wrap{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)}
+.twd-rate-input{width:52px;height:26px;border:1px solid var(--border);border-radius:5px;text-align:center;font-size:11px;font-family:'Inter',sans-serif;outline:none;padding:0 4px}
+/* ── 交易記錄 ── */
+.tx-type-buy{color:var(--green);font-weight:700;font-size:11px}
+.tx-type-sell{color:var(--red);font-weight:700;font-size:11px}
+/* ── 計算器 ── */
+.calc-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+.calc-field label{display:block;font-size:10px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.calc-field input,.calc-field select{width:100%;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;color:var(--dark);background:var(--white);transition:border-color .13s}
+.calc-field input:focus,.calc-field select:focus{border-color:var(--blue)}
+.calc-result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.calc-result-card{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:14px 16px;text-align:center}
+.calc-result-label{font-size:10px;color:var(--mid);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.calc-result-value{font-size:20px;font-weight:800;letter-spacing:-.5px}
+/* ── 目標設定 ── */
+.goal-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);margin-bottom:20px}
+.goal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.goal-title{font-size:13px;font-weight:700;color:var(--dark)}
+.goal-progress-wrap{margin-bottom:10px}
+.goal-progress-bar{height:10px;background:var(--border);border-radius:6px;overflow:hidden;margin-bottom:6px}
+.goal-progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--blue),#00c6ff);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.goal-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--mid)}
+.goal-set-row{display:flex;gap:8px;margin-top:10px}
+.goal-input{flex:1;height:34px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;font-family:'Inter',sans-serif;outline:none;color:var(--dark)}
+.goal-input:focus{border-color:var(--blue)}
+/* ── 股息追蹤 ── */
+.div-stat-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.div-stat-row:last-child{border-bottom:none}
+.div-ex-date{font-size:10px;color:var(--mid);margin-top:2px}
 /* ── 風險卡 tooltip ── */
 .risk-card-wrap{position:relative}
 .risk-tip-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--border);color:var(--light);font-size:9px;font-weight:700;cursor:help;margin-left:5px;line-height:1;vertical-align:middle;transition:background .13s}
@@ -397,6 +429,46 @@ tr:hover td{background:var(--bg)}
   </div>
 </div>
 
+<!-- 交易記錄 Modal -->
+<div class="modal-backdrop" id="transactionModal" style="display:none" onclick="if(event.target===this)closeTransactionModal()">
+  <div class="modal">
+    <div class="modal-title">記錄交易</div>
+    <div class="modal-sub">買入或賣出記錄，系統自動更新持倉均成本</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button id="txTypeBuy" class="btn btn-primary" style="flex:1;height:36px;background:var(--green)" onclick="setTxType('BUY')">買入 BUY</button>
+      <button id="txTypeSell" class="btn btn-ghost" style="flex:1;height:36px" onclick="setTxType('SELL')">賣出 SELL</button>
+    </div>
+    <input type="hidden" id="tm-type" value="BUY">
+    <div class="modal-field">
+      <div class="modal-label">股票代號</div>
+      <input class="modal-input" id="tm-symbol" placeholder="例：VOO" style="text-transform:uppercase">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="modal-field">
+        <div class="modal-label">股數</div>
+        <input class="modal-input" id="tm-shares" type="number" min="0.0001" step="any" placeholder="例：0.5">
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">成交價格（USD）</div>
+        <input class="modal-input" id="tm-price" type="number" min="0.01" step="any" placeholder="例：695.00">
+      </div>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">日期</div>
+      <input class="modal-input" id="tm-date" type="date">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">備注（選填）</div>
+      <input class="modal-input" id="tm-notes" placeholder="例：定期定額 6 月">
+    </div>
+    <div id="txModalError" style="display:none;color:var(--red);font-size:12px;margin-top:4px;padding:6px 10px;background:#FEF2F2;border-radius:4px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeTransactionModal()">取消</button>
+      <button class="btn btn-primary" id="txModalSubmit" onclick="submitTransactionForm()">儲存</button>
+    </div>
+  </div>
+</div>
+
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
@@ -438,6 +510,14 @@ tr:hover td{background:var(--bg)}
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5 L14.5 13.5 H1.5 Z"/><line x1="8" y1="6" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r=".6" fill="currentColor" stroke="none"/></svg></span>
       <span class="nav-item-text">風險評估</span>
     </div>
+    <div class="nav-item" onclick="showPage('transactions')" data-label="交易記錄">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="8.5" x2="11" y2="8.5"/><line x1="5" y1="11" x2="8" y2="11"/></svg></span>
+      <span class="nav-item-text">交易記錄</span>
+    </div>
+    <div class="nav-item" onclick="showPage('calculator')" data-label="計算器">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="5.5" y1="5.5" x2="10.5" y2="5.5"/><line x1="5.5" y1="8" x2="7.5" y2="8"/><line x1="5.5" y1="10.5" x2="7.5" y2="10.5"/><line x1="9" y1="8" x2="11" y2="10.5"/><line x1="11" y1="8" x2="9" y2="10.5"/></svg></span>
+      <span class="nav-item-text">DCA 計算器</span>
+    </div>
   </div>
   <div class="sidebar-footer">
     <div class="sidebar-footer-text">
@@ -467,6 +547,15 @@ tr:hover td{background:var(--bg)}
       </div>
     </div>
     <div class="topbar-right">
+      <div class="twd-rate-wrap" id="twdRateWrap" style="display:none">
+        <span>1 USD =</span>
+        <input class="twd-rate-input" id="twdRateInput" type="number" value="32" min="1" step="0.1" onchange="updateTwdRate()">
+        <span>NTD</span>
+      </div>
+      <button class="twd-btn" id="twdToggleBtn" onclick="toggleTwd()">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="6.5"/><path d="M8 1.5 Q11.5 8 8 14.5 Q4.5 8 8 1.5"/><line x1="1.5" y1="8" x2="14.5" y2="8"/></svg>
+        USD
+      </button>
       <button class="btn btn-ghost" id="refreshBtn" onclick="refreshAll()">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8A6 6 0 1 1 8 2a6 6 0 0 1 4.24 1.76L14 2v4h-4"/></svg>
         Refresh
@@ -486,7 +575,29 @@ tr:hover td{background:var(--bg)}
       <div class="stat-card"><div class="stat-label">Total Net Worth</div><div class="stat-value" id="s-totalMv">—</div><div class="stat-change" id="s-pnl">Loading...</div><div class="stat-sub">Unrealized P&L</div></div>
       <div class="stat-card"><div class="stat-label">Total Cost Basis</div><div class="stat-value" id="s-cost">—</div><div class="stat-change" id="s-ret">—</div><div class="stat-sub">Return</div></div>
       <div class="stat-card"><div class="stat-label">Day Change</div><div class="stat-value" id="s-dayChg">—</div><div class="stat-change" id="s-dayPct">—</div><div class="stat-sub">Today's P&L</div></div>
-      <div class="stat-card"><div class="stat-label">Positions</div><div class="stat-value" id="s-count">—</div><div class="stat-change" style="color:var(--mid)">Active holdings</div><div class="stat-sub">&nbsp;</div></div>
+      <div class="stat-card"><div class="stat-label">持倉數</div><div class="stat-value" id="s-count">—</div><div class="stat-change" style="color:var(--mid)">Active holdings</div><div class="stat-sub">&nbsp;</div></div>
+      <div class="stat-card"><div class="stat-label">年化股息收益</div><div class="stat-value" id="s-divIncome" style="color:var(--green)">—</div><div class="stat-change" id="s-divYield" style="color:var(--green)">—</div><div class="stat-sub" id="s-divSub">Portfolio yield</div></div>
+    </div>
+
+    <!-- 投資目標 -->
+    <div class="goal-card" id="goalCard">
+      <div class="goal-header">
+        <div class="goal-title">🎯 投資目標</div>
+        <span style="font-size:11px;color:var(--mid)" id="goalReachDate"></span>
+      </div>
+      <div class="goal-progress-wrap">
+        <div class="goal-progress-bar"><div class="goal-progress-fill" id="goalFill" style="width:0%"></div></div>
+        <div class="goal-meta">
+          <span id="goalCurrentLabel">現值 —</span>
+          <span id="goalPctLabel">0%</span>
+          <span id="goalTargetLabel">目標 —</span>
+        </div>
+      </div>
+      <div class="goal-set-row">
+        <input class="goal-input" id="goalInput" type="number" placeholder="設定目標金額（USD）" min="1">
+        <button class="btn btn-primary" style="height:34px" onclick="saveGoal()">設定</button>
+        <button class="btn btn-ghost" style="height:34px" onclick="clearGoal()">清除</button>
+      </div>
     </div>
 
     <div class="grid-7030 mb-20">
@@ -824,6 +935,56 @@ tr:hover td{background:var(--bg)}
     </div>
   </div>
 
+  <!-- PAGE: 交易記錄 -->
+  <div class="page" id="page-transactions">
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">交易記錄</div><div class="card-sub" id="txSub">—</div></div>
+        <div style="display:flex;gap:8px">
+          <select class="filter-select" id="txFilterSymbol" onchange="renderTransactionsTable()" style="height:32px;font-size:12px">
+            <option value="">所有股票</option>
+          </select>
+          <button class="btn btn-primary" onclick="openTransactionModal('','BUY')" style="height:32px">+ 新增交易</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th>日期</th><th>股票</th><th>類型</th><th>股數</th><th>價格</th><th>總金額</th><th>備注</th>
+        </tr></thead>
+        <tbody id="txTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: DCA 計算器 -->
+  <div class="page" id="page-calculator">
+    <div class="card mb-20">
+      <div class="card-header"><div class="card-title">定期定額複利計算器</div><div class="card-sub">預估長期投資成長</div></div>
+      <div class="card-body">
+        <div class="calc-form">
+          <div class="calc-field"><label>每月投入（USD）</label><input type="number" id="calc-monthly" value="500" min="1"></div>
+          <div class="calc-field"><label>初始資金（USD）</label><input type="number" id="calc-initial" value="0" min="0"></div>
+          <div class="calc-field"><label>預期年報酬率（%）</label><input type="number" id="calc-rate" value="7" min="0.1" step="0.1"></div>
+          <div class="calc-field"><label>投資年限（年）</label><input type="number" id="calc-years" value="20" min="1" max="50"></div>
+          <div class="calc-field" style="display:flex;align-items:flex-end"><button class="btn btn-primary" onclick="runCalculator()" style="width:100%;height:38px">計算</button></div>
+        </div>
+        <div class="calc-result-grid" id="calcResultGrid" style="display:none">
+          <div class="calc-result-card"><div class="calc-result-label">終值</div><div class="calc-result-value" id="calc-final" style="color:var(--blue)">—</div></div>
+          <div class="calc-result-card"><div class="calc-result-label">總投入</div><div class="calc-result-value" id="calc-invested" style="color:var(--mid)">—</div></div>
+          <div class="calc-result-card"><div class="calc-result-label">複利獲益</div><div class="calc-result-value" id="calc-gain" style="color:var(--green)">—</div></div>
+        </div>
+        <div style="position:relative;min-height:280px">
+          <div class="chart-wrap" style="height:280px"><canvas id="calcChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">複利成長年表</div></div>
+      <div class="table-wrap"><table><thead><tr><th>年</th><th>總投入</th><th>帳戶價值</th><th>複利獲益</th><th>年化報酬 ×</th></tr></thead><tbody id="calcTableBody"></tbody></table></div>
+    </div>
+  </div>
+
   <!-- PAGE: 觀察清單 -->
   <div class="page" id="page-watchlist">
     <div class="card">
@@ -909,23 +1070,27 @@ function closeModal() {
 
 // ── NAVIGATION ────────────────────────────────────────────────
 const PAGE_META = {
-  overview:  ['資產總覽','Dashboard'],
-  screener:  ['選股篩選器','Screener'],
-  portfolio: ['組合配置','Portfolio'],
-  technical: ['技術分析','Technical Analysis'],
-  risk:      ['風險評估','Risk'],
-  watchlist: ['觀察清單','Watchlist'],
+  overview:      ['資產總覽','Dashboard'],
+  screener:      ['選股篩選器','Screener'],
+  portfolio:     ['組合配置','Portfolio'],
+  technical:     ['技術分析','Technical Analysis'],
+  risk:          ['風險評估','Risk'],
+  watchlist:     ['觀察清單','Watchlist'],
+  transactions:  ['交易記錄','Transactions'],
+  calculator:    ['DCA 計算器','Calculator'],
 };
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   document.querySelector(`.nav-item[onclick="showPage('${id}')"]`)?.classList.add('active');
-  const [t,b] = PAGE_META[id];
+  const [t,b] = PAGE_META[id] || [id, id];
   document.getElementById('page-title').textContent = t;
   document.getElementById('page-breadcrumb').textContent = b;
   if (id === 'screener') loadScreenerWatchlist();
-  closeMobileSidebar(); // 手機上導覽後自動關閉 sidebar
+  if (id === 'transactions') loadTransactionsPage();
+  if (id === 'calculator') { runCalculator(); }
+  closeMobileSidebar();
 }
 
 // ── SIDEBAR TOGGLE ─────────────────────────────────────────────
@@ -1017,6 +1182,8 @@ async function loadOverview() {
     await loadPortfolioPage(holdings, summary);
     await loadRiskPage();
     await loadWatchlistPage();
+    await loadDividends();
+    loadGoal(summary.total_market_value || 0);
   } catch(e) {
     console.error(e);
   }
@@ -1059,6 +1226,7 @@ function renderHoldings(holdings) {
       <td><span class="tag ${up?'tag-green':'tag-red'}">${up?'+':''}${(h.unrealized_pnl_pct||0).toFixed(2)}%</span></td>
       <td><span class="tag tag-gray" style="font-size:10px">${h.sector||'—'}</span></td>
       <td style="white-space:nowrap">
+        <button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px;color:var(--green);border-color:var(--green)" onclick="openTransactionModal('${h.symbol}','BUY')">加倉</button>
         <button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px" onclick="editHolding('${id}','${h.symbol}',${h.shares},${h.avg_cost})">編輯</button>
         <button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px;color:var(--red)" onclick="deleteHolding('${id}','${h.symbol}')">刪除</button>
       </td>
@@ -1089,9 +1257,12 @@ async function renderNetWorthChart(period) {
     dates=genDates(n); prices=genPrices(77000,n,42);
   } else {
     try {
-      const data = await api(`/api/stocks/history/VOO?period=${period}`);
-      dates=data.dates; prices=data.prices;
-    } catch { dates=genDates(252); prices=genPrices(77000,252,42); }
+      // 使用真實組合淨值歷史，不再用單一 VOO 股價代替
+      const periodMap={'1y':'1y','6mo':'6mo','3mo':'3mo','1mo':'1m'};
+      const data = await api(`/api/portfolio/value-history?period=${periodMap[period]||'1m'}`);
+      dates=data.dates; prices=data.values;
+      if(!dates||!dates.length) throw new Error('no data');
+    } catch { dates=genDates(21); prices=genPrices(3000,21,8); }
   }
 
   document.getElementById('trendSub').textContent=`${dates[0]} — ${dates[dates.length-1]}`;
@@ -1989,6 +2160,293 @@ function resetDgmScreen() {
   document.getElementById('dgmCount').textContent = '—';
   document.getElementById('dgmSectorView').innerHTML = '';
   _showDgmTableView();
+}
+
+// ══════════════════════════════════════════════════════════════
+// TWD 換算
+// ══════════════════════════════════════════════════════════════
+let _twdMode = false;
+let _twdRate = 32;
+
+function toggleTwd() {
+  _twdMode = !_twdMode;
+  const btn = document.getElementById('twdToggleBtn');
+  const wrap = document.getElementById('twdRateWrap');
+  btn.textContent = _twdMode ? 'TWD' : 'USD';
+  btn.className = _twdMode ? 'twd-btn active' : 'twd-btn';
+  // rebuild icon
+  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="6.5"/><path d="M8 1.5 Q11.5 8 8 14.5 Q4.5 8 8 1.5"/><line x1="1.5" y1="8" x2="14.5" y2="8"/></svg>${_twdMode?'TWD':'USD'}`;
+  wrap.style.display = _twdMode ? 'flex' : 'none';
+  refreshAll();
+}
+function updateTwdRate() {
+  _twdRate = parseFloat(document.getElementById('twdRateInput').value) || 32;
+  refreshAll();
+}
+function fmtMoney(usd, decimals=0) {
+  if (_twdMode) {
+    const ntd = usd * _twdRate;
+    return 'NT$' + ntd.toLocaleString('en', {maximumFractionDigits: decimals});
+  }
+  return '$' + usd.toLocaleString('en', {maximumFractionDigits: decimals});
+}
+
+// ══════════════════════════════════════════════════════════════
+// 股息追蹤
+// ══════════════════════════════════════════════════════════════
+const DEMO_DIVIDENDS = {
+  total_annual_dividend: 63.18,
+  holdings: [
+    {symbol:'BRK-B', shares:6,   annual_dividend_per_share:0,    annual_dividend_total:0,    dividend_yield:0,    next_ex_date:null,       next_dividend_amount:0},
+    {symbol:'VOO',   shares:0.145, annual_dividend_per_share:6.84, annual_dividend_total:0.99, dividend_yield:1.38, next_ex_date:'2026-06-25',next_dividend_amount:1.71},
+  ]
+};
+
+async function loadDividends() {
+  try {
+    const data = DEMO_MODE ? DEMO_DIVIDENDS : await api('/api/portfolio/dividends');
+    const total = data.total_annual_dividend || 0;
+    const holdings = data.holdings || [];
+
+    // 更新 stat card
+    document.getElementById('s-divIncome').textContent = fmtMoney(total, 2);
+    const totalCostEl = parseFloat((document.getElementById('s-totalMv').textContent||'0').replace(/[^0-9.]/g,'')) || 1;
+    const weightedYield = holdings.reduce((acc,h)=>{
+      const y = h.dividend_yield || 0;
+      return acc + y * (h.annual_dividend_total / (total||1));
+    }, 0);
+    const avgYield = holdings.length ? holdings.reduce((a,b)=>a+(b.dividend_yield||0),0)/holdings.length : 0;
+    document.getElementById('s-divYield').textContent = avgYield.toFixed(2)+'% avg yield';
+
+    // 若沒有股息，顯示暗示
+    if(total <= 0) {
+      document.getElementById('s-divIncome').textContent = '$0.00';
+      document.getElementById('s-divYield').textContent = '持有股息股才會顯示';
+    }
+  } catch(e) { console.error('dividends', e); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// 投資目標
+// ══════════════════════════════════════════════════════════════
+function loadGoal(currentValue) {
+  const goal = parseFloat(localStorage.getItem('investGoal') || '0');
+  if (!goal) return;
+  document.getElementById('goalInput').value = goal;
+  _updateGoalDisplay(currentValue, goal);
+}
+function _updateGoalDisplay(current, goal) {
+  const pct = Math.min(100, (current / goal) * 100);
+  document.getElementById('goalFill').style.width = pct.toFixed(1) + '%';
+  document.getElementById('goalCurrentLabel').textContent = '現值 ' + fmtMoney(current, 0);
+  document.getElementById('goalTargetLabel').textContent = '目標 ' + fmtMoney(goal, 0);
+  document.getElementById('goalPctLabel').textContent = pct.toFixed(1) + '%';
+  // 預估達標時間（假設每月 DCA 500 + 7% 年化）
+  const monthly = parseFloat(localStorage.getItem('goalMonthly') || '500');
+  const rate = 0.07 / 12;
+  let val = current, months = 0;
+  while (val < goal && months < 600) {
+    val = val * (1 + rate) + monthly;
+    months++;
+  }
+  const yrs = Math.floor(months / 12), mos = months % 12;
+  document.getElementById('goalReachDate').textContent =
+    val >= goal ? `預計 ${yrs > 0 ? yrs + '年' : ''}${mos > 0 ? mos + '個月' : ''} 後達標` : '目標已達成！';
+}
+function saveGoal() {
+  const v = parseFloat(document.getElementById('goalInput').value);
+  if (!v || v <= 0) return showToast('請輸入有效目標金額', 'error');
+  localStorage.setItem('investGoal', v);
+  const cur = parseFloat((document.getElementById('s-totalMv').textContent||'0').replace(/[^0-9.]/g,'')) || 0;
+  _updateGoalDisplay(cur, v);
+  showToast('目標已設定！');
+}
+function clearGoal() {
+  localStorage.removeItem('investGoal');
+  document.getElementById('goalInput').value = '';
+  document.getElementById('goalFill').style.width = '0%';
+  document.getElementById('goalCurrentLabel').textContent = '現值 —';
+  document.getElementById('goalTargetLabel').textContent = '目標 —';
+  document.getElementById('goalPctLabel').textContent = '0%';
+  document.getElementById('goalReachDate').textContent = '';
+}
+
+// ══════════════════════════════════════════════════════════════
+// 交易記錄
+// ══════════════════════════════════════════════════════════════
+let _allTransactions = [];
+const DEMO_TRANSACTIONS = [
+  {id:'t1',symbol:'BRK-B',transaction_type:'BUY',shares:6,   price:474.34,total_amount:2846.04,transaction_date:'2026-05-20',notes:'初始建倉'},
+  {id:'t2',symbol:'VOO',  transaction_type:'BUY',shares:0.145,price:690,  total_amount:100.05, transaction_date:'2026-05-28',notes:'定期定額'},
+];
+
+async function loadTransactionsPage() {
+  try {
+    _allTransactions = DEMO_MODE ? DEMO_TRANSACTIONS : await api('/api/portfolio/transactions');
+    renderTransactionsTable();
+    // 更新篩選器
+    const sel = document.getElementById('txFilterSymbol');
+    const syms = [...new Set(_allTransactions.map(t=>t.symbol))];
+    sel.innerHTML = '<option value="">所有股票</option>' + syms.map(s=>`<option>${s}</option>`).join('');
+  } catch(e) { console.error(e); }
+}
+function renderTransactionsTable() {
+  const filter = document.getElementById('txFilterSymbol').value;
+  const data = filter ? _allTransactions.filter(t=>t.symbol===filter) : _allTransactions;
+  const tbody = document.getElementById('txTbody');
+  document.getElementById('txSub').textContent = `${data.length} 筆記錄`;
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state" style="padding:28px"><div class="es-text">沒有交易記錄</div><div class="es-sub">點「+ 新增交易」或在持倉列表點「加倉」開始記錄</div></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(t => {
+    const isBuy = t.transaction_type === 'BUY';
+    const sharesStr = +t.shares % 1 === 0 ? +t.shares : (+t.shares).toFixed(4).replace(/\.?0+$/,'');
+    return `<tr>
+      <td style="color:var(--mid)">${t.transaction_date||'—'}</td>
+      <td><span class="ticker">${t.symbol}</span></td>
+      <td><span class="${isBuy?'tx-type-buy':'tx-type-sell'}">${isBuy?'買入':'賣出'}</span></td>
+      <td>${sharesStr}</td>
+      <td>$${parseFloat(t.price||0).toFixed(2)}</td>
+      <td><strong>$${parseFloat(t.total_amount||0).toLocaleString('en',{maximumFractionDigits:2})}</strong></td>
+      <td style="color:var(--mid);font-size:12px">${t.notes||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function openTransactionModal(symbol, type='BUY') {
+  document.getElementById('tm-symbol').value = symbol || '';
+  document.getElementById('tm-shares').value = '';
+  document.getElementById('tm-price').value = '';
+  document.getElementById('tm-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('tm-notes').value = '';
+  document.getElementById('txModalError').style.display = 'none';
+  setTxType(type);
+  document.getElementById('transactionModal').style.display = 'flex';
+  setTimeout(() => (symbol ? document.getElementById('tm-shares') : document.getElementById('tm-symbol')).focus(), 50);
+}
+function closeTransactionModal() {
+  document.getElementById('transactionModal').style.display = 'none';
+}
+function setTxType(type) {
+  document.getElementById('tm-type').value = type;
+  const buyBtn  = document.getElementById('txTypeBuy');
+  const sellBtn = document.getElementById('txTypeSell');
+  if (type === 'BUY') {
+    buyBtn.className  = 'btn btn-primary'; buyBtn.style.background = 'var(--green)';
+    sellBtn.className = 'btn btn-ghost';   sellBtn.style.background = '';
+  } else {
+    sellBtn.className = 'btn btn-primary'; sellBtn.style.background = 'var(--red)';
+    buyBtn.className  = 'btn btn-ghost';   buyBtn.style.background = '';
+  }
+}
+async function submitTransactionForm() {
+  const symbol = document.getElementById('tm-symbol').value.trim().toUpperCase();
+  const shares = parseFloat(document.getElementById('tm-shares').value);
+  const price  = parseFloat(document.getElementById('tm-price').value);
+  const date   = document.getElementById('tm-date').value;
+  const notes  = document.getElementById('tm-notes').value.trim();
+  const type   = document.getElementById('tm-type').value;
+  const errEl  = document.getElementById('txModalError');
+
+  if (!symbol) { errEl.textContent='請輸入股票代號'; errEl.style.display='block'; return; }
+  if (!shares || shares <= 0) { errEl.textContent='請輸入有效股數'; errEl.style.display='block'; return; }
+  if (!price  || price  <= 0) { errEl.textContent='請輸入有效價格'; errEl.style.display='block'; return; }
+  if (!date)  { errEl.textContent='請選擇日期'; errEl.style.display='block'; return; }
+
+  const btn = document.getElementById('txModalSubmit');
+  btn.textContent = '儲存中...'; btn.disabled = true;
+  try {
+    if (DEMO_MODE) {
+      _allTransactions.unshift({id:'t'+Date.now(), symbol, transaction_type:type, shares, price, total_amount:+(shares*price).toFixed(2), transaction_date:date, notes});
+      showToast(`已記錄 ${type==='BUY'?'買入':'賣出'} ${symbol} ${shares} 股`);
+    } else {
+      await api('/api/portfolio/transaction', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({symbol, transaction_type:type, shares, price, transaction_date:date, notes})
+      });
+      showToast(`已記錄 ${type==='BUY'?'買入':'賣出'} ${symbol} ${shares} 股`);
+      await refreshAll();
+    }
+    closeTransactionModal();
+    if (document.getElementById('page-transactions').classList.contains('active')) loadTransactionsPage();
+  } catch(e) {
+    errEl.textContent = e.message || '儲存失敗，請稍後再試';
+    errEl.style.display = 'block';
+  } finally {
+    btn.textContent = '儲存'; btn.disabled = false;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// DCA 計算器
+// ══════════════════════════════════════════════════════════════
+let calcChart;
+function runCalculator() {
+  const monthly  = parseFloat(document.getElementById('calc-monthly').value) || 500;
+  const initial  = parseFloat(document.getElementById('calc-initial').value) || 0;
+  const rateAnn  = parseFloat(document.getElementById('calc-rate').value) || 7;
+  const years    = parseInt(document.getElementById('calc-years').value) || 20;
+  const rate     = rateAnn / 100 / 12;
+
+  const labels=[], values=[], invested=[];
+  let val = initial, totalIn = initial;
+  for (let m = 1; m <= years * 12; m++) {
+    val = val * (1 + rate) + monthly;
+    totalIn += monthly;
+    if (m % 12 === 0) {
+      labels.push(`第${m/12}年`);
+      values.push(+val.toFixed(2));
+      invested.push(+totalIn.toFixed(2));
+    }
+  }
+  const finalVal = values[values.length-1] || 0;
+  const totalInvested = totalIn;
+  const gain = finalVal - totalInvested;
+
+  document.getElementById('calc-final').textContent    = fmtMoney(finalVal, 0);
+  document.getElementById('calc-invested').textContent = fmtMoney(totalInvested, 0);
+  document.getElementById('calc-gain').textContent     = '+' + fmtMoney(gain, 0);
+  document.getElementById('calcResultGrid').style.display = 'grid';
+
+  // Chart
+  const ctx = document.getElementById('calcChart').getContext('2d');
+  if (calcChart) calcChart.destroy();
+  calcChart = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'帳戶價值',data:values,borderColor:'#006FFF',backgroundColor:'rgba(0,111,255,0.08)',fill:true,tension:0.4,pointRadius:3,borderWidth:2},
+        {label:'總投入',  data:invested,borderColor:'#9CA3AF',backgroundColor:'transparent',fill:false,tension:0.4,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:11}}},tooltip:{callbacks:{label:c=>'$'+Math.round(c.raw).toLocaleString('en')}}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:11},color:'#9CA3AF'}},
+        y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'K':'$'+Math.round(v),font:{size:11},color:'#9CA3AF'}}
+      }
+    }
+  });
+
+  // 年表
+  const tb = document.getElementById('calcTableBody');
+  let v2 = initial, ti = initial;
+  tb.innerHTML = '';
+  for (let y = 1; y <= years; y++) {
+    for (let m = 1; m <= 12; m++) { v2 = v2*(1+rate)+monthly; ti+=monthly; }
+    const mul = (v2/ti).toFixed(2);
+    const up = v2 > ti;
+    tb.innerHTML += `<tr>
+      <td style="color:var(--mid)">${y} 年</td>
+      <td>${fmtMoney(ti,0)}</td>
+      <td><strong style="color:var(--blue)">${fmtMoney(v2,0)}</strong></td>
+      <td style="color:var(--green)">+${fmtMoney(v2-ti,0)}</td>
+      <td style="color:var(--blue)">${mul}×</td>
+    </tr>`;
+  }
 }
 
 // ── TOAST 通知 ─────────────────────────────────────────────────
