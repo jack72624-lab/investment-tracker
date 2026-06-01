@@ -1064,7 +1064,7 @@ async function renderNetWorthChart(period) {
   }
 
   document.getElementById('trendSub').textContent=`${dates[0]} — ${dates[dates.length-1]}`;
-  nwChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'Portfolio',data:prices,borderColor:'#006FFF',backgroundColor:'rgba(0,111,255,0.07)',fill:true,tension:0.4,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+Math.round(c.raw).toLocaleString('en')}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:7,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K',font:{size:11},color:'#9CA3AF'}}}}});
+  nwChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'Portfolio',data:prices,borderColor:'#006FFF',backgroundColor:'rgba(0,111,255,0.07)',fill:true,tension:0.4,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+Math.round(c.raw).toLocaleString('en')}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:7,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'K':'$'+Math.round(v),font:{size:11},color:'#9CA3AF'}}}}});
   document.getElementById('trendLoading').style.display='none';
 }
 
