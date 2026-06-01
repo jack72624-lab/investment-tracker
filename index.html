@@ -514,7 +514,7 @@ tr:hover td{background:var(--bg)}
       <div class="table-wrap">
         <table><thead><tr>
           <th>Ticker</th><th>Company</th><th>Price</th><th>Change</th>
-          <th>Shares</th><th>Mkt Value</th><th>P&L</th><th>Return</th><th>Sector</th><th></th>
+          <th>Shares</th><th>Avg Cost</th><th>Mkt Value</th><th>P&L</th><th>Return</th><th>Sector</th><th></th>
         </tr></thead>
         <tbody id="holdingsTbody"></tbody>
         </table>
@@ -651,6 +651,9 @@ tr:hover td{background:var(--bg)}
             <button class="btn btn-primary" onclick="runDgmDiscover()" style="height:32px;background:linear-gradient(135deg,#16A34A,#006FFF)">
               AI 推薦
             </button>
+            <button class="btn btn-primary" onclick="runDgmDiscoverSectors()" style="height:32px;background:linear-gradient(135deg,#0073BB,#16A34A)">
+              分領域各5名
+            </button>
             <button class="btn btn-ghost" onclick="resetDgmScreen()" style="height:32px">Reset</button>
           </div>
           <div class="sym-hint">FREEBIRDS 企業品質（≥ 7/14 = 好公司）→ 買入時機（≥ 7/11 = 好買點）· 資料來源：yfinance</div>
@@ -666,8 +669,8 @@ tr:hover td{background:var(--bg)}
           </div>
         </div>
         <div style="position:relative">
-          <div class="loading-overlay" id="dgmLoading" style="display:none;min-height:80px"><div class="loading-spinner"></div> 計算評分中...</div>
-          <div class="table-wrap">
+          <div class="loading-overlay" id="dgmLoading" style="display:none;min-height:80px"><div class="loading-spinner"></div><span id="dgmLoadingText" style="font-size:13px;color:var(--mid)"> 計算評分中...</span></div>
+          <div id="dgmTableView" class="table-wrap">
             <table id="dgmTable"><thead><tr>
               <th>Ticker</th><th>Company</th><th>Price</th><th>Div%</th>
               <th>連續成長</th><th>FREEBIRDS</th><th>買入時機</th><th>推薦</th><th></th>
@@ -675,6 +678,7 @@ tr:hover td{background:var(--bg)}
             <tbody id="dgmTbody"></tbody>
             </table>
           </div>
+          <div id="dgmSectorView" style="display:none"></div>
         </div>
       </div>
     </div>
@@ -1017,10 +1021,11 @@ function renderHoldings(holdings) {
       <td><div class="co-name">${h.name||h.symbol}</div><div class="co-sector">${h.sector||''}</div></td>
       <td><strong>$${(h.current_price||0).toFixed(2)}</strong></td>
       <td style="color:${cup?'var(--green)':'var(--red)'}">${cup?'+':''}${(h.change_pct||0).toFixed(2)}%</td>
-      <td style="color:var(--mid)">${h.shares}</td>
+      <td style="color:var(--mid)">${+h.shares % 1 === 0 ? +h.shares : (+h.shares).toFixed(4).replace(/\.?0+$/,'')}</td>
+      <td style="color:var(--mid)">$${(h.avg_cost||0).toFixed(2)}</td>
       <td><strong>$${(h.market_value||0).toLocaleString('en',{maximumFractionDigits:0})}</strong></td>
       <td style="color:${up?'var(--green)':'var(--red)'}"><strong>${up?'+':''}$${Math.abs(h.unrealized_pnl||0).toLocaleString('en',{maximumFractionDigits:0})}</strong></td>
-      <td><span class="tag ${up?'tag-green':'tag-red'}">${up?'+':''}${(h.unrealized_pnl_pct||0).toFixed(1)}%</span></td>
+      <td><span class="tag ${up?'tag-green':'tag-red'}">${up?'+':''}${(h.unrealized_pnl_pct||0).toFixed(2)}%</span></td>
       <td><span class="tag tag-gray" style="font-size:10px">${h.sector||'—'}</span></td>
       <td style="white-space:nowrap">
         <button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px" onclick="editHolding('${id}','${h.symbol}',${h.shares},${h.avg_cost})">編輯</button>
@@ -1901,6 +1906,7 @@ async function runDgmScreen() {
   const tbody   = document.getElementById('dgmTbody');
   const count   = document.getElementById('dgmCount');
 
+  _showDgmTableView();
   loading.style.display = 'flex';
   tbody.innerHTML = '';
   count.textContent = '—';
@@ -1940,6 +1946,8 @@ function resetDgmScreen() {
   document.getElementById('dgm-symbols').value = '';
   document.getElementById('dgmTbody').innerHTML = '';
   document.getElementById('dgmCount').textContent = '—';
+  document.getElementById('dgmSectorView').innerHTML = '';
+  _showDgmTableView();
 }
 
 // ── TOAST 通知 ─────────────────────────────────────────────────
@@ -2165,10 +2173,129 @@ const DEMO_DGM_DISCOVER = [
   { symbol:'MSFT', name:'Microsoft Corp', sector:'Technology', price:415.80, dividend_yield:0.74, consecutive_years:21, '5yr_dg_rate':10.2, freebirds_score:8.5, freebirds_max:14, is_quality:true, timing_score:4.0, timing_max:11, is_buy:false, recommendation:'潛力股', freebirds_breakdown:{'D_div_growth':{score:1,value:'10.2%',note:'>10%'},'E_quality':{score:2,value:'21年',note:'Dividend Contender'},'R_roe':{score:1,value:'36.4%',note:'>15%'}}, timing_breakdown:{'Y_vs_inflation':{score:0,value:'0.74%',note:'<4%'},'P_pe':{score:0,value:'35.1',note:'≥15'}} },
 ];
 
+// DGM 分領域 Demo 資料
+const DEMO_DGM_SECTOR_DISCOVER = [
+  { sector_key:'consumer_staples', sector_label:'消費必需 Consumer Staples', stocks:[
+    { symbol:'KO',  name:'Coca-Cola Co',          dividend_yield:3.10, consecutive_years:62, freebirds_score:9.5, freebirds_max:14, timing_score:7.5, timing_max:11, recommendation:'建議購買'  },
+    { symbol:'PG',  name:'Procter & Gamble',       dividend_yield:2.45, consecutive_years:67, freebirds_score:10.0,freebirds_max:14, timing_score:6.0, timing_max:11, recommendation:'潛力股'   },
+    { symbol:'CL',  name:'Colgate-Palmolive',      dividend_yield:2.30, consecutive_years:61, freebirds_score:8.5, freebirds_max:14, timing_score:5.5, timing_max:11, recommendation:'潛力股'   },
+    { symbol:'CHD', name:'Church & Dwight',        dividend_yield:1.20, consecutive_years:28, freebirds_score:8.0, freebirds_max:14, timing_score:6.5, timing_max:11, recommendation:'潛力股'   },
+    { symbol:'CLX', name:'Clorox Company',         dividend_yield:3.80, consecutive_years:47, freebirds_score:7.5, freebirds_max:14, timing_score:7.0, timing_max:11, recommendation:'建議購買'  },
+  ]},
+  { sector_key:'healthcare', sector_label:'醫療保健 Healthcare', stocks:[
+    { symbol:'JNJ', name:'Johnson & Johnson',      dividend_yield:3.25, consecutive_years:61, freebirds_score:10.0,freebirds_max:14, timing_score:8.0, timing_max:11, recommendation:'建議購買'  },
+    { symbol:'ABT', name:'Abbott Laboratories',    dividend_yield:1.95, consecutive_years:52, freebirds_score:9.0, freebirds_max:14, timing_score:6.0, timing_max:11, recommendation:'潛力股'   },
+    { symbol:'MDT', name:'Medtronic',              dividend_yield:3.50, consecutive_years:46, freebirds_score:8.0, freebirds_max:14, timing_score:7.5, timing_max:11, recommendation:'建議購買'  },
+    { symbol:'BDX', name:'Becton Dickinson',       dividend_yield:1.65, consecutive_years:52, freebirds_score:8.5, freebirds_max:14, timing_score:5.5, timing_max:11, recommendation:'潛力股'   },
+    { symbol:'SYK', name:'Stryker Corp',           dividend_yield:1.10, consecutive_years:31, freebirds_score:9.0, freebirds_max:14, timing_score:5.0, timing_max:11, recommendation:'繼續觀察' },
+  ]},
+  { sector_key:'industrial', sector_label:'工業 Industrials', stocks:[
+    { symbol:'ITW', name:'Illinois Tool Works',    dividend_yield:2.30, consecutive_years:49, freebirds_score:10.0,freebirds_max:14, timing_score:7.0, timing_max:11, recommendation:'建議購買'  },
+    { symbol:'GPC', name:'Genuine Parts Co',       dividend_yield:2.80, consecutive_years:68, freebirds_score:9.0, freebirds_max:14, timing_score:8.0, timing_max:11, recommendation:'建議購買'  },
+    { symbol:'SWK', name:'Stanley Black & Decker', dividend_yield:4.20, consecutive_years:56, freebirds_score:7.0, freebirds_max:14, timing_score:8.5, timing_max:11, recommendation:'建議購買'  },
+    { symbol:'CINF',name:'Cincinnati Financial',   dividend_yield:2.80, consecutive_years:63, freebirds_score:8.5, freebirds_max:14, timing_score:7.0, timing_max:11, recommendation:'建議購買'  },
+    { symbol:'MMM', name:'3M Company',             dividend_yield:4.10, consecutive_years:65, freebirds_score:7.5, freebirds_max:14, timing_score:7.0, timing_max:11, recommendation:'建議購買'  },
+  ]},
+  { sector_key:'tech', sector_label:'科技 Technology', stocks:[
+    { symbol:'MSFT',name:'Microsoft Corp',         dividend_yield:0.74, consecutive_years:21, freebirds_score:10.0,freebirds_max:14, timing_score:4.0, timing_max:11, recommendation:'潛力股'   },
+    { symbol:'AAPL',name:'Apple Inc',              dividend_yield:0.55, consecutive_years:12, freebirds_score:9.5, freebirds_max:14, timing_score:5.0, timing_max:11, recommendation:'潛力股'   },
+    { symbol:'TXN', name:'Texas Instruments',      dividend_yield:2.85, consecutive_years:20, freebirds_score:9.0, freebirds_max:14, timing_score:6.5, timing_max:11, recommendation:'潛力股'   },
+    { symbol:'AVGO',name:'Broadcom Inc',           dividend_yield:1.65, consecutive_years:13, freebirds_score:9.0, freebirds_max:14, timing_score:5.5, timing_max:11, recommendation:'潛力股'   },
+    { symbol:'QCOM',name:'Qualcomm Inc',           dividend_yield:2.20, consecutive_years:21, freebirds_score:8.5, freebirds_max:14, timing_score:7.0, timing_max:11, recommendation:'建議購買'  },
+  ]},
+  { sector_key:'utilities', sector_label:'公用事業 Utilities', stocks:[
+    { symbol:'NEE', name:'NextEra Energy',         dividend_yield:3.10, consecutive_years:29, freebirds_score:9.0, freebirds_max:14, timing_score:7.5, timing_max:11, recommendation:'建議購買'  },
+    { symbol:'SO',  name:'Southern Company',       dividend_yield:3.80, consecutive_years:22, freebirds_score:8.0, freebirds_max:14, timing_score:7.0, timing_max:11, recommendation:'建議購買'  },
+    { symbol:'AWK', name:'American Water Works',   dividend_yield:2.10, consecutive_years:16, freebirds_score:8.5, freebirds_max:14, timing_score:6.0, timing_max:11, recommendation:'潛力股'   },
+    { symbol:'AEP', name:'American Electric Power',dividend_yield:4.00, consecutive_years:13, freebirds_score:7.5, freebirds_max:14, timing_score:7.5, timing_max:11, recommendation:'建議購買'  },
+    { symbol:'WEC', name:'WEC Energy Group',       dividend_yield:3.50, consecutive_years:22, freebirds_score:8.0, freebirds_max:14, timing_score:7.0, timing_max:11, recommendation:'建議購買'  },
+  ]},
+  { sector_key:'finance', sector_label:'金融 Finance', stocks:[
+    { symbol:'V',   name:'Visa Inc',               dividend_yield:0.82, consecutive_years:15, freebirds_score:10.0,freebirds_max:14, timing_score:5.5, timing_max:11, recommendation:'潛力股'   },
+    { symbol:'AFL', name:'Aflac Inc',              dividend_yield:2.30, consecutive_years:41, freebirds_score:9.5, freebirds_max:14, timing_score:8.0, timing_max:11, recommendation:'建議購買'  },
+    { symbol:'AXP', name:'American Express',       dividend_yield:1.25, consecutive_years:10, freebirds_score:8.5, freebirds_max:14, timing_score:6.0, timing_max:11, recommendation:'潛力股'   },
+    { symbol:'JPM', name:'JPMorgan Chase',         dividend_yield:2.35, consecutive_years:14, freebirds_score:8.5, freebirds_max:14, timing_score:7.0, timing_max:11, recommendation:'建議購買'  },
+    { symbol:'BLK', name:'BlackRock Inc',          dividend_yield:2.40, consecutive_years:14, freebirds_score:8.0, freebirds_max:14, timing_score:6.5, timing_max:11, recommendation:'潛力股'   },
+  ]},
+];
+
+function _showDgmTableView() {
+  document.getElementById('dgmTableView').style.display = '';
+  document.getElementById('dgmSectorView').style.display = 'none';
+}
+function _showDgmSectorView() {
+  document.getElementById('dgmTableView').style.display = 'none';
+  document.getElementById('dgmSectorView').style.display = '';
+}
+
+function renderDgmSectorCards(sectors) {
+  const recColor = { '建議購買':'var(--green)', '潛力股':'var(--blue)', '繼續觀察':'var(--light)' };
+  const SECTOR_COLORS_DGM = {
+    consumer_staples:'#16A34A', healthcare:'#0073BB', industrial:'#D97706',
+    tech:'#7C3AED', utilities:'#0891B2', finance:'#DC2626',
+  };
+  return `<div class="sector-discover-grid">${sectors.map(sec => {
+    const color = SECTOR_COLORS_DGM[sec.sector_key] || 'var(--green)';
+    const rows = (sec.stocks || []).slice(0,5).map(s => {
+      const fb = s.freebirds_score != null ? `${s.freebirds_score}/${s.freebirds_max||14}` : '—';
+      const fbColor = (s.freebirds_score||0) >= (s.freebirds_max||14)*0.6 ? 'var(--green)' : (s.freebirds_score||0) >= (s.freebirds_max||14)*0.4 ? 'var(--amber)' : 'var(--light)';
+      const consec = s.consecutive_years || 0;
+      const div = s.dividend_yield != null ? s.dividend_yield.toFixed(2)+'%' : '—';
+      return `
+      <div class="sector-stock-row">
+        <span class="ticker" style="font-size:11px">${s.symbol}</span>
+        <span style="color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name||''}</span>
+        <span style="text-align:right;font-size:10px;color:var(--mid)">${div}</span>
+        <span style="text-align:right;font-size:10px;font-weight:700;color:${fbColor}">${fb}</span>
+        <span style="text-align:right"><span style="font-size:10px;font-weight:600;color:${recColor[s.recommendation]||'var(--mid)'}">${s.recommendation||'—'}</span></span>
+      </div>`;
+    }).join('');
+    return `<div class="sector-card">
+      <div class="sector-card-hdr" style="border-top:3px solid ${color}">
+        <span class="sector-card-title">${sec.sector_label}</span>
+        <span style="font-size:10px;color:var(--light)">${(sec.stocks||[]).length} 支</span>
+      </div>
+      <div style="display:grid;grid-template-columns:44px 1fr 38px 42px 64px;gap:6px;padding:5px 14px 4px;font-size:10px;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)">
+        <span>Ticker</span><span>Company</span><span style="text-align:right">Div%</span><span style="text-align:right">FB</span><span style="text-align:right">推薦</span>
+      </div>
+      <div style="display:grid;grid-template-columns:44px 1fr 38px 42px 64px;gap:6px">${rows}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+async function runDgmDiscoverSectors() {
+  const loading = document.getElementById('dgmLoading');
+  const count   = document.getElementById('dgmCount');
+  loading.style.display = 'flex';
+  document.getElementById('dgmLoadingText').textContent = 'AI 正在為各領域推薦股息成長股 · 約需 60-120 秒...';
+  count.textContent = '—';
+  _showDgmSectorView();
+
+  try {
+    if (DEMO_MODE) {
+      await new Promise(r => setTimeout(r, 1800));
+      document.getElementById('dgmSectorView').innerHTML = renderDgmSectorCards(DEMO_DGM_SECTOR_DISCOVER);
+      count.textContent = `分領域推薦：6 大板塊 × 5 支`;
+    } else {
+      const data = await api('/api/screener/dgm/discover/sectors');
+      if (!data || !data.results) throw new Error('No results returned');
+      document.getElementById('dgmSectorView').innerHTML = renderDgmSectorCards(data.results);
+      count.textContent = `分領域推薦：${data.results.length} 大板塊`;
+    }
+  } catch(e) {
+    console.error(e);
+    document.getElementById('dgmSectorView').innerHTML = `<div style="padding:32px;text-align:center;color:var(--red)">${e.message}</div>`;
+  } finally {
+    loading.style.display = 'none';
+    document.getElementById('dgmLoadingText').textContent = '計算評分中...';
+  }
+}
+
 async function runDgmDiscover() {
   const loading = document.getElementById('dgmLoading');
   const tbody   = document.getElementById('dgmTbody');
   const count   = document.getElementById('dgmCount');
+  _showDgmTableView();
   loading.style.display = 'flex';
   tbody.innerHTML = '';
   count.textContent = '—';
