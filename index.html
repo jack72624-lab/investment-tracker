@@ -874,26 +874,27 @@ tr:hover td{background:var(--bg)}
         <div id="techMeta" style="display:flex;gap:16px;padding-bottom:12px;font-size:12px;color:var(--mid)"></div>
       </div>
       <div class="card-tabs">
-        <div class="card-tab active" onclick="switchTab(this,'price')">Price / MA</div>
-        <div class="card-tab" onclick="switchTab(this,'rsi')">RSI (14)</div>
-        <div class="card-tab" onclick="switchTab(this,'volume')">Volume</div>
+        <div class="card-tab active" onclick="switchTab(this,'price')">股價走勢</div>
+        <div class="card-tab" onclick="switchTab(this,'rsi')">超買超賣</div>
+        <div class="card-tab" onclick="switchTab(this,'volume')">成交量</div>
       </div>
       <div class="tab-pane active" id="chart-price" style="position:relative">
         <div class="chart-wrap-xl"><canvas id="priceChart"></canvas></div>
         <div class="loading-overlay" id="priceLoading"><div class="loading-spinner"></div> Loading</div>
       </div>
       <div class="tab-pane" id="chart-rsi">
-        <div style="font-size:11px;color:var(--mid);margin-bottom:12px">RSI &gt; 70 = Overbought &nbsp;|&nbsp; RSI &lt; 30 = Oversold</div>
+        <div style="font-size:11px;color:var(--mid);margin-bottom:12px">RSI &gt; 70 = 超買，股價偏高，注意風險 &nbsp;|&nbsp; RSI &lt; 30 = 超賣，股價偏低，可能是買入機會</div>
         <div class="chart-wrap-lg"><canvas id="rsiChart"></canvas></div>
       </div>
       <div class="tab-pane" id="chart-volume">
+        <div style="font-size:11px;color:var(--mid);margin-bottom:12px">綠色 = 當天上漲的成交量；紅色 = 當天下跌的成交量。量大代表市場參與度高。</div>
         <div class="chart-wrap-lg"><canvas id="volumeChart"></canvas></div>
       </div>
     </div>
     <div class="grid-3">
-      <div class="card"><div class="card-header"><div class="card-title">Indicators</div></div><div class="card-body" id="techIndicators"></div></div>
-      <div class="card"><div class="card-header"><div class="card-title">Support / Resistance</div></div><div class="card-body" id="techLevels"></div></div>
-      <div class="card"><div class="card-header"><div class="card-title">Signal Summary</div></div><div class="card-body" id="techSignals"></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">技術指標</div><div class="card-sub">各指標的目前數值</div></div><div class="card-body" id="techIndicators"></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">關鍵價位</div><div class="card-sub">支撐與壓力參考</div></div><div class="card-body" id="techLevels"></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">白話結論</div><div class="card-sub">現在該觀望還是買入？</div></div><div class="card-body" id="techSignals"></div></div>
     </div>
   </div>
 
@@ -1492,11 +1493,11 @@ async function loadTechnical(symbol, period) {
   const {dates,prices,sma20,sma50,rsi,volumes}=data;
   const ctx=document.getElementById('priceChart').getContext('2d');
   if(pChart) pChart.destroy();
-  pChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'Price',data:prices,borderColor:'#006FFF',backgroundColor:'rgba(0,111,255,0.05)',fill:true,tension:0.3,pointRadius:0,borderWidth:2},{label:'SMA 20',data:sma20,borderColor:'#D97706',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},{label:'SMA 50',data:sma50,borderColor:'#DC2626',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#6B7280'}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: $${c.raw?.toFixed(2)??'—'}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>'$'+v.toFixed(0),font:{size:11},color:'#9CA3AF'}}}}});
+  pChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'股價',data:prices,borderColor:'#006FFF',backgroundColor:'rgba(0,111,255,0.05)',fill:true,tension:0.3,pointRadius:0,borderWidth:2},{label:'20日均線',data:sma20,borderColor:'#D97706',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},{label:'50日均線',data:sma50,borderColor:'#DC2626',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#6B7280'}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: $${c.raw?.toFixed(2)??'—'}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>'$'+v.toFixed(0),font:{size:11},color:'#9CA3AF'}}}}});
 
   const ctx2=document.getElementById('rsiChart').getContext('2d');
   if(rChart) rChart.destroy();
-  rChart=new Chart(ctx2,{type:'line',data:{labels:dates,datasets:[{label:'RSI (14)',data:rsi,borderColor:'#006FFF',fill:false,tension:0.3,pointRadius:0,borderWidth:2},{label:'Overbought',data:Array(dates.length).fill(70),borderColor:'rgba(220,38,38,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1},{label:'Oversold',data:Array(dates.length).fill(30),borderColor:'rgba(22,163,74,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#6B7280'}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9CA3AF'}},y:{min:0,max:100,grid:{color:'#F3F4F6'},ticks:{font:{size:11},color:'#9CA3AF'}}}}});
+  rChart=new Chart(ctx2,{type:'line',data:{labels:dates,datasets:[{label:'RSI',data:rsi,borderColor:'#006FFF',fill:false,tension:0.3,pointRadius:0,borderWidth:2},{label:'超買線(70)',data:Array(dates.length).fill(70),borderColor:'rgba(220,38,38,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1},{label:'超賣線(30)',data:Array(dates.length).fill(30),borderColor:'rgba(22,163,74,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#6B7280'}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9CA3AF'}},y:{min:0,max:100,grid:{color:'#F3F4F6'},ticks:{font:{size:11},color:'#9CA3AF'}}}}});
 
   const volColors=prices.map((p,i)=>i===0?'rgba(0,111,255,.6)':p>=prices[i-1]?'rgba(22,163,74,.65)':'rgba(220,38,38,.65)');
   const ctx3=document.getElementById('volumeChart').getContext('2d');
@@ -1509,26 +1510,88 @@ async function loadTechnical(symbol, period) {
   const cur=prices[prices.length-1];
   const hi=Math.max(...prices.filter(Boolean)), lo=Math.min(...prices.filter(Boolean));
 
+  const rsiLabel = lastRSI>70 ? '超買（偏高）' : lastRSI<30 ? '超賣（偏低）' : '正常範圍';
+  const maVsLabel = cur>lastSMA20 ? '在均線上方' : '在均線下方';
+  const maXLabel  = lastSMA20>lastSMA50 ? '黃金交叉（看漲）' : '死亡交叉（看跌）';
   document.getElementById('techIndicators').innerHTML=`
-    <div class="alloc-item"><div class="alloc-name">RSI (14)</div><span class="tag ${lastRSI>70?'tag-red':lastRSI<30?'tag-green':'tag-blue'}">${lastRSI?.toFixed(1)??'—'}</span></div>
-    <div class="alloc-item"><div class="alloc-name">SMA 20</div><div style="font-weight:600;font-family:monospace">$${lastSMA20?.toFixed(2)??'—'}</div></div>
-    <div class="alloc-item"><div class="alloc-name">SMA 50</div><div style="font-weight:600;font-family:monospace">$${lastSMA50?.toFixed(2)??'—'}</div></div>
-    <div class="alloc-item"><div class="alloc-name">Price vs SMA 20</div><span class="tag ${cur>lastSMA20?'tag-green':'tag-red'}">${cur>lastSMA20?'Above':'Below'}</span></div>
-    <div class="alloc-item"><div class="alloc-name">MA Cross</div><span class="tag ${lastSMA20>lastSMA50?'tag-green':'tag-red'}">${lastSMA20>lastSMA50?'Golden Cross':'Death Cross'}</span></div>`;
+    <div class="alloc-item">
+      <div class="alloc-name">RSI 超買超賣<div style="font-size:10px;color:var(--mid);font-weight:400">0–100，70以上偏高，30以下偏低</div></div>
+      <span class="tag ${lastRSI>70?'tag-red':lastRSI<30?'tag-green':'tag-blue'}">${lastRSI?.toFixed(1)??'—'} ${rsiLabel}</span>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-name">20日均線<div style="font-size:10px;color:var(--mid);font-weight:400">近20天平均買入價格</div></div>
+      <div style="font-weight:600;font-family:monospace">$${lastSMA20?.toFixed(2)??'—'}</div>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-name">50日均線<div style="font-size:10px;color:var(--mid);font-weight:400">近50天平均買入價格，代表中期趨勢</div></div>
+      <div style="font-weight:600;font-family:monospace">$${lastSMA50?.toFixed(2)??'—'}</div>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-name">現價 vs 均線<div style="font-size:10px;color:var(--mid);font-weight:400">在均線上方代表短期偏強</div></div>
+      <span class="tag ${cur>lastSMA20?'tag-green':'tag-red'}">${maVsLabel}</span>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-name">均線交叉<div style="font-size:10px;color:var(--mid);font-weight:400">短期均線穿越長期均線的方向</div></div>
+      <span class="tag ${lastSMA20>lastSMA50?'tag-green':'tag-red'}">${maXLabel}</span>
+    </div>`;
+  const distHi = ((cur/hi-1)*100).toFixed(1);
+  const distLo = ((cur/lo-1)*100).toFixed(1);
   document.getElementById('techLevels').innerHTML=`
-    <div class="alloc-item"><div class="alloc-name">Current</div><div style="font-weight:700;font-family:monospace">$${cur.toFixed(2)}</div></div>
-    <div class="alloc-item"><div class="alloc-name">52W High</div><div style="color:var(--green);font-weight:600;font-family:monospace">$${hi.toFixed(2)}</div></div>
-    <div class="alloc-item"><div class="alloc-name">52W Low</div><div style="color:var(--red);font-weight:600;font-family:monospace">$${lo.toFixed(2)}</div></div>
-    <div class="alloc-item"><div class="alloc-name">Resistance</div><div style="color:var(--red);font-weight:600;font-family:monospace">$${(cur*1.08).toFixed(2)}</div></div>
-    <div class="alloc-item"><div class="alloc-name">Support</div><div style="color:var(--green);font-weight:600;font-family:monospace">$${(cur*0.93).toFixed(2)}</div></div>`;
-  const sig=lastSMA20>lastSMA50&&lastRSI<70?'Hold / Accumulate':lastRSI>70?'Caution — Overbought':'Neutral — Wait for signal';
+    <div class="alloc-item">
+      <div class="alloc-name">目前股價</div>
+      <div style="font-weight:700;font-family:monospace;font-size:15px">$${cur.toFixed(2)}</div>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-name">52週最高<div style="font-size:10px;color:var(--mid);font-weight:400">過去一年最貴，現在距離 ${distHi}%</div></div>
+      <div style="color:var(--red);font-weight:600;font-family:monospace">$${hi.toFixed(2)}</div>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-name">52週最低<div style="font-size:10px;color:var(--mid);font-weight:400">過去一年最便宜，現在距離 +${distLo}%</div></div>
+      <div style="color:var(--green);font-weight:600;font-family:monospace">$${lo.toFixed(2)}</div>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-name">壓力位（上方阻力）<div style="font-size:10px;color:var(--mid);font-weight:400">估計上方的賣壓區，漲到這裡可能遇阻</div></div>
+      <div style="color:var(--red);font-weight:600;font-family:monospace">$${(cur*1.08).toFixed(2)}</div>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-name">支撐位（下方支撐）<div style="font-size:10px;color:var(--mid);font-weight:400">估計下方的買盤區，跌到這裡可能止跌</div></div>
+      <div style="color:var(--green);font-weight:600;font-family:monospace">$${(cur*0.93).toFixed(2)}</div>
+    </div>`;
+  // 決定白話結論
+  let sigColor, sigBg, sigTitle, sigText;
+  if(lastRSI>70){
+    sigColor='var(--red)'; sigBg='#FEF2F2';
+    sigTitle='目前偏高，建議觀望';
+    sigText=`RSI ${lastRSI?.toFixed(0)} 已進入超買區（>70），代表短期漲幅較大，市場情緒偏熱。建議等股價稍微回調、RSI 降至 60 以下，再考慮分批買入。`;
+  } else if(lastRSI<30){
+    sigColor='var(--green)'; sigBg='#F0FDF4';
+    sigTitle='目前偏低，可考慮分批買入';
+    sigText=`RSI ${lastRSI?.toFixed(0)} 進入超賣區（<30），代表股價短期跌幅較大，可能已接近相對低點。若長期看好這支股票，可考慮開始分批買入。`;
+  } else if(lastSMA20>lastSMA50){
+    sigColor='var(--blue)'; sigBg='#EFF6FF';
+    sigTitle='趨勢偏強，可繼續持有或定期買入';
+    sigText=`20日均線在50日均線之上（黃金交叉），代表短期走勢比中期強，整體趨勢看漲。RSI ${lastRSI?.toFixed(0)} 在正常範圍，沒有明顯超買。適合繼續持有或定期定額累積。`;
+  } else {
+    sigColor='var(--amber)'; sigBg='#FFFBEB';
+    sigTitle='趨勢中性，建議定期定額持續投入';
+    sigText=`目前均線呈死亡交叉（短期弱於中期），但 RSI ${lastRSI?.toFixed(0)} 正常。若是長期定期定額計畫，不需要特別在意短期訊號，按計畫持續投入即可。`;
+  }
   document.getElementById('techSignals').innerHTML=`
-    <div class="alloc-item"><div class="alloc-name">Trend</div><span class="tag ${lastSMA20>lastSMA50?'tag-green':'tag-red'}">${lastSMA20>lastSMA50?'Bullish':'Bearish'}</span></div>
-    <div class="alloc-item"><div class="alloc-name">RSI Status</div><span class="tag ${lastRSI>70?'tag-red':lastRSI<30?'tag-green':'tag-blue'}">${lastRSI>70?'Overbought':lastRSI<30?'Oversold':'Neutral'}</span></div>
-    <div class="alloc-item"><div class="alloc-name">MA Signal</div><span class="tag ${lastSMA20>lastSMA50?'tag-green':'tag-red'}">${lastSMA20>lastSMA50?'Golden Cross':'Death Cross'}</span></div>
-    <div style="margin-top:12px;padding:11px 13px;background:var(--blue-lt);border-radius:7px;border-left:3px solid var(--blue)">
-      <div style="font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">AI Recommendation</div>
-      <div style="font-size:12px;color:var(--dark);font-weight:500">${sig}</div>
+    <div style="margin-bottom:12px;padding:13px 14px;background:${sigBg};border-radius:7px;border-left:3px solid ${sigColor}">
+      <div style="font-size:12px;font-weight:700;color:${sigColor};margin-bottom:5px">${sigTitle}</div>
+      <div style="font-size:12px;color:var(--text);line-height:1.65">${sigText}</div>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-name">整體趨勢</div>
+      <span class="tag ${lastSMA20>lastSMA50?'tag-green':'tag-red'}">${lastSMA20>lastSMA50?'看漲':'看跌'}</span>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-name">超買超賣</div>
+      <span class="tag ${lastRSI>70?'tag-red':lastRSI<30?'tag-green':'tag-blue'}">${lastRSI>70?'超買（偏高）':lastRSI<30?'超賣（偏低）':'正常'}</span>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-name">均線訊號</div>
+      <span class="tag ${lastSMA20>lastSMA50?'tag-green':'tag-red'}">${lastSMA20>lastSMA50?'黃金交叉':'死亡交叉'}</span>
     </div>`;
 
   document.getElementById('priceLoading').style.display='none';
