@@ -203,6 +203,13 @@ tr:hover td{background:var(--bg)}
 .alert-block:last-child{margin-bottom:0}
 .alert-title{font-weight:700;font-size:12px;margin-bottom:3px}
 .alert-text{font-size:12px;color:var(--dark)}
+/* ── 風險卡 tooltip ── */
+.risk-card-wrap{position:relative}
+.risk-tip-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--border);color:var(--light);font-size:9px;font-weight:700;cursor:help;margin-left:5px;line-height:1;vertical-align:middle;transition:background .13s}
+.risk-tip-icon:hover{background:var(--blue);color:#fff}
+.risk-card-wrap .risk-tooltip{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1a2035;color:#e8eaf0;font-size:11.5px;line-height:1.6;padding:10px 13px;border-radius:9px;white-space:normal;width:230px;opacity:0;pointer-events:none;transition:opacity .18s;z-index:300;box-shadow:0 6px 24px rgba(0,0,0,.22)}
+.risk-card-wrap .risk-tooltip::before{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-bottom-color:#1a2035}
+.risk-card-wrap:hover .risk-tooltip{opacity:1}
 
 /* LOADING */
 .loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
@@ -782,14 +789,38 @@ tr:hover td{background:var(--bg)}
   <!-- PAGE: 風險 -->
   <div class="page" id="page-risk">
     <div class="stats-grid mb-20">
-      <div class="stat-card"><div class="stat-label">Portfolio Beta</div><div class="stat-value" id="r-beta">—</div><div class="stat-change" id="r-betaLabel" style="color:var(--amber)">—</div><div class="stat-sub">vs. S&P 500</div></div>
-      <div class="stat-card"><div class="stat-label">Sharpe Ratio</div><div class="stat-value" id="r-sharpe" style="color:var(--blue)">—</div><div class="stat-change up" id="r-sharpeLabel">—</div><div class="stat-sub">Risk-adjusted return</div></div>
-      <div class="stat-card"><div class="stat-label">Max Drawdown</div><div class="stat-value" id="r-dd" style="color:var(--red)">—</div><div class="stat-change down">Historical worst loss</div><div class="stat-sub">&nbsp;</div></div>
-      <div class="stat-card"><div class="stat-label">Annualized Vol</div><div class="stat-value" id="r-vol">—</div><div class="stat-change" style="color:var(--amber)">12-month rolling</div><div class="stat-sub">&nbsp;</div></div>
+      <div class="stat-card risk-card-wrap">
+        <div class="stat-label">Portfolio Beta <span class="risk-tip-icon">?</span></div>
+        <div class="stat-value" id="r-beta">—</div>
+        <div class="stat-change" id="r-betaLabel" style="color:var(--amber)">—</div>
+        <div class="stat-sub">vs. S&P 500</div>
+        <div class="risk-tooltip">📊 衡量組合相對大盤的波動性。<br>• Beta = 1：跟大盤同步<br>• Beta &gt; 1：比大盤波動更大（漲更多也跌更多）<br>• Beta &lt; 1：比大盤穩定</div>
+      </div>
+      <div class="stat-card risk-card-wrap">
+        <div class="stat-label">夏普比率 <span class="risk-tip-icon">?</span></div>
+        <div class="stat-value" id="r-sharpe" style="color:var(--blue)">—</div>
+        <div class="stat-change up" id="r-sharpeLabel">—</div>
+        <div class="stat-sub">風險調整後報酬</div>
+        <div class="risk-tooltip">📈 每承擔一單位風險所獲得的超額報酬。<br>• &gt; 1：優秀<br>• 0.5–1：良好，風險補償合理<br>• &lt; 0.5：風險補償不足<br>數字越高代表在同樣風險下賺得更多。</div>
+      </div>
+      <div class="stat-card risk-card-wrap">
+        <div class="stat-label">最大回撤 <span class="risk-tip-icon">?</span></div>
+        <div class="stat-value" id="r-dd" style="color:var(--red)">—</div>
+        <div class="stat-change down">歷史最大跌幅</div>
+        <div class="stat-sub">&nbsp;</div>
+        <div class="risk-tooltip">📉 從歷史最高點到最低點的最大跌幅。<br>例如 -8.9% 代表組合曾從高峰下跌 8.9%。<br>此數值越接近 0 代表組合越抗跌，心理壓力越小。</div>
+      </div>
+      <div class="stat-card risk-card-wrap">
+        <div class="stat-label">年化波動率 <span class="risk-tip-icon">?</span></div>
+        <div class="stat-value" id="r-vol">—</div>
+        <div class="stat-change" style="color:var(--amber)">12 個月滾動計算</div>
+        <div class="stat-sub">&nbsp;</div>
+        <div class="risk-tooltip">〰️ 組合每年的價格波動幅度。<br>• &lt; 10%：低波動，穩健型<br>• 10–20%：中等波動<br>• &gt; 20%：高波動<br>定期定額投資人不必過度在意短期波動。</div>
+      </div>
     </div>
     <div class="grid-2">
-      <div class="card"><div class="card-header"><div class="card-title">Position Risk Score</div></div><div class="card-body" id="riskScoreList"></div></div>
-      <div class="card"><div class="card-header"><div class="card-title">Risk Alerts</div></div><div class="card-body" id="riskAlerts"></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">持倉風險分數</div></div><div class="card-body" id="riskScoreList"></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">風險建議</div></div><div class="card-body" id="riskAlerts"></div></div>
     </div>
   </div>
 
@@ -1119,20 +1150,30 @@ async function loadRiskPage() {
     document.getElementById('r-sharpe').textContent  = risk.sharpe_ratio.toFixed(2);
     document.getElementById('r-dd').textContent      = risk.max_drawdown.toFixed(1)+'%';
     document.getElementById('r-vol').textContent     = risk.annualized_volatility.toFixed(1)+'%';
-    document.getElementById('r-betaLabel').textContent  = risk.beta>1.2?'High Risk':risk.beta>0.8?'Medium Risk':'Low Risk';
-    document.getElementById('r-sharpeLabel').textContent= risk.sharpe_ratio>1?'Excellent':risk.sharpe_ratio>0.5?'Good (>0.5)':'Below average';
+    document.getElementById('r-betaLabel').textContent  = risk.beta>1.2?'高風險':risk.beta>0.8?'中等風險':'低風險';
+    document.getElementById('r-betaLabel').style.color  = risk.beta>1.2?'var(--red)':risk.beta>0.8?'var(--amber)':'var(--green)';
+    document.getElementById('r-sharpeLabel').textContent= risk.sharpe_ratio>1?'優秀':risk.sharpe_ratio>0.5?'良好（>0.5）':'低於標準';
+    document.getElementById('r-sharpeLabel').className  = 'stat-change '+(risk.sharpe_ratio>0.5?'up':'down');
 
     const riskList=document.getElementById('riskScoreList'); riskList.innerHTML='';
-    risk.position_risks.forEach(p=>{const col=p.risk_score>=70?'var(--red)':p.risk_score>=40?'var(--amber)':'var(--green)';riskList.innerHTML+=`<div class="alloc-item"><div class="alloc-name"><span class="ticker">${p.symbol}</span><div class="alloc-sub">β ${p.beta} · ${p.concentration_pct}% of portfolio</div></div><div class="score-bar-wrap" style="width:110px"><div class="score-bar"><div class="score-fill" style="width:${p.risk_score}%;background:${col}"></div></div><span class="score-val" style="color:${col}">${p.risk_score}</span></div></div>`;});
+    risk.position_risks.forEach(p=>{
+      const col=p.risk_score>=70?'var(--red)':p.risk_score>=40?'var(--amber)':'var(--green)';
+      const riskLabel=p.risk_score>=70?'高風險':p.risk_score>=40?'中等':'穩健';
+      riskList.innerHTML+=`<div class="alloc-item"><div class="alloc-name"><span class="ticker">${p.symbol}</span><div class="alloc-sub">Beta ${p.beta} · 佔組合 ${p.concentration_pct}%</div></div><div style="display:flex;align-items:center;gap:8px"><div class="score-bar-wrap" style="width:90px"><div class="score-bar"><div class="score-fill" style="width:${p.risk_score}%;background:${col}"></div></div></div><span style="font-size:11px;font-weight:700;color:${col};min-width:24px;text-align:right">${p.risk_score}</span><span style="font-size:10px;color:${col};background:${col}18;padding:2px 6px;border-radius:4px;white-space:nowrap">${riskLabel}</span></div></div>`;
+    });
 
     const alerts=document.getElementById('riskAlerts');
     let html='';
     const sectors=DEMO_SUMMARY.sector_allocation;
     const topSec=Object.entries(sectors).sort((a,b)=>b[1]-a[1])[0];
-    if(topSec&&topSec[1]>35) html+=`<div class="alert-block" style="background:var(--amber-lt);border-color:var(--amber)"><div class="alert-title" style="color:var(--amber)">Sector Concentration</div><div class="alert-text">${topSec[0]} at ${topSec[1]}% — recommend reducing to below 35%</div></div>`;
-    if(risk.beta>1.2) html+=`<div class="alert-block" style="background:#EFF6FF;border-color:var(--blue)"><div class="alert-title" style="color:var(--blue)">Elevated Beta</div><div class="alert-text">Portfolio Beta ${risk.beta} — drawdowns may exceed market by ${((risk.beta-1)*100).toFixed(0)}%</div></div>`;
-    if(risk.sharpe_ratio>0.5) html+=`<div class="alert-block" style="background:var(--green-lt);border-color:var(--green)"><div class="alert-title" style="color:var(--green)">Sharpe Ratio Healthy</div><div class="alert-text">${risk.sharpe_ratio} exceeds the 0.5 threshold — risk/reward is acceptable</div></div>`;
-    alerts.innerHTML=html||'<div class="alert-block" style="background:var(--green-lt);border-color:var(--green)"><div class="alert-title" style="color:var(--green)">All Clear</div><div class="alert-text">No significant risk alerts detected.</div></div>';
+    if(topSec&&topSec[1]>35) html+=`<div class="alert-block" style="background:var(--amber-lt);border-color:var(--amber)"><div class="alert-title" style="color:var(--amber)">⚠️ 板塊集中度偏高</div><div class="alert-text">${topSec[0]} 佔比 ${topSec[1]}%，超過 35% 警戒線。建議分散到其他板塊，降低單一產業的系統性風險。</div></div>`;
+    if(risk.beta>1.2) html+=`<div class="alert-block" style="background:#EFF6FF;border-color:var(--blue)"><div class="alert-title" style="color:var(--blue)">📊 組合波動偏高</div><div class="alert-text">Portfolio Beta 為 ${risk.beta}，比大盤波動更大。市場下跌時跌幅可能超過大盤約 ${((risk.beta-1)*100).toFixed(0)}%。可考慮加入低 Beta 的穩健型股票（如公用事業、消費必需品）來平衡。</div></div>`;
+    if(risk.beta<=1.2&&risk.beta>=0.8) html+=`<div class="alert-block" style="background:var(--green-lt);border-color:var(--green)"><div class="alert-title" style="color:var(--green)">✅ Beta 穩健</div><div class="alert-text">組合 Beta ${risk.beta.toFixed(2)}，與大盤波動程度相近，風險控制良好。</div></div>`;
+    if(risk.sharpe_ratio>1) html+=`<div class="alert-block" style="background:var(--green-lt);border-color:var(--green)"><div class="alert-title" style="color:var(--green)">🏆 夏普比率優秀</div><div class="alert-text">夏普比率 ${risk.sharpe_ratio.toFixed(2)} 超過 1.0，代表你的組合在承擔風險的同時獲得了非常好的報酬回報，繼續保持！</div></div>`;
+    else if(risk.sharpe_ratio>0.5) html+=`<div class="alert-block" style="background:var(--green-lt);border-color:var(--green)"><div class="alert-title" style="color:var(--green)">✅ 夏普比率良好</div><div class="alert-text">夏普比率 ${risk.sharpe_ratio.toFixed(2)} 超過 0.5 標準線，代表每承擔的風險都有合理報酬，組合效率良好。</div></div>`;
+    else html+=`<div class="alert-block" style="background:var(--red-lt);border-color:var(--red)"><div class="alert-title" style="color:var(--red)">⚠️ 夏普比率偏低</div><div class="alert-text">夏普比率 ${risk.sharpe_ratio.toFixed(2)} 低於 0.5，目前的風險補償不足。建議檢視高風險低報酬的持倉，考慮調整配置。</div></div>`;
+    if(Math.abs(risk.max_drawdown)>20) html+=`<div class="alert-block" style="background:var(--red-lt);border-color:var(--red)"><div class="alert-title" style="color:var(--red)">📉 最大回撤偏大</div><div class="alert-text">歷史最大回撤 ${risk.max_drawdown.toFixed(1)}%，需確認心理能接受此幅度的虧損。若不適合，可增加防禦型資產比例。</div></div>`;
+    alerts.innerHTML=html||'<div class="alert-block" style="background:var(--green-lt);border-color:var(--green)"><div class="alert-title" style="color:var(--green)">✅ 風險狀況良好</div><div class="alert-text">目前沒有需要特別注意的風險警示，組合整體表現穩健。繼續定期檢視即可！</div></div>';
   } catch(e){ console.error(e); }
 }
 
