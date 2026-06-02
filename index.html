@@ -89,7 +89,7 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;background:var(
 .page{display:none}.page.active{display:block}
 
 /* STATS */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin-bottom:20px}
 .stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
 .stat-label{font-size:10px;color:var(--mid);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
 .stat-value{font-size:24px;font-weight:700;color:var(--dark);letter-spacing:-.6px;line-height:1}
@@ -349,6 +349,27 @@ tr:hover td{background:var(--bg)}
 .sector-add-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
 .sector-add-btn.added{background:var(--green);color:#fff;border-color:var(--green);pointer-events:none}
 @media(max-width:640px){.sector-discover-grid{grid-template-columns:1fr;padding:10px}}
+/* ── 估值燈號 ─────────────────────────────────────────────── */
+.val-dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-right:1px}
+.val-dot.green{background:#16A34A}.val-dot.yellow{background:#D97706}.val-dot.red{background:#DC2626}.val-dot.gray{background:#9CA3AF}
+.val-wrap{display:inline-flex;align-items:center;gap:5px;cursor:help;position:relative}
+.val-wrap .val-tip{position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:#1a2035;color:#e8eaf0;font-size:11px;padding:7px 11px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;z-index:300;transition:opacity .15s;min-width:180px;line-height:1.55;box-shadow:0 4px 16px rgba(0,0,0,.18)}
+.val-wrap:hover .val-tip{opacity:1}
+/* ── 績效對比大盤 ─────────────────────────────────────────── */
+.perf-compare-grid{width:100%}
+.perf-compare-row{display:grid;grid-template-columns:130px 1fr 1fr 1fr;align-items:center;padding:10px 16px;gap:8px}
+.perf-compare-row.hdr{padding:6px 16px;background:var(--accent);border-bottom:1px solid var(--border)}
+.perf-compare-row+.perf-compare-row{border-top:1px solid var(--border)}
+.perf-compare-label{font-weight:700;font-size:12px;color:var(--navy)}
+.perf-compare-val{text-align:center;font-size:13px;color:var(--mid)}
+.perf-compare-hdr-val{text-align:center;font-size:10px;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.04em}
+/* ── 再平衡頁面 ──────────────────────────────────────────── */
+.rebal-table{width:100%;border-collapse:collapse}
+.rebal-table th{font-size:10px;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.04em;padding:8px 12px;text-align:left;border-bottom:2px solid var(--border)}
+.rebal-table td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle}
+.rebal-table tr:last-child td{border-bottom:none}
+.target-input{width:60px;height:28px;border:1px solid var(--border);border-radius:3px;font-size:12px;text-align:center;padding:0 4px;color:var(--text);background:var(--white)}
+.target-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(0,115,187,.12)}
 
 /* ── DGM TABLE ──────────────────────────── */
 .dgm-score-wrap{display:flex;align-items:center;gap:6px}
@@ -527,6 +548,10 @@ tr:hover td{background:var(--bg)}
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="5.5" y1="5.5" x2="10.5" y2="5.5"/><line x1="5.5" y1="8" x2="7.5" y2="8"/><line x1="5.5" y1="10.5" x2="7.5" y2="10.5"/><line x1="9" y1="8" x2="11" y2="10.5"/><line x1="11" y1="8" x2="9" y2="10.5"/></svg></span>
       <span class="nav-item-text">DCA 計算器</span>
     </div>
+    <div class="nav-item" onclick="showPage('rebalance')" data-label="再平衡建議">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="9,4 13,8 9,12"/><polyline points="7,12 3,8 7,4"/></svg></span>
+      <span class="nav-item-text">再平衡建議</span>
+    </div>
   </div>
   <div class="sidebar-footer">
     <div class="sidebar-footer-text">
@@ -586,6 +611,7 @@ tr:hover td{background:var(--bg)}
       <div class="stat-card"><div class="stat-label">Day Change</div><div class="stat-value" id="s-dayChg">—</div><div class="stat-change" id="s-dayPct">—</div><div class="stat-sub">Today's P&L</div></div>
       <div class="stat-card"><div class="stat-label">持倉數</div><div class="stat-value" id="s-count">—</div><div class="stat-change" style="color:var(--mid)">Active holdings</div><div class="stat-sub">&nbsp;</div></div>
       <div class="stat-card"><div class="stat-label">年化股息收益</div><div class="stat-value" id="s-divIncome" style="color:var(--green)">—</div><div class="stat-change" id="s-divYield" style="color:var(--green)">—</div><div class="stat-sub" id="s-divSub">Portfolio yield</div></div>
+      <div class="stat-card"><div class="stat-label">年化報酬率 IRR</div><div class="stat-value" id="s-irr">—</div><div class="stat-change" id="s-irrLabel" style="color:var(--mid)">—</div><div class="stat-sub">依交易記錄計算</div></div>
     </div>
 
     <!-- 投資目標 -->
@@ -606,6 +632,22 @@ tr:hover td{background:var(--bg)}
         <input class="goal-input" id="goalInput" type="number" placeholder="設定目標金額（USD）" min="1">
         <button class="btn btn-primary" style="height:34px" onclick="saveGoal()">設定</button>
         <button class="btn btn-ghost" style="height:34px" onclick="clearGoal()">清除</button>
+      </div>
+    </div>
+
+    <!-- 績效對比大盤 -->
+    <div class="card mb-20">
+      <div class="card-header">
+        <div><div class="card-title">績效對比大盤</div><div class="card-sub">我的組合報酬率 vs VOO（標普500 ETF）</div></div>
+        <div class="timeframe-row">
+          <button class="tf-btn active" onclick="setPerfTF(this,'1y')">1Y</button>
+          <button class="tf-btn" onclick="setPerfTF(this,'6mo')">6M</button>
+          <button class="tf-btn" onclick="setPerfTF(this,'3mo')">3M</button>
+          <button class="tf-btn" onclick="setPerfTF(this,'1mo')">1M</button>
+        </div>
+      </div>
+      <div class="card-body" id="perfContent" style="padding:0">
+        <div style="text-align:center;padding:24px;color:var(--mid)">載入中...</div>
       </div>
     </div>
 
@@ -641,7 +683,7 @@ tr:hover td{background:var(--bg)}
       <div class="table-wrap">
         <table><thead><tr>
           <th>Ticker</th><th>Company</th><th>Price</th><th>Change</th>
-          <th>Shares</th><th>Avg Cost</th><th>Mkt Value</th><th>P&L</th><th>Return</th><th>Sector</th><th></th>
+          <th>Shares</th><th>Avg Cost</th><th>Mkt Value</th><th>P&L</th><th>Return</th><th>估值</th><th>Sector</th><th></th>
         </tr></thead>
         <tbody id="holdingsTbody"></tbody>
         </table>
@@ -1013,6 +1055,47 @@ tr:hover td{background:var(--bg)}
     </div>
   </div>
 
+  <!-- PAGE: 再平衡建議 -->
+  <div class="page" id="page-rebalance">
+    <!-- 估值警示 -->
+    <div class="card mb-20">
+      <div class="card-header">
+        <div><div class="card-title">估值燈號</div><div class="card-sub">依 P/E 偵測持倉是否偏高估，紅燈考慮減倉</div></div>
+      </div>
+      <div class="card-body" id="rebalValuation">
+        <div style="text-align:center;padding:24px;color:var(--mid)">載入中...</div>
+      </div>
+    </div>
+    <!-- 目標配置 + 建議 -->
+    <div class="grid-2 mb-20">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">目標配置設定</div><div class="card-sub">輸入各板塊目標佔比（%），系統計算偏差</div></div>
+          <button class="btn btn-primary" style="height:30px;font-size:11px" onclick="saveTargetAllocation()">儲存設定</button>
+        </div>
+        <div class="card-body" style="padding:0">
+          <table class="rebal-table">
+            <thead><tr><th>板塊</th><th>現況 %</th><th>目標 %</th><th>偏差</th><th>操作方向</th></tr></thead>
+            <tbody id="rebalAllocBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">再平衡建議</div><div class="card-sub">依配置偏差 + 估值產生操作方向</div></div>
+        <div class="card-body" id="rebalAdvice">
+          <div style="color:var(--mid);font-size:12px;text-align:center;padding:16px">請先設定目標配置</div>
+        </div>
+      </div>
+    </div>
+    <!-- 股息再投資 -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">股息再投資建議</div><div class="card-sub">將本月預估股息投入至低配板塊，加速複利</div></div>
+      <div class="card-body" id="rebalDividendReinvest">
+        <div style="text-align:center;padding:20px;color:var(--mid)">載入中...</div>
+      </div>
+    </div>
+  </div>
+
   </div>
 </main>
 
@@ -1088,6 +1171,7 @@ const PAGE_META = {
   watchlist:     ['觀察清單','Watchlist'],
   transactions:  ['交易記錄','Transactions'],
   calculator:    ['DCA 計算器','Calculator'],
+  rebalance:     ['再平衡建議','Rebalancing'],
 };
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -1100,6 +1184,7 @@ function showPage(id) {
   if (id === 'screener') loadScreenerWatchlist();
   if (id === 'transactions') loadTransactionsPage();
   if (id === 'calculator') { runCalculator(); }
+  if (id === 'rebalance') { loadRebalancePage(); }
   closeMobileSidebar();
 }
 
@@ -1147,11 +1232,11 @@ async function api(path, method = 'GET', body = null) {
 
 // ── DEMO DATA (fallback) ──────────────────────────────────────
 const DEMO_HOLDINGS = [
-  {symbol:'NVDA',name:'NVIDIA Corp',sector:'Technology',shares:15,avg_cost:620,current_price:875.50,change_pct:2.3,market_value:13132.5,unrealized_pnl:3832.5,unrealized_pnl_pct:41.3},
-  {symbol:'AAPL',name:'Apple Inc',sector:'Technology',shares:40,avg_cost:165,current_price:189.20,change_pct:-0.4,market_value:7568,unrealized_pnl:968,unrealized_pnl_pct:14.7},
-  {symbol:'MSFT',name:'Microsoft Corp',sector:'Technology',shares:20,avg_cost:370,current_price:415.80,change_pct:0.8,market_value:8316,unrealized_pnl:916,unrealized_pnl_pct:12.4},
-  {symbol:'VOO',name:'Vanguard S&P 500',sector:'ETF',shares:30,avg_cost:430,current_price:498.20,change_pct:0.6,market_value:14946,unrealized_pnl:2046,unrealized_pnl_pct:15.9},
-  {symbol:'JPM',name:'JPMorgan Chase',sector:'Financials',shares:25,avg_cost:178,current_price:198.40,change_pct:1.1,market_value:4960,unrealized_pnl:510,unrealized_pnl_pct:11.5},
+  {symbol:'NVDA',name:'NVIDIA Corp',sector:'Technology',shares:15,avg_cost:620,current_price:875.50,change_pct:2.3,market_value:13132.5,unrealized_pnl:3832.5,unrealized_pnl_pct:41.3,pe_ratio:45.2,beta:1.72},
+  {symbol:'AAPL',name:'Apple Inc',sector:'Technology',shares:40,avg_cost:165,current_price:189.20,change_pct:-0.4,market_value:7568,unrealized_pnl:968,unrealized_pnl_pct:14.7,pe_ratio:29.4,beta:1.19},
+  {symbol:'MSFT',name:'Microsoft Corp',sector:'Technology',shares:20,avg_cost:370,current_price:415.80,change_pct:0.8,market_value:8316,unrealized_pnl:916,unrealized_pnl_pct:12.4,pe_ratio:35.1,beta:0.92},
+  {symbol:'VOO',name:'Vanguard S&P 500',sector:'ETF',shares:30,avg_cost:430,current_price:498.20,change_pct:0.6,market_value:14946,unrealized_pnl:2046,unrealized_pnl_pct:15.9,pe_ratio:23.4,beta:1.00},
+  {symbol:'JPM',name:'JPMorgan Chase',sector:'Financials',shares:25,avg_cost:178,current_price:198.40,change_pct:1.1,market_value:4960,unrealized_pnl:510,unrealized_pnl_pct:11.5,pe_ratio:12.1,beta:1.18},
 ];
 const DEMO_SUMMARY = {total_market_value:84327,total_cost:77485,total_unrealized_pnl:6842,total_unrealized_pnl_pct:8.8,day_change:412,day_change_pct:0.49,holdings_count:5,sector_allocation:{Technology:34.5,ETF:28.6,Financials:18.2,Healthcare:12.4,Other:6.3}};
 const DEMO_RISK = {beta:1.18,sharpe_ratio:0.87,max_drawdown:-22.1,annualized_volatility:18.4,position_risks:[{symbol:'NVDA',concentration_pct:15.6,beta:1.72,risk_score:82},{symbol:'AAPL',concentration_pct:9.0,beta:1.19,risk_score:55},{symbol:'MSFT',concentration_pct:9.9,beta:0.92,risk_score:50},{symbol:'VOO',concentration_pct:17.7,beta:1.00,risk_score:42},{symbol:'JPM',concentration_pct:5.9,beta:1.18,risk_score:48}]};
@@ -1194,6 +1279,9 @@ async function loadOverview() {
     await loadWatchlistPage();
     await loadDividends();
     loadGoal(summary.total_market_value || 0);
+    // 新功能
+    loadPerformanceVsBenchmark('1y');
+    calcPortfolioIRR(summary.total_market_value || 0);
   } catch(e) {
     console.error(e);
   }
@@ -1218,12 +1306,13 @@ function renderSummaryCards(s) {
 function renderHoldings(holdings) {
   const tbody=document.getElementById('holdingsTbody');
   document.getElementById('holdingsSub').textContent = `${holdings.length} positions`;
-  if(!holdings.length){tbody.innerHTML=`<tr><td colspan="10"><div class="empty-state"><div class="es-text">No holdings yet</div><div class="es-sub">Click "+ 新增持倉" to add your first position</div></div></td></tr>`;return}
+  if(!holdings.length){tbody.innerHTML=`<tr><td colspan="12"><div class="empty-state"><div class="es-text">No holdings yet</div><div class="es-sub">Click "+ 新增持倉" to add your first position</div></div></td></tr>`;return}
   tbody.innerHTML='';
   holdings.forEach(h=>{
     const up=(h.unrealized_pnl||0)>=0, cup=(h.change_pct||0)>=0;
     const tr=document.createElement('tr');
     const id=h.id||'';
+    const vl = valLight(h.pe_ratio);
     tr.innerHTML=`
       <td><span class="ticker">${h.symbol}</span></td>
       <td><div class="co-name">${h.name||h.symbol}</div><div class="co-sector">${h.sector||''}</div></td>
@@ -1234,6 +1323,13 @@ function renderHoldings(holdings) {
       <td><strong>$${(h.market_value||0).toLocaleString('en',{maximumFractionDigits:0})}</strong></td>
       <td style="color:${up?'var(--green)':'var(--red)'}"><strong>${up?'+':''}$${Math.abs(h.unrealized_pnl||0).toLocaleString('en',{maximumFractionDigits:0})}</strong></td>
       <td><span class="tag ${up?'tag-green':'tag-red'}">${up?'+':''}${(h.unrealized_pnl_pct||0).toFixed(2)}%</span></td>
+      <td>
+        <span class="val-wrap">
+          <span class="val-dot ${vl.cls}"></span>
+          <span style="font-size:11px;color:var(--mid)">${h.pe_ratio ? h.pe_ratio.toFixed(0) : '—'}</span>
+          <span class="val-tip">${vl.label}<br>${vl.advice}</span>
+        </span>
+      </td>
       <td><span class="tag tag-gray" style="font-size:10px">${h.sector||'—'}</span></td>
       <td style="white-space:nowrap">
         <button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px;color:var(--green);border-color:var(--green)" onclick="openTransactionModal('${h.symbol}','BUY')">加倉</button>
@@ -1604,6 +1700,260 @@ async function loadTechnical(symbol, period) {
     </div>`;
 
   document.getElementById('priceLoading').style.display='none';
+}
+
+// ── 估值燈號 helper ───────────────────────────────────────────
+function valLight(pe) {
+  if (!pe) return { cls:'gray', label:'P/E 無資料', advice:'無法判斷估值，參考其他指標' };
+  if (pe > 35) return { cls:'red',    label:`P/E ${pe.toFixed(1)}，估值偏高`,   advice:'考慮逐步減倉 20-30%，獲利了結部分' };
+  if (pe > 20) return { cls:'yellow', label:`P/E ${pe.toFixed(1)}，估值合理偏高`, advice:'繼續觀察，暫不追高' };
+  return           { cls:'green',  label:`P/E ${pe.toFixed(1)}，估值合理`,     advice:'可繼續持有或加倉' };
+}
+
+// ── 績效對比大盤 ─────────────────────────────────────────────
+let _curPerfTF = '1y';
+function setPerfTF(btn, tf) {
+  document.querySelectorAll('.perf-tf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _curPerfTF = tf;
+  loadPerformanceVsBenchmark(tf);
+}
+
+async function loadPerformanceVsBenchmark(period = '1y') {
+  const el = document.getElementById('perfContent');
+  el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--mid)">計算中...</div>';
+  const periodMap = { '1y':'1y', '6mo':'6mo', '3mo':'3mo', '1mo':'1m' };
+  try {
+    let portRet, vooRet, portStart, portEnd, vooStart, vooEnd;
+    if (DEMO_MODE) {
+      portRet = 8.8; vooRet = 6.2;
+      portStart = 77485; portEnd = 84327;
+      vooStart = 470; vooEnd = 498.2;
+    } else {
+      const [portData, vooData] = await Promise.all([
+        api(`/api/portfolio/value-history?period=${periodMap[period]||'1m'}`),
+        api(`/api/stocks/history/VOO?period=${period}`),
+      ]);
+      if (!portData.values?.length || !vooData.prices?.length) {
+        el.innerHTML = '<div style="padding:16px;color:var(--mid);text-align:center">資料不足，請確認持倉均價設定正確</div>';
+        return;
+      }
+      portStart = portData.values[0]; portEnd = portData.values[portData.values.length-1];
+      vooStart  = vooData.prices[0];  vooEnd  = vooData.prices[vooData.prices.length-1];
+      portRet = ((portEnd/portStart)-1)*100;
+      vooRet  = ((vooEnd/vooStart)-1)*100;
+    }
+    const alpha = portRet - vooRet;
+    const pc = portRet>=0?'var(--green)':'var(--red)';
+    const vc = vooRet>=0?'var(--green)':'var(--red)';
+    const ac = alpha>=0?'var(--green)':'var(--red)';
+    const alphaMsg = alpha>=0 ? '跑贏大盤，持續好的策略' : '跑輸大盤，可回顧配置';
+    el.innerHTML = `
+      <div class="perf-compare-grid">
+        <div class="perf-compare-row hdr">
+          <div class="perf-compare-hdr-val"></div>
+          <div class="perf-compare-hdr-val">報酬率</div>
+          <div class="perf-compare-hdr-val">起始值</div>
+          <div class="perf-compare-hdr-val">終止值</div>
+        </div>
+        <div class="perf-compare-row">
+          <div class="perf-compare-label">我的組合</div>
+          <div class="perf-compare-val"><span style="font-size:20px;font-weight:800;color:${pc}">${portRet>=0?'+':''}${portRet.toFixed(2)}%</span></div>
+          <div class="perf-compare-val">$${portStart.toLocaleString('en',{maximumFractionDigits:0})}</div>
+          <div class="perf-compare-val">$${portEnd.toLocaleString('en',{maximumFractionDigits:0})}</div>
+        </div>
+        <div class="perf-compare-row">
+          <div class="perf-compare-label">VOO 大盤</div>
+          <div class="perf-compare-val"><span style="font-size:20px;font-weight:800;color:${vc}">${vooRet>=0?'+':''}${vooRet.toFixed(2)}%</span></div>
+          <div class="perf-compare-val">$${vooStart.toFixed(2)}</div>
+          <div class="perf-compare-val">$${vooEnd.toFixed(2)}</div>
+        </div>
+        <div class="perf-compare-row" style="background:var(--accent)">
+          <div class="perf-compare-label">超越大盤 (Alpha)</div>
+          <div class="perf-compare-val"><span style="font-size:20px;font-weight:800;color:${ac}">${alpha>=0?'+':''}${alpha.toFixed(2)}%</span></div>
+          <div class="perf-compare-val" style="grid-column:span 2;text-align:left;font-size:11px;color:var(--mid)">${alphaMsg}</div>
+        </div>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div style="padding:16px;color:var(--red)">載入失敗：${e.message}</div>`;
+  }
+}
+
+// ── 年化報酬率 IRR ───────────────────────────────────────────
+async function calcPortfolioIRR(currentValue) {
+  const irrEl = document.getElementById('s-irr');
+  const lblEl = document.getElementById('s-irrLabel');
+  try {
+    if (DEMO_MODE) {
+      irrEl.textContent = '+14.2%';
+      irrEl.style.color = 'var(--green)';
+      lblEl.textContent = '持有 1.2 年';
+      return;
+    }
+    const txns = await api('/api/portfolio/transactions').catch(()=>[]);
+    if (!txns.length) { irrEl.textContent='—'; lblEl.textContent='尚無交易記錄'; return; }
+
+    let totalInvested = 0, earliestDate = new Date();
+    txns.forEach(t => {
+      const d = new Date(t.transaction_date);
+      if (t.transaction_type === 'BUY')  totalInvested += Number(t.total_amount);
+      if (t.transaction_type === 'SELL') totalInvested -= Number(t.total_amount);
+      if (d < earliestDate) earliestDate = d;
+    });
+    if (totalInvested <= 0 || !currentValue) { irrEl.textContent='—'; return; }
+
+    const years = (Date.now() - earliestDate.getTime()) / (1000*60*60*24*365);
+    if (years < 0.05) { irrEl.textContent='—'; lblEl.textContent='持有期太短'; return; }
+
+    const irr = (Math.pow(currentValue / totalInvested, 1/years) - 1) * 100;
+    const up = irr >= 0;
+    irrEl.textContent = (up?'+':'')+irr.toFixed(1)+'%';
+    irrEl.style.color = up ? 'var(--green)' : 'var(--red)';
+    lblEl.textContent = years<1 ? `持有 ${(years*12).toFixed(0)} 個月` : `持有 ${years.toFixed(1)} 年`;
+  } catch(e) { irrEl.textContent='—'; }
+}
+
+// ── 再平衡頁面 ───────────────────────────────────────────────
+async function loadRebalancePage() {
+  try {
+    const [holdings, summary, divData] = DEMO_MODE
+      ? [DEMO_HOLDINGS, DEMO_SUMMARY, {total_annual_dividend:162,holdings:[]}]
+      : await Promise.all([
+          api('/api/portfolio'),
+          api('/api/portfolio/summary'),
+          api('/api/portfolio/dividends').catch(()=>({total_annual_dividend:0,holdings:[]})),
+        ]);
+    renderValuationAlerts(holdings);
+    renderTargetAllocationTable(summary.sector_allocation||{});
+    renderRebalanceAdvice(summary.sector_allocation||{}, holdings);
+    renderDividendReinvest(divData, summary.sector_allocation||{}, holdings);
+  } catch(e) { console.error('rebalance error', e); }
+}
+
+function renderValuationAlerts(holdings) {
+  const el = document.getElementById('rebalValuation');
+  if (!holdings.length) { el.innerHTML='<div style="color:var(--mid);padding:12px">尚無持倉</div>'; return; }
+  const legend = `<div style="display:flex;gap:14px;font-size:11px;color:var(--mid);margin-bottom:14px;flex-wrap:wrap">
+    <span><span class="val-dot green"></span> P/E &lt;20 合理</span>
+    <span><span class="val-dot yellow"></span> P/E 20-35 偏高</span>
+    <span><span class="val-dot red"></span> P/E &gt;35 高估，考慮減倉</span>
+    <span><span class="val-dot gray"></span> 無資料</span></div>`;
+  const rows = holdings.map(h => {
+    const vl = valLight(h.pe_ratio);
+    const clsTag = {green:'tag-green',yellow:'tag-amber',red:'tag-red',gray:'tag-gray'}[vl.cls];
+    const pct = h.unrealized_pnl_pct||0; const up=pct>=0;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:12px">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+        <span class="val-dot ${vl.cls}"></span>
+        <div style="min-width:0">
+          <span class="ticker" style="font-size:13px">${h.symbol}</span>
+          <span style="font-size:11px;color:var(--mid);margin-left:8px">${h.name||''}</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;font-size:11px;flex-shrink:0">
+        <span style="color:var(--mid)">P/E <strong style="color:${vl.cls==='red'?'var(--red)':vl.cls==='yellow'?'var(--amber)':'var(--text)'}">${h.pe_ratio?h.pe_ratio.toFixed(1):'—'}</strong></span>
+        <span style="color:${up?'var(--green)':'var(--red)'}"><strong>${up?'+':''}${pct.toFixed(1)}%</strong></span>
+        <span class="tag ${clsTag}" style="font-size:10px;white-space:nowrap">${vl.advice}</span>
+      </div>
+    </div>`;
+  }).join('');
+  el.innerHTML = legend + rows;
+}
+
+function renderTargetAllocationTable(sectorAlloc) {
+  const el = document.getElementById('rebalAllocBody');
+  const saved = JSON.parse(localStorage.getItem('targetAlloc')||'{}');
+  el.innerHTML = Object.entries(sectorAlloc).map(([sec,pct]) => {
+    const target = saved[sec] ?? '';
+    const dev = target!=='' ? (pct - parseFloat(target)) : null;
+    let devHtml='—', dirHtml='—';
+    if (dev !== null) {
+      const c = Math.abs(dev)>10 ? (dev>0?'var(--red)':'var(--blue)') : 'var(--mid)';
+      devHtml = `<strong style="color:${c}">${dev>0?'+':''}${dev.toFixed(1)}%</strong>`;
+      if (Math.abs(dev)>=3) dirHtml = dev>0
+        ? `<span class="tag tag-red" style="font-size:10px">超配，考慮減倉</span>`
+        : `<span class="tag tag-blue" style="font-size:10px">低配，可加倉</span>`;
+      else dirHtml = `<span style="color:var(--mid);font-size:11px">均衡</span>`;
+    }
+    return `<tr>
+      <td><strong>${sec}</strong></td>
+      <td>${pct.toFixed(1)}%</td>
+      <td><input class="target-input" data-sector="${sec}" type="number" placeholder="%" min="0" max="100" step="1" value="${target}"></td>
+      <td>${devHtml}</td>
+      <td>${dirHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+function saveTargetAllocation() {
+  const alloc={};
+  document.querySelectorAll('.target-input').forEach(inp=>{
+    if(inp.value) alloc[inp.dataset.sector]=parseFloat(inp.value);
+  });
+  localStorage.setItem('targetAlloc',JSON.stringify(alloc));
+  showToast('目標配置已儲存');
+  loadRebalancePage();
+}
+
+function renderRebalanceAdvice(sectorAlloc, holdings) {
+  const el = document.getElementById('rebalAdvice');
+  const saved = JSON.parse(localStorage.getItem('targetAlloc')||'{}');
+  const advice = [];
+  // 配置偏差建議
+  Object.entries(sectorAlloc).forEach(([sec,pct]) => {
+    const target = saved[sec]; if(target==null) return;
+    const dev = pct - target;
+    if (dev > 5)  advice.push({type:'sell',msg:`「${sec}」超配 +${dev.toFixed(1)}%（目標 ${target}%），考慮減持部分換至低配板塊`});
+    if (dev < -5) advice.push({type:'buy', msg:`「${sec}」低配 ${dev.toFixed(1)}%（目標 ${target}%），可逢低加碼補足`});
+  });
+  // 高估值警示
+  holdings.filter(h=>h.pe_ratio&&h.pe_ratio>35).forEach(h=>{
+    advice.push({type:'sell',msg:`${h.symbol}（P/E ${h.pe_ratio.toFixed(0)}）估值偏高，可考慮減倉 20-30%，落袋部分獲利`});
+  });
+  if (!advice.length) {
+    if (!Object.keys(saved).length) {
+      el.innerHTML='<div style="padding:14px;color:var(--mid);font-size:12px;text-align:center">請先在左側輸入各板塊目標 %，再點「儲存設定」</div>';
+    } else {
+      el.innerHTML='<div style="padding:12px;background:var(--green-lt,#F0FDF4);border-radius:6px;border-left:3px solid var(--green);font-size:12px;color:var(--dark)">目前配置均衡，估值也無明顯偏高。繼續按計畫定期投入即可。</div>';
+    }
+    return;
+  }
+  el.innerHTML = advice.map(a=>`
+    <div style="margin-bottom:10px;padding:10px 13px;background:${a.type==='sell'?'#FEF2F2':'#EFF6FF'};border-radius:6px;border-left:3px solid ${a.type==='sell'?'var(--red)':'var(--blue)'}">
+      <div style="font-size:10px;font-weight:700;color:${a.type==='sell'?'var(--red)':'var(--blue)'};margin-bottom:3px">${a.type==='sell'?'考慮減倉 / 獲利了結':'建議加倉 / 補足低配'}</div>
+      <div style="font-size:12px;color:var(--dark);line-height:1.55">${a.msg}</div>
+    </div>`).join('');
+}
+
+function renderDividendReinvest(divData, sectorAlloc, holdings) {
+  const el = document.getElementById('rebalDividendReinvest');
+  const monthlyDiv = (divData.total_annual_dividend||0)/12;
+  if (monthlyDiv < 0.01) {
+    el.innerHTML='<div style="padding:12px;color:var(--mid);font-size:12px">持倉目前股息極少，暫無再投資建議。待股息增長後會自動顯示。</div>';
+    return;
+  }
+  const saved = JSON.parse(localStorage.getItem('targetAlloc')||'{}');
+  const under = Object.entries(sectorAlloc)
+    .filter(([s,p])=>saved[s]!=null&&(p-saved[s])<-3)
+    .sort((a,b)=>(a[1]-saved[a[0]])-(b[1]-saved[b[0]]));
+  let msg = '';
+  if (under.length) {
+    const [topSec]=under[0];
+    const match = holdings.find(h=>(h.sector||'').includes(topSec)||topSec.includes(h.sector||''));
+    const buyTarget = match ? `<strong>${match.symbol}</strong>（${match.name||match.symbol}）` : `${topSec} 板塊標的`;
+    msg = `建議將 <strong>$${monthlyDiv.toFixed(2)}</strong> 股息再投入低配板塊「${topSec}」，可考慮買入 ${buyTarget}`;
+  } else {
+    const biggest = holdings.sort((a,b)=>(b.market_value||0)-(a.market_value||0))[0];
+    msg = `建議將 <strong>$${monthlyDiv.toFixed(2)}</strong> 繼續買入核心持倉 <strong>${biggest?.symbol||'主力標的'}</strong>，維持複利滾動`;
+  }
+  el.innerHTML=`<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    <div style="flex-shrink:0">
+      <div style="font-size:11px;color:var(--mid)">本月預估股息</div>
+      <div style="font-size:26px;font-weight:800;color:var(--green)">$${monthlyDiv.toFixed(2)}</div>
+      <div style="font-size:10px;color:var(--light)">年化 $${(divData.total_annual_dividend||0).toFixed(2)}</div>
+    </div>
+    <div style="flex:1;min-width:200px;padding:12px 14px;background:#F0FDF4;border-radius:6px;border-left:3px solid var(--green);font-size:12px;color:var(--dark);line-height:1.6">${msg}</div>
+  </div>`;
 }
 
 function calcRSI(prices,period=14){
