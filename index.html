@@ -2108,7 +2108,7 @@ async function loadScreenerWatchlist() {
       : '<th>訊號</th>';
 
     const rows = items.map(w => {
-      const d   = (w._data) || {};
+      const d   = (w._data) || _screenerDataStore[w.symbol]?.data || {};
       const up  = (w.change_pct || 0) >= 0;
       let extra = '';
       if (tab === 'bos') {
