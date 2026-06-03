@@ -2909,11 +2909,7 @@ async function addToWatchlist(symbol, name, btn, source = 'AI 推薦') {
   try {
     btn.disabled = true;
     btn.textContent = '加入中...';
-    await api('/api/watchlist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ symbol: symbol, notes: `${source} - ${name}` }),
-    });
+    await api('/api/watchlist', 'POST', { symbol: symbol, notes: `${source} - ${name}` });
     btn.textContent = '已加入';
     btn.classList.add('added');
     showToast(`${symbol} 已加入觀察清單`);
