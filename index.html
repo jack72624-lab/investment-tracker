@@ -381,9 +381,9 @@ tr:hover td{background:var(--bg)}
 .dgm-bd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px 16px}
 .dgm-bd-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px dashed var(--border);font-size:11px}
 .dgm-bd-item:last-child{border-bottom:none}
-.dgm-bd-name{color:var(--mid);flex:1}
-.dgm-bd-note{color:var(--light);font-size:10px;margin-left:4px;flex:1}
-.dgm-bd-pts{font-weight:700;min-width:28px;text-align:right}
+.dgm-bd-name{color:var(--mid);flex:0 0 120px;white-space:nowrap}
+.dgm-bd-note{color:var(--light);font-size:10px;margin-left:4px;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.dgm-bd-pts{font-weight:700;flex:0 0 64px;text-align:right;white-space:nowrap}
 .expand-btn{background:none;border:none;cursor:pointer;color:var(--light);padding:2px 6px;border-radius:4px;font-size:11px;transition:all .13s}
 .expand-btn:hover{background:var(--border);color:var(--dark)}
 
