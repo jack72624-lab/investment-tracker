@@ -2108,7 +2108,9 @@ async function loadScreenerWatchlist() {
       : '<th>訊號</th>';
 
     const rows = items.map(w => {
-      const d   = (w._data) || _screenerDataStore[w.symbol]?.data || {};
+      let _notesData = {};
+      try { _notesData = JSON.parse(w.notes || '{}'); } catch(e) {}
+      const d = (w._data) || _screenerDataStore[w.symbol]?.data || _notesData;
       const up  = (w.change_pct || 0) >= 0;
       let extra = '';
       if (tab === 'bos') {
@@ -2132,7 +2134,7 @@ async function loadScreenerWatchlist() {
         <td><span class="ticker" style="font-size:12px">${w.symbol}</span></td>
         <td>
           <div class="co-name">${w.name || ''}</div>
-          ${w.notes ? `<div class="co-sector">${w.notes}</div>` : ''}
+          ${(()=>{ const src = _notesData.source || w.notes; return src ? `<div class="co-sector">${_notesData.source ? _notesData.source+' - '+(_notesData.name||w.symbol) : src}</div>` : ''; })()}
         </td>
         <td><strong>${w.current_price ? '$'+w.current_price.toFixed(2) : '—'}</strong></td>
         <td style="color:${up?'var(--green)':'var(--red)'};font-size:11px">${up?'+':''}${(w.change_pct||0).toFixed(2)}%</td>
@@ -2909,7 +2911,14 @@ async function addToWatchlist(symbol, name, btn, source = 'AI 推薦') {
   try {
     btn.disabled = true;
     btn.textContent = '加入中...';
-    await api('/api/watchlist', 'POST', { symbol: symbol, notes: `${source} - ${name}` });
+    const stored = _screenerDataStore[symbol]?.data || {};
+    const meta = { source, name,
+      bos_score: stored.bos_score, entry_signal: stored.entry_signal,
+      freebirds_score: stored.freebirds_score, timing_score: stored.timing_score,
+      freebirds_max: stored.freebirds_max, timing_max: stored.timing_max,
+      recommendation: stored.recommendation,
+    };
+    await api('/api/watchlist', 'POST', { symbol: symbol, notes: JSON.stringify(meta) });
     btn.textContent = '已加入';
     btn.classList.add('added');
     showToast(`${symbol} 已加入觀察清單`);
