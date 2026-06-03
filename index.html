@@ -2100,36 +2100,35 @@ async function loadScreenerWatchlist() {
     const SIG_TAG = { '買入':'tag-green','持有':'tag-amber','觀察':'tag-blue','建議購買':'tag-green','等待更好進場點':'tag-amber','暫不考慮':'tag-gray' };
     const SC = _bosScoreColor || (s => s >= 8 ? 'var(--green)' : s >= 6 ? 'var(--amber)' : 'var(--red)');
 
-    // 依目前 tab 決定額外欄位
-    const extraHeader = tab === 'bos'
-      ? '<th>BOS Score</th><th>進場訊號</th>'
-      : tab === 'dgm'
-      ? '<th>FREEBIRDS</th><th>買入時機</th><th>推薦</th>'
-      : '<th>訊號</th>';
+    // 固定欄位：來源 / 分數 / 進場訊號（每列自行依 source 決定）
+    const extraHeader = '<th>分數</th><th>進場訊號</th>';
 
     const rows = items.map(w => {
       let _notesData = {};
       try { _notesData = JSON.parse(w.notes || '{}'); } catch(e) {}
-      const d = (w._data) || _screenerDataStore[w.symbol]?.data || _notesData;
+      const d   = (w._data) || _screenerDataStore[w.symbol]?.data || _notesData;
+      const src = (_notesData.source || d.source || '').toUpperCase();
       const up  = (w.change_pct || 0) >= 0;
-      let extra = '';
-      if (tab === 'bos') {
-        const sc = d.bos_score;
-        const scColor = sc != null ? _bosScoreColor(sc) : 'var(--mid)';
-        const eTag = SIG_TAG[d.entry_signal] || SIG_TAG[w.signal] || 'tag-blue';
-        extra = `<td><span style="color:${scColor};font-weight:700">${sc != null ? sc+'/10' : '—'}</span></td>
-                 <td><span class="tag ${eTag}" style="font-size:10px">${d.entry_signal || w.signal || '—'}</span></td>`;
-      } else if (tab === 'dgm') {
-        const fbColor = d.freebirds_score != null ? _dgmScoreColor(d.freebirds_score, d.freebirds_max||14) : 'var(--mid)';
-        const tColor  = d.timing_score != null ? _dgmScoreColor(d.timing_score, d.timing_max||11) : 'var(--mid)';
-        const recMap  = { '建議購買':'tag-green','潛力股':'tag-blue','繼續觀察':'tag-gray' };
-        extra = `<td style="color:${fbColor};font-weight:700">${d.freebirds_score != null ? d.freebirds_score+'/'+(d.freebirds_max||14) : '—'}</td>
-                 <td style="color:${tColor};font-weight:700">${d.timing_score != null ? d.timing_score+'/'+(d.timing_max||11) : '—'}</td>
-                 <td>${d.recommendation ? `<span class="tag ${recMap[d.recommendation]||'tag-gray'}" style="font-size:10px">${d.recommendation}</span>` : '—'}</td>`;
-      } else {
-        const sTag = SIG_TAG[w.signal] || 'tag-blue';
-        extra = `<td><span class="tag ${sTag}" style="font-size:10px">${w.signal || '—'}</span></td>`;
+
+      // 分數欄：BOS 用 bos_score；DGM 用 freebirds/timing；其他顯示 —
+      let scoreCell = '—';
+      if (src === 'BOS' && d.bos_score != null) {
+        const c = _bosScoreColor(d.bos_score);
+        scoreCell = `<span style="color:${c};font-weight:700">${d.bos_score}/10</span>`;
+      } else if ((src === 'DGM' || src.includes('DGM')) && d.freebirds_score != null) {
+        const fbC = _dgmScoreColor(d.freebirds_score, d.freebirds_max||14);
+        const tC  = d.timing_score != null ? _dgmScoreColor(d.timing_score, d.timing_max||11) : 'var(--mid)';
+        scoreCell = `<span style="color:${fbC};font-weight:600">${d.freebirds_score}/${d.freebirds_max||14}</span>`
+                  + `<span style="color:var(--light);margin:0 2px">·</span>`
+                  + `<span style="color:${tC};font-weight:600">${d.timing_score != null ? d.timing_score+'/'+(d.timing_max||11) : '—'}</span>`;
       }
+
+      // 進場訊號欄
+      const sigText = d.entry_signal || d.recommendation || w.signal || '—';
+      const eTag = SIG_TAG[sigText] || 'tag-blue';
+      const sigCell = sigText !== '—' ? `<span class="tag ${eTag}" style="font-size:10px">${sigText}</span>` : '—';
+
+      let extra = `<td>${scoreCell}</td><td>${sigCell}</td>`;
       return `<tr>
         <td><span class="ticker" style="font-size:12px">${w.symbol}</span></td>
         <td>
