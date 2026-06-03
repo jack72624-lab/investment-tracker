@@ -859,7 +859,14 @@ tr:hover td{background:var(--bg)}
           <div class="card-title">觀察清單</div>
           <div class="card-sub" id="screenerWatchlistSub">—</div>
         </div>
-        <button class="btn btn-ghost" onclick="loadScreenerWatchlist()" style="font-size:12px">重新整理</button>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div style="display:flex;gap:2px;background:var(--accent);border-radius:6px;padding:3px">
+            <button id="wl-tab-all" onclick="switchWatchlistTab('all')" style="border:none;cursor:pointer;padding:4px 10px;border-radius:4px;font-size:11px;background:var(--blue);color:#fff;font-weight:600">全部</button>
+            <button id="wl-tab-bos" onclick="switchWatchlistTab('bos')" style="border:none;cursor:pointer;padding:4px 10px;border-radius:4px;font-size:11px;background:none;color:var(--mid)">BOS</button>
+            <button id="wl-tab-dgm" onclick="switchWatchlistTab('dgm')" style="border:none;cursor:pointer;padding:4px 10px;border-radius:4px;font-size:11px;background:none;color:var(--mid)">DGM</button>
+          </div>
+          <button class="btn btn-ghost" onclick="loadScreenerWatchlist()" style="font-size:12px">重新整理</button>
+        </div>
       </div>
       <div id="screenerWatchlistBody">
         <div class="empty-state" style="padding:28px">
@@ -2084,81 +2091,114 @@ function showAddWatchlist(){ alert('串接後端後，此按鈕將開啟觀察�
 // ── 篩選器內嵌觀察清單 ───────────────────────────────────────
 let _screenerWatchlistDemo = [];
 
+let _wlTab = 'all';
+function switchWatchlistTab(t) {
+  _wlTab = t;
+  ['all','bos','dgm'].forEach(id => {
+    const btn = document.getElementById('wl-tab-'+id);
+    if (!btn) return;
+    btn.style.background = id === t ? 'var(--blue)' : 'none';
+    btn.style.color      = id === t ? '#fff' : 'var(--mid)';
+    btn.style.fontWeight = id === t ? '600' : '400';
+  });
+  loadScreenerWatchlist();
+}
+
 async function loadScreenerWatchlist() {
   const body = document.getElementById('screenerWatchlistBody');
   const sub  = document.getElementById('screenerWatchlistSub');
   if (!body) return;
-  const tab = _currentScreenerTab || 'general';
+  const wlTab = _wlTab || 'all';
   try {
-    const items = DEMO_MODE ? _screenerWatchlistDemo : await api('/api/watchlist');
-    sub.textContent = `${items.length} 支股票`;
+    const allItems = DEMO_MODE ? _screenerWatchlistDemo : await api('/api/watchlist');
+
+    // 解析每筆 notes JSON，補充 source/data
+    const enriched = allItems.map(w => {
+      let nd = {};
+      try { nd = JSON.parse(w.notes || '{}'); } catch(e) {}
+      const d   = (w._data) || _screenerDataStore[w.symbol]?.data || nd;
+      const src = (nd.source || d.source || '').toUpperCase();
+      return { ...w, _nd: nd, _d: d, _src: src };
+    });
+
+    // 依 tab 過濾
+    const items = wlTab === 'bos' ? enriched.filter(w => w._src === 'BOS')
+                : wlTab === 'dgm' ? enriched.filter(w => w._src === 'DGM' || w._src.includes('DGM'))
+                : enriched;
+
+    sub.textContent = `${allItems.length} 支 · 顯示 ${items.length} 支`;
     if (items.length === 0) {
-      body.innerHTML = `<div class="empty-state" style="padding:28px"><div class="es-text">觀察清單是空的</div><div class="es-sub">在上方篩選結果中點「加入關注」即可追蹤</div></div>`;
+      const hint = wlTab === 'all' ? '在篩選結果中點「加入觀察」即可追蹤'
+                 : `先在 ${wlTab.toUpperCase()} 篩選器中加入股票`;
+      body.innerHTML = `<div class="empty-state" style="padding:28px"><div class="es-text">目前沒有${wlTab==='all'?'':wlTab.toUpperCase()+' '}股票</div><div class="es-sub">${hint}</div></div>`;
       return;
     }
 
-    const SIG_TAG = { '買入':'tag-green','持有':'tag-amber','觀察':'tag-blue','建議購買':'tag-green','等待更好進場點':'tag-amber','暫不考慮':'tag-gray' };
-    const SC = _bosScoreColor || (s => s >= 8 ? 'var(--green)' : s >= 6 ? 'var(--amber)' : 'var(--red)');
+    const SIG_TAG = { '買入':'tag-green','持有':'tag-amber','觀察':'tag-blue','建議購買':'tag-green','等待更好進場點':'tag-amber','暫不考慮':'tag-gray','潛力股':'tag-blue','繼續觀察':'tag-gray' };
 
-    // 固定欄位：來源 / 分數 / 進場訊號（每列自行依 source 決定）
-    const extraHeader = '<th>分數</th><th>進場訊號</th>';
+    const extraHeader = wlTab === 'bos' ? '<th>BOS Score</th><th>進場訊號</th>'
+                      : wlTab === 'dgm' ? '<th>FREEBIRDS</th><th>買入時機</th><th>推薦</th>'
+                      : '<th>來源</th><th>分數</th><th>訊號</th>';
 
     const rows = items.map(w => {
-      let _notesData = {};
-      try { _notesData = JSON.parse(w.notes || '{}'); } catch(e) {}
-      const d   = (w._data) || _screenerDataStore[w.symbol]?.data || _notesData;
-      const src = (_notesData.source || d.source || '').toUpperCase();
-      const up  = (w.change_pct || 0) >= 0;
+      const { _nd, _d: d, _src: src } = w;
+      const up = (w.change_pct || 0) >= 0;
+      let extra = '';
 
-      // 分數欄：BOS 用 bos_score；DGM 用 freebirds/timing；其他顯示 —
-      let scoreCell = '—';
-      if (src === 'BOS' && d.bos_score != null) {
-        const c = _bosScoreColor(d.bos_score);
-        scoreCell = `<span style="color:${c};font-weight:700">${d.bos_score}/10</span>`;
-      } else if ((src === 'DGM' || src.includes('DGM')) && d.freebirds_score != null) {
-        const fbC = _dgmScoreColor(d.freebirds_score, d.freebirds_max||14);
-        const tC  = d.timing_score != null ? _dgmScoreColor(d.timing_score, d.timing_max||11) : 'var(--mid)';
-        scoreCell = `<span style="color:${fbC};font-weight:600">${d.freebirds_score}/${d.freebirds_max||14}</span>`
-                  + `<span style="color:var(--light);margin:0 2px">·</span>`
-                  + `<span style="color:${tC};font-weight:600">${d.timing_score != null ? d.timing_score+'/'+(d.timing_max||11) : '—'}</span>`;
+      if (wlTab === 'bos') {
+        const sc  = d.bos_score;
+        const c   = sc != null ? _bosScoreColor(sc) : 'var(--mid)';
+        const sig = d.entry_signal || '—';
+        const eTag = SIG_TAG[sig] || 'tag-blue';
+        extra = `<td><span style="color:${c};font-weight:700">${sc != null ? sc+'/10' : '—'}</span></td>
+                 <td>${sig!=='—'?`<span class="tag ${eTag}" style="font-size:10px">${sig}</span>`:'—'}</td>`;
+      } else if (wlTab === 'dgm') {
+        const fbC = d.freebirds_score != null ? _dgmScoreColor(d.freebirds_score, d.freebirds_max||14) : 'var(--mid)';
+        const tC  = d.timing_score   != null ? _dgmScoreColor(d.timing_score,   d.timing_max||11)    : 'var(--mid)';
+        const rec = d.recommendation || '—';
+        const rTag = SIG_TAG[rec] || 'tag-gray';
+        extra = `<td style="color:${fbC};font-weight:600">${d.freebirds_score!=null?d.freebirds_score+'/'+(d.freebirds_max||14):'—'}</td>
+                 <td style="color:${tC};font-weight:600">${d.timing_score!=null?d.timing_score+'/'+(d.timing_max||11):'—'}</td>
+                 <td>${rec!=='—'?`<span class="tag ${rTag}" style="font-size:10px">${rec}</span>`:'—'}</td>`;
+      } else {
+        const srcBadge = src === 'BOS' ? `<span class="tag tag-blue" style="font-size:9px">BOS</span>`
+                       : src.includes('DGM') ? `<span class="tag tag-amber" style="font-size:9px">DGM</span>`
+                       : `<span class="tag tag-gray" style="font-size:9px">AI</span>`;
+        let sc = '—';
+        if (src==='BOS' && d.bos_score!=null) sc = `${d.bos_score}/10`;
+        else if (src.includes('DGM') && d.freebirds_score!=null) sc = `${d.freebirds_score}/${d.freebirds_max||14}`;
+        const sig = d.entry_signal || d.recommendation || '—';
+        const eTag = SIG_TAG[sig] || 'tag-blue';
+        extra = `<td>${srcBadge}</td><td style="font-weight:600">${sc}</td>
+                 <td>${sig!=='—'?`<span class="tag ${eTag}" style="font-size:10px">${sig}</span>`:'—'}</td>`;
       }
 
-      // 進場訊號欄
-      const sigText = d.entry_signal || d.recommendation || w.signal || '—';
-      const eTag = SIG_TAG[sigText] || 'tag-blue';
-      const sigCell = sigText !== '—' ? `<span class="tag ${eTag}" style="font-size:10px">${sigText}</span>` : '—';
-
-      let extra = `<td>${scoreCell}</td><td>${sigCell}</td>`;
+      const subtitle = _nd.source ? `${_nd.source} · ${_nd.name||w.symbol}` : (w.notes||'');
       return `<tr>
         <td><span class="ticker" style="font-size:12px">${w.symbol}</span></td>
         <td>
           <div class="co-name">${w.name || ''}</div>
-          ${(()=>{ const src = _notesData.source || w.notes; return src ? `<div class="co-sector">${_notesData.source ? _notesData.source+' - '+(_notesData.name||w.symbol) : src}</div>` : ''; })()}
+          ${subtitle ? `<div class="co-sector">${subtitle}</div>` : ''}
         </td>
         <td><strong>${w.current_price ? '$'+w.current_price.toFixed(2) : '—'}</strong></td>
         <td style="color:${up?'var(--green)':'var(--red)'};font-size:11px">${up?'+':''}${(w.change_pct||0).toFixed(2)}%</td>
         ${extra}
-        <td>
-          <button onclick="removeFromScreenerWatchlist('${w.symbol}',this)"
-            style="border:none;background:none;cursor:pointer;color:var(--light);font-size:13px;padding:2px 6px;border-radius:4px;hover:background:var(--bg)"
-            title="移除">移除</button>
-        </td>
+        <td><button onclick="removeFromScreenerWatchlist('${w.symbol}',this)"
+          style="border:none;background:none;cursor:pointer;color:var(--light);font-size:13px;padding:2px 6px"
+          >移除</button></td>
       </tr>`;
     }).join('');
 
-    const legend = tab === 'bos'
-      ? '綠色建議購買 = 進場訊號出現 · 橘色等待 = 持續觀察'
-      : tab === 'dgm'
-      ? '進場時機 >= 7/11 表示買入條件成立'
-      : '點重新整理取得最新報價';
+    const legend = wlTab === 'bos' ? '綠色 = 建議購買 · 橘色 = 等待更好進場點'
+                 : wlTab === 'dgm' ? '買入時機 ≥ 7/11 = 買入條件成立'
+                 : '點重新整理取得最新報價';
 
     body.innerHTML = `
       <div class="table-wrap" style="padding:0 0 4px">
         <table>
           <thead><tr>
             <th>Ticker</th><th>Company</th><th>Price</th><th>Change</th>
-            ${extraHeader}
-            <th></th>
+            ${extraHeader}<th></th>
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>
