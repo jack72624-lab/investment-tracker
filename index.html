@@ -3027,6 +3027,14 @@ const DEMO_BOS_SECTOR_DISCOVER = [
   ]},
 ];
 
+function _cacheStocksToStore(sectors, source) {
+  for (const sec of sectors) {
+    for (const s of (sec.stocks || [])) {
+      _screenerDataStore[s.symbol] = { source, data: s };
+    }
+  }
+}
+
 function renderSectorCards(sectors) {
   const moatColor = { '強':'var(--green)', '中':'var(--amber)', '弱':'var(--red)' };
   const entryTag  = { '建議購買':'tag-green', '等待更好進場點':'tag-amber', '不建議':'tag-red' };
@@ -3082,11 +3090,13 @@ async function runBosDiscoverSectors() {
   try {
     if (DEMO_MODE) {
       await new Promise(r => setTimeout(r, 1800));
+      _cacheStocksToStore(DEMO_BOS_SECTOR_DISCOVER, 'BOS');
       document.getElementById('bosSectorView').innerHTML = renderSectorCards(DEMO_BOS_SECTOR_DISCOVER);
       count.textContent = `分領域推薦：6 大板塊 × 5 支`;
     } else {
       const data = await api('/api/screener/discover?sectors=tech,healthcare,finance,food,defense,energy');
       if (!data || !data.results) throw new Error('No results returned');
+      _cacheStocksToStore(data.results, 'BOS');
       document.getElementById('bosSectorView').innerHTML = renderSectorCards(data.results);
       count.textContent = `分領域推薦：${data.results.length} 大板塊`;
     }
@@ -3214,11 +3224,13 @@ async function runDgmDiscoverSectors() {
   try {
     if (DEMO_MODE) {
       await new Promise(r => setTimeout(r, 1800));
+      _cacheStocksToStore(DEMO_DGM_SECTOR_DISCOVER, 'DGM');
       document.getElementById('dgmSectorView').innerHTML = renderDgmSectorCards(DEMO_DGM_SECTOR_DISCOVER);
       count.textContent = `分領域推薦：6 大板塊 × 5 支`;
     } else {
       const data = await api('/api/screener/dgm/discover/sectors');
       if (!data || !data.results) throw new Error('No results returned');
+      _cacheStocksToStore(data.results, 'DGM');
       document.getElementById('dgmSectorView').innerHTML = renderDgmSectorCards(data.results);
       count.textContent = `分領域推薦：${data.results.length} 大板塊`;
     }
