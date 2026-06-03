@@ -2226,7 +2226,7 @@ const _screenerDataStore = {};
 
 function _bosMiniSparkline(values, color) {
   if (!values || values.length < 2) return '';
-  const pts = [...values].reverse(); // oldest first (left → right)
+  const pts = [...values]; // yfinance returns oldest-first; plot left(old)→right(new)
   const min = Math.min(...pts), max = Math.max(...pts);
   const range = max - min || 0.1;
   const W = 56, H = 22, P = 2;
@@ -2281,7 +2281,7 @@ function renderBosRow(s, idx) {
       <span class="dgm-bd-name">1. 淨利率趨勢</span>
       <span class="dgm-bd-note" style="display:flex;align-items:center;gap:6px">
         ${_bosMiniSparkline(s.net_margins_4yr, trendColor)}
-        <span style="font-size:10px;color:var(--light)">${(s.net_margins_4yr||[]).length ? s.net_margins_4yr[s.net_margins_4yr.length-1].toFixed(1)+'% → '+s.net_margins_4yr[0].toFixed(1)+'%' : '—'}</span>
+        <span style="font-size:10px;color:var(--light)">${(s.net_margins_4yr||[]).length ? s.net_margins_4yr[0].toFixed(1)+'% → '+s.net_margins_4yr[s.net_margins_4yr.length-1].toFixed(1)+'%' : '—'}</span>
       </span>
       <span class="dgm-bd-pts" style="color:${trendColor}">${s.net_margin_trend || '—'} (${ptLabel(trendPts)})</span>
     </div>
