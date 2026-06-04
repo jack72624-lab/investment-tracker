@@ -378,12 +378,18 @@ tr:hover td{background:var(--bg)}
 .dgm-score-val{font-size:11px;font-weight:700;min-width:28px;text-align:right}
 .dgm-breakdown{display:none;padding:12px 16px 14px;background:var(--bg);border-top:1px solid var(--border)}
 .dgm-breakdown.open{display:block}
-.dgm-bd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px 16px}
-.dgm-bd-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px dashed var(--border);font-size:11px}
+.dgm-bd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 20px}
+.dgm-bd-item{display:flex;align-items:flex-start;padding:6px 8px;border-bottom:1px dashed var(--border);font-size:11px;border-radius:3px;cursor:default;transition:background .12s;position:relative}
 .dgm-bd-item:last-child{border-bottom:none}
-.dgm-bd-name{color:var(--mid);flex:0 0 120px;white-space:nowrap}
-.dgm-bd-note{color:var(--light);font-size:10px;margin-left:4px;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.dgm-bd-pts{font-weight:700;flex:0 0 64px;text-align:right;white-space:nowrap}
+.dgm-bd-item:hover{background:var(--accent)}
+.dgm-bd-name{color:var(--text);font-weight:600;flex:0 0 140px;white-space:normal;line-height:1.4}
+.dgm-bd-middle{flex:1;margin:0 8px;min-width:0}
+.dgm-bd-val{color:var(--blue);font-weight:600;font-size:11px}
+.dgm-bd-note{color:var(--mid);font-size:10px;margin-top:1px;white-space:normal;line-height:1.3}
+.dgm-bd-pts{font-weight:700;flex:0 0 48px;text-align:right;white-space:nowrap;font-size:12px}
+/* tooltip */
+.dgm-bd-tooltip{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:200;width:280px;background:#16191F;color:#fff;font-size:11px;line-height:1.5;padding:8px 10px;border-radius:4px;pointer-events:none;white-space:normal;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.dgm-bd-item:hover .dgm-bd-tooltip{display:block}
 .expand-btn{background:none;border:none;cursor:pointer;color:var(--light);padding:2px 6px;border-radius:4px;font-size:11px;transition:all .13s}
 .expand-btn:hover{background:var(--border);color:var(--dark)}
 
@@ -2493,14 +2499,43 @@ function renderDgmRow(s, idx, opts = {}) {
   const bdId   = `dgm-bd-${idx}`;
 
   // 整合 FREEBIRDS + Timing breakdown
+  const DGM_LABELS = {
+    D_div_growth:    { label:'股息成長率 (5yr)',  group:'FREEBIRDS',  tip:'近5年股息年化複合成長率(CAGR)。\n≥10% → +1分（優秀）\n≥6% → +0.5分（達標）\n<6% → 0分' },
+    F_fcf_payout:    { label:'FCF配息率',         group:'FREEBIRDS',  tip:'股息÷每股自由現金流。代表公司靠現金流能否支撐配息。\n<40% → +1分（非常健康）\n<75% → +0.5分（可接受）\n≥75% → 0分（過高風險）' },
+    R_revenue_eps:   { label:'營收與EPS成長',      group:'FREEBIRDS',  tip:'EPS與營收雙增長，代表公司持續擴張盈利能力。\nEPS↑且營收↑ → +1分\nEPS/營收穩定 → +0.5分\nEPS或營收衰退 → 0分' },
+    E_quality:       { label:'連續股息成長年數',    group:'FREEBIRDS',  tip:'連續幾年每年提高股息，是股息貴族的核心指標。\n≥50年（Dividend King）→ +4分\n≥25年（Champion）→ +3分\n≥10年（Contender）→ +2分\n≥5年（Challenger）→ +1分\n<5年 → 0分' },
+    E_5_10_ratio:    { label:'5/10年成長比',       group:'FREEBIRDS',  tip:'近5年CAGR ÷ 近10年CAGR。比值>1代表近期股息成長加速，趨勢向好。\n>1 → +1分（近期加速）\n≤1 → 0分（成長趨緩）' },
+    B_buybacks:      { label:'股票回購趨勢',        group:'FREEBIRDS',  tip:'公司是否持續回購股票（縮減流通股數）。回購代表管理層認為股價低估，有利股東。\n⚠️ 目前 API 資料不足，需人工確認近5年股數趨勢。' },
+    I_income_payout: { label:'配息率（盈餘基礎）',  group:'FREEBIRDS',  tip:'股息÷EPS（盈餘配息率）。反映公司用多少盈餘分配股息，太高則股息不可持續。\n<50% → +1分（充裕空間）\n<75% → +0.5分（可接受）\n≥75% → 0分（偏高）' },
+    R_roe:           { label:'股東權益報酬率 ROE',  group:'FREEBIRDS',  tip:'稅後淨利÷股東權益。衡量公司用股東資金創造獲利的效率。\n≥15% → +1分\n<15% → 0分' },
+    D_debt:          { label:'淨負債/市值',         group:'FREEBIRDS',  tip:'（總負債－現金）÷市值。衡量公司財務槓桿是否健康。\n<20% → +1分（健康）\n20-50% → 0分（尚可）\n>50% → -1分（扣分，負債過高）' },
+    S_beta:          { label:'股價波動性 Beta',     group:'FREEBIRDS',  tip:'Beta衡量股票相對大盤的波動幅度。股息投資偏好低波動。\nBeta < 1.2 → +1分（穩定）\nBeta ≥ 1.2 → 0分（波動較大）' },
+    Y_vs_sp500:      { label:'殖利率 vs S&P500',   group:'Timing',     tip:'當前殖利率是否顯著高於大盤平均。如果股息收益遠超指數，代表相對吸引力高。\n殖利率 ≥ S&P500殖利率 × 1.5 → +1分' },
+    Y_vs_inflation:  { label:'殖利率 vs 通膨',      group:'Timing',     tip:'殖利率是否能打敗通貨膨脹，保持實質購買力。\n殖利率 ≥ 4% → +1分（打敗通膨）\n<4% → 0分' },
+    C_chowder:       { label:'Chowder法則',         group:'Timing',     tip:'殖利率 + 5年股息成長率 的總和，衡量股息的「總回報潛力」。\n總和 ≥ 15% → +1分\n<15% → 0分' },
+    F_fcf_yield:     { label:'自由現金流殖利率',    group:'Timing',     tip:'每股自由現金流÷股價。衡量公司以現金流支撐現價的能力，越高越便宜。\n≥5% → +1分\n<5% → 0分' },
+    P_pe:            { label:'本益比 P/E',          group:'Timing',     tip:'股價÷每股盈餘。P/E越低代表估值越便宜，股息投資特別重視低估值買入。\nP/E < 15 → +1分（便宜）\n≥15 → 0分' },
+    R_roe_bonus:     { label:'ROE加分（PE<15）',    group:'Timing',     tip:'同時滿足低估值（P/E < 15）且高效益（ROE > 20%），代表以便宜價格買入優質公司。\nP/E < 15 且 ROE > 20% → +1分加成' },
+    T_target_yield:  { label:'殖利率相對高點',       group:'Timing',     tip:'以52週高低殖利率區間計算，當前殖利率處於哪個百分位。殖利率越高→股價越低→越值得買入。\n位於第65百分位以上 → +1分（偏高，進場好時機）' },
+    T_target_pe:     { label:'股價相對低點',         group:'Timing',     tip:'股價在52週高低區間的位置。股價越接近低點，進場風險越低。\n位於第35百分位以下 → +1分（接近低點）' },
+    D_ddm:           { label:'DDM股息折現估值',     group:'Timing',     tip:'股息折現模型（Dividend Discount Model）估算內在價值 = 下年股息÷（折現率－成長率）。\nDDM估值 > 現價 → +1分（低估）\nDDM估值 ≤ 現價 → 0分' },
+    P_piotroski:     { label:'Piotroski F-分數',   group:'Timing',     tip:'9項財務健康指標評分（獲利能力3項、槓桿流動性3項、營運效率3項）。\n>5分 → +1分（財務健康）\n≤5分 → 0分' },
+  };
   const allBd = { ...s.freebirds_breakdown, ...s.timing_breakdown };
   const bdHtml = Object.entries(allBd).map(([k, v]) => {
     const ptsColor = v.score > 0 ? 'var(--green)' : v.score < 0 ? 'var(--red)' : 'var(--light)';
+    const meta = DGM_LABELS[k] || { label: k.replace(/_/g,' '), group:'', tip:'' };
+    const groupBadge = meta.group ? `<span style="font-size:9px;color:var(--light);margin-left:4px">${meta.group}</span>` : '';
+    const tooltipHtml = meta.tip ? `<div class="dgm-bd-tooltip">${meta.tip.replace(/\n/g,'<br>')}</div>` : '';
     return `
       <div class="dgm-bd-item">
-        <span class="dgm-bd-name">${k.replace(/_/g,' ')}</span>
-        <span class="dgm-bd-note">${v.note || ''}</span>
+        <span class="dgm-bd-name">${meta.label}${groupBadge}</span>
+        <span class="dgm-bd-middle">
+          <div class="dgm-bd-val">${v.value || ''}</div>
+          <div class="dgm-bd-note">${v.note || ''}</div>
+        </span>
         <span class="dgm-bd-pts" style="color:${ptsColor}">${v.score > 0 ? '+'+v.score : v.score}</span>
+        ${tooltipHtml}
       </div>`;
   }).join('');
 
