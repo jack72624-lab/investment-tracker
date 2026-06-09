@@ -89,6 +89,9 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;background:var(
 .page{display:none}.page.active{display:block}
 
 /* STATS */
+.stats-section{margin-bottom:20px}
+.stats-section .stats-grid{margin-bottom:0}
+.stats-section-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;padding-left:2px}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin-bottom:20px}
 .stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
 .stat-label{font-size:10px;color:var(--mid);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
@@ -613,13 +616,27 @@ tr:hover td{background:var(--bg)}
 
   <!-- PAGE: 總覽 -->
   <div class="page active" id="page-overview">
-    <div class="stats-grid" id="summaryStats">
-      <div class="stat-card"><div class="stat-label">Total Net Worth</div><div class="stat-value" id="s-totalMv">—</div><div class="stat-change" id="s-pnl">Loading...</div><div class="stat-sub">Unrealized P&L</div></div>
-      <div class="stat-card"><div class="stat-label">Total Cost Basis</div><div class="stat-value" id="s-cost">—</div><div class="stat-change" id="s-ret">—</div><div class="stat-sub">Return</div></div>
-      <div class="stat-card"><div class="stat-label">Day Change</div><div class="stat-value" id="s-dayChg">—</div><div class="stat-change" id="s-dayPct">—</div><div class="stat-sub">Today's P&L</div></div>
-      <div class="stat-card"><div class="stat-label">持倉數</div><div class="stat-value" id="s-count">—</div><div class="stat-change" style="color:var(--mid)">Active holdings</div><div class="stat-sub">&nbsp;</div></div>
-      <div class="stat-card"><div class="stat-label">年化股息收益</div><div class="stat-value" id="s-divIncome" style="color:var(--green)">—</div><div class="stat-change" id="s-divYield" style="color:var(--green)">—</div><div class="stat-sub" id="s-divSub">Portfolio yield</div></div>
-      <div class="stat-card"><div class="stat-label">年化報酬率 IRR</div><div class="stat-value" id="s-irr">—</div><div class="stat-change" id="s-irrLabel" style="color:var(--mid)">—</div><div class="stat-sub">依交易記錄計算</div></div>
+    <!-- 美股統計列 -->
+    <div class="stats-section" id="stats-us-section">
+      <div class="stats-section-label" style="color:var(--mid)">美股 <span style="font-weight:400">USD</span></div>
+      <div class="stats-grid" id="summaryStats">
+        <div class="stat-card"><div class="stat-label">Total Net Worth</div><div class="stat-value" id="s-totalMv">—</div><div class="stat-change" id="s-pnl">Loading...</div><div class="stat-sub">Unrealized P&L</div></div>
+        <div class="stat-card"><div class="stat-label">Total Cost Basis</div><div class="stat-value" id="s-cost">—</div><div class="stat-change" id="s-ret">—</div><div class="stat-sub">Return</div></div>
+        <div class="stat-card"><div class="stat-label">Day Change</div><div class="stat-value" id="s-dayChg">—</div><div class="stat-change" id="s-dayPct">—</div><div class="stat-sub">Today's P&L</div></div>
+        <div class="stat-card"><div class="stat-label">持倉數</div><div class="stat-value" id="s-count">—</div><div class="stat-change" style="color:var(--mid)">Active holdings</div><div class="stat-sub">&nbsp;</div></div>
+        <div class="stat-card"><div class="stat-label">年化股息收益</div><div class="stat-value" id="s-divIncome" style="color:var(--green)">—</div><div class="stat-change" id="s-divYield" style="color:var(--green)">—</div><div class="stat-sub" id="s-divSub">Portfolio yield</div></div>
+        <div class="stat-card"><div class="stat-label">年化報酬率 IRR</div><div class="stat-value" id="s-irr">—</div><div class="stat-change" id="s-irrLabel" style="color:var(--mid)">—</div><div class="stat-sub">依交易記錄計算</div></div>
+      </div>
+    </div>
+    <!-- 台股統計列（有台股持倉時顯示） -->
+    <div class="stats-section" id="stats-tw-section" style="display:none">
+      <div class="stats-section-label" style="color:#DC2626">台股 <span style="font-weight:400">TWD</span></div>
+      <div class="stats-grid">
+        <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">台股淨值</div><div class="stat-value" id="tw-s-totalMv">—</div><div class="stat-change" id="tw-s-pnl"></div><div class="stat-sub">Unrealized P&L</div></div>
+        <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">台股成本</div><div class="stat-value" id="tw-s-cost">—</div><div class="stat-change" id="tw-s-ret"></div><div class="stat-sub">Return</div></div>
+        <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">今日變動</div><div class="stat-value" id="tw-s-dayChg">—</div><div class="stat-change" id="tw-s-dayPct"></div><div class="stat-sub">Today's P&L</div></div>
+        <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">台股持倉數</div><div class="stat-value" id="tw-s-count">—</div><div class="stat-change" style="color:var(--mid)">Active holdings</div><div class="stat-sub">&nbsp;</div></div>
+      </div>
     </div>
 
     <!-- 投資目標 -->
@@ -1342,11 +1359,10 @@ function formatMoneyDec(val, currency) {
 }
 
 function renderSummaryCards(s) {
-  // 支援新版分拆格式（s.us / s.tw）與舊版向下相容
   const usData = s.us || s;
   document.getElementById('s-totalMv').textContent = '$'+(usData.total_market_value||0).toLocaleString('en',{maximumFractionDigits:0});
   document.getElementById('s-cost').textContent    = '$'+(usData.total_cost||0).toLocaleString('en',{maximumFractionDigits:0});
-  document.getElementById('s-count').textContent   = s.holdings_count;
+  document.getElementById('s-count').textContent   = s.us ? (s.us.holdings_count||0) : s.holdings_count;
   const pnl=(usData.total_unrealized_pnl||0), up=pnl>=0;
   document.getElementById('s-pnl').innerHTML = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="${up?'2,9 6,3 10,9':'2,3 6,9 10,3'}"/></svg> ${up?'+':''}$${Math.abs(pnl).toLocaleString('en',{maximumFractionDigits:0})} (${up?'+':''}${(usData.total_unrealized_pnl_pct||0).toFixed(1)}%)`;
   document.getElementById('s-pnl').className = 'stat-change '+(up?'up':'down');
@@ -1358,32 +1374,24 @@ function renderSummaryCards(s) {
   document.getElementById('s-dayPct').textContent  = (dup?'+':'')+(usData.day_change_pct||0).toFixed(2)+'%';
   document.getElementById('s-dayPct').className    = 'stat-change '+(dup?'up':'down');
 
-  // 若有台股資料，在 overview 注入台股小卡
+  // 台股統計列
   const twData = s.tw;
-  const twCard = document.getElementById('tw-summary-card');
+  const twSection = document.getElementById('stats-tw-section');
+  if (!twSection) return;
   if (twData && twData.holdings_count > 0) {
-    if (!twCard) {
-      const statsArea = document.querySelector('.stats-grid');
-      if (statsArea) {
-        const card = document.createElement('div');
-        card.id = 'tw-summary-card';
-        card.className = 'stat-card';
-        card.style = 'border-top:3px solid #DC2626';
-        card.innerHTML = `
-          <div class="stat-label">台股市值（TWD）</div>
-          <div class="stat-value" id="tw-s-mv">NT$0</div>
-          <div class="stat-change" id="tw-s-pnl"></div>
-          <div style="font-size:10px;color:var(--light);margin-top:4px" id="tw-s-count"></div>`;
-        statsArea.appendChild(card);
-      }
-    }
+    twSection.style.display = '';
     const twPnl = twData.total_unrealized_pnl||0, twUp = twPnl >= 0;
-    const twMvEl = document.getElementById('tw-s-mv');
-    const twPnlEl = document.getElementById('tw-s-pnl');
-    const twCntEl = document.getElementById('tw-s-count');
-    if (twMvEl) twMvEl.textContent = 'NT$' + (twData.total_market_value||0).toLocaleString('en',{maximumFractionDigits:0});
-    if (twPnlEl) { twPnlEl.textContent = (twUp?'+':'')+'NT$'+Math.abs(twPnl).toLocaleString('en',{maximumFractionDigits:0})+' ('+( twUp?'+':'')+( twData.total_unrealized_pnl_pct||0).toFixed(1)+'%)'; twPnlEl.className='stat-change '+(twUp?'up':'down'); }
-    if (twCntEl) twCntEl.textContent = twData.holdings_count + ' 台股持倉';
+    const twDc = twData.day_change||0, twDup = twDc >= 0;
+    const g = id => document.getElementById(id);
+    if(g('tw-s-totalMv')) g('tw-s-totalMv').textContent = 'NT$'+(twData.total_market_value||0).toLocaleString('en',{maximumFractionDigits:0});
+    if(g('tw-s-cost'))    g('tw-s-cost').textContent    = 'NT$'+(twData.total_cost||0).toLocaleString('en',{maximumFractionDigits:0});
+    if(g('tw-s-count'))   g('tw-s-count').textContent   = twData.holdings_count;
+    if(g('tw-s-pnl'))   { g('tw-s-pnl').textContent = (twUp?'+':'')+'NT$'+Math.abs(twPnl).toLocaleString('en',{maximumFractionDigits:0})+' ('+(twUp?'+':'')+(twData.total_unrealized_pnl_pct||0).toFixed(1)+'%)'; g('tw-s-pnl').className='stat-change '+(twUp?'up':'down'); }
+    if(g('tw-s-ret'))   { g('tw-s-ret').textContent = (twUp?'+':'')+(twData.total_unrealized_pnl_pct||0).toFixed(1)+'%'; g('tw-s-ret').className='stat-change '+(twUp?'up':'down'); }
+    if(g('tw-s-dayChg')){ g('tw-s-dayChg').textContent = (twDup?'+':'')+'NT$'+Math.abs(twDc).toLocaleString('en',{maximumFractionDigits:0}); g('tw-s-dayChg').style.color = twDup?'var(--green)':'var(--red)'; }
+    if(g('tw-s-dayPct')){ g('tw-s-dayPct').textContent = (twDup?'+':'')+(twData.day_change_pct||0).toFixed(2)+'%'; g('tw-s-dayPct').className='stat-change '+(twDup?'up':'down'); }
+  } else {
+    twSection.style.display = 'none';
   }
 }
 
