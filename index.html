@@ -446,14 +446,15 @@ tr:hover td{background:var(--bg)}
     <div class="modal-sub">輸入股票代號、持股數量和平均成本</div>
     <div class="modal-field">
       <div class="modal-label">股票代號</div>
-      <input class="modal-input" id="hm-symbol" placeholder="例：NVDA" style="text-transform:uppercase" onkeydown="if(event.key==='Enter')document.getElementById('hm-shares').focus()">
+      <input class="modal-input" id="hm-symbol" placeholder="例：NVDA 或 2330（台積電）" style="text-transform:uppercase" oninput="onSymbolInput(this.value)" onkeydown="if(event.key==='Enter')document.getElementById('hm-shares').focus()">
+      <div id="hm-symbol-hint" style="display:none;font-size:11px;color:var(--blue);margin-top:4px;padding:4px 8px;background:var(--blue-lt);border-radius:4px"></div>
     </div>
     <div class="modal-field">
       <div class="modal-label">持股數量（股）</div>
       <input class="modal-input" id="hm-shares" type="number" min="0.0001" step="any" placeholder="例：10" onkeydown="if(event.key==='Enter')document.getElementById('hm-cost').focus()">
     </div>
     <div class="modal-field">
-      <div class="modal-label">平均成本（USD）</div>
+      <div class="modal-label" id="hm-cost-label">平均成本（USD）</div>
       <input class="modal-input" id="hm-cost" type="number" min="0.01" step="any" placeholder="例：150.00" onkeydown="if(event.key==='Enter')submitHoldingForm()">
       <div class="modal-hint">加倉時系統會自動計算加權平均成本</div>
     </div>
@@ -729,6 +730,13 @@ tr:hover td{background:var(--bg)}
     <div class="screener-mode active" id="smode-general">
       <div class="filters-bar">
         <div class="filters-row">
+          <div class="filter-group"><div class="filter-label">市場</div>
+            <select class="filter-select" id="f-market">
+              <option value="">全部</option>
+              <option value="us">美股 (USD)</option>
+              <option value="tw">台股 (TWD)</option>
+            </select>
+          </div>
           <div class="filter-group"><div class="filter-label">Sector</div>
             <select class="filter-select" id="f-sector"><option value="">All Sectors</option><option>Technology</option><option>Financials</option><option>Healthcare</option><option>Consumer Cyclical</option><option>Energy</option></select>
           </div>
@@ -1300,20 +1308,115 @@ async function loadOverview() {
   }
 }
 
+// 判斷是否台股代號（純 4-6 位數字）
+function isTwStock(sym) {
+  return /^\d{4,6}$/.test(sym.trim());
+}
+
+// symbol input 即時提示
+function onSymbolInput(val) {
+  const hint = document.getElementById('hm-symbol-hint');
+  const costLabel = document.getElementById('hm-cost-label');
+  const normalized = val.trim().toUpperCase();
+  if (isTwStock(normalized)) {
+    hint.textContent = `台股代號，將自動儲存為 ${normalized}.TW`;
+    hint.style.display = 'block';
+    costLabel.textContent = '平均成本（TWD）';
+    document.getElementById('hm-cost').placeholder = '例：850.00';
+  } else {
+    hint.style.display = 'none';
+    costLabel.textContent = '平均成本（USD）';
+    document.getElementById('hm-cost').placeholder = '例：150.00';
+  }
+}
+
+// 格式化金額，依幣別使用對應符號
+function formatMoney(val, currency) {
+  const prefix = currency === 'TWD' ? 'NT$' : '$';
+  return prefix + (val||0).toLocaleString('en', {maximumFractionDigits:0});
+}
+function formatMoneyDec(val, currency) {
+  const prefix = currency === 'TWD' ? 'NT$' : '$';
+  return prefix + (val||0).toFixed(2);
+}
+
 function renderSummaryCards(s) {
-  document.getElementById('s-totalMv').textContent = '$'+s.total_market_value.toLocaleString('en',{maximumFractionDigits:0});
-  document.getElementById('s-cost').textContent    = '$'+s.total_cost.toLocaleString('en',{maximumFractionDigits:0});
+  // 支援新版分拆格式（s.us / s.tw）與舊版向下相容
+  const usData = s.us || s;
+  document.getElementById('s-totalMv').textContent = '$'+(usData.total_market_value||0).toLocaleString('en',{maximumFractionDigits:0});
+  document.getElementById('s-cost').textContent    = '$'+(usData.total_cost||0).toLocaleString('en',{maximumFractionDigits:0});
   document.getElementById('s-count').textContent   = s.holdings_count;
-  const pnl=s.total_unrealized_pnl, up=pnl>=0;
-  document.getElementById('s-pnl').innerHTML = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="${up?'2,9 6,3 10,9':'2,3 6,9 10,3'}"/></svg> ${up?'+':''}$${Math.abs(pnl).toLocaleString('en',{maximumFractionDigits:0})} (${up?'+':''}${s.total_unrealized_pnl_pct.toFixed(1)}%)`;
+  const pnl=(usData.total_unrealized_pnl||0), up=pnl>=0;
+  document.getElementById('s-pnl').innerHTML = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="${up?'2,9 6,3 10,9':'2,3 6,9 10,3'}"/></svg> ${up?'+':''}$${Math.abs(pnl).toLocaleString('en',{maximumFractionDigits:0})} (${up?'+':''}${(usData.total_unrealized_pnl_pct||0).toFixed(1)}%)`;
   document.getElementById('s-pnl').className = 'stat-change '+(up?'up':'down');
-  document.getElementById('s-ret').textContent = (up?'+':'')+s.total_unrealized_pnl_pct.toFixed(1)+'%';
+  document.getElementById('s-ret').textContent = (up?'+':'')+(usData.total_unrealized_pnl_pct||0).toFixed(1)+'%';
   document.getElementById('s-ret').className = 'stat-change '+(up?'up':'down');
-  const dc=s.day_change, dup=dc>=0;
+  const dc=(usData.day_change||0), dup=dc>=0;
   document.getElementById('s-dayChg').textContent = (dup?'+':'')+'$'+Math.abs(dc).toLocaleString('en',{maximumFractionDigits:0});
   document.getElementById('s-dayChg').style.color = dup?'var(--green)':'var(--red)';
-  document.getElementById('s-dayPct').textContent  = (dup?'+':'')+s.day_change_pct.toFixed(2)+'%';
+  document.getElementById('s-dayPct').textContent  = (dup?'+':'')+(usData.day_change_pct||0).toFixed(2)+'%';
   document.getElementById('s-dayPct').className    = 'stat-change '+(dup?'up':'down');
+
+  // 若有台股資料，在 overview 注入台股小卡
+  const twData = s.tw;
+  const twCard = document.getElementById('tw-summary-card');
+  if (twData && twData.holdings_count > 0) {
+    if (!twCard) {
+      const statsArea = document.querySelector('.stats-grid');
+      if (statsArea) {
+        const card = document.createElement('div');
+        card.id = 'tw-summary-card';
+        card.className = 'stat-card';
+        card.style = 'border-top:3px solid #DC2626';
+        card.innerHTML = `
+          <div class="stat-label">台股市值（TWD）</div>
+          <div class="stat-value" id="tw-s-mv">NT$0</div>
+          <div class="stat-change" id="tw-s-pnl"></div>
+          <div style="font-size:10px;color:var(--light);margin-top:4px" id="tw-s-count"></div>`;
+        statsArea.appendChild(card);
+      }
+    }
+    const twPnl = twData.total_unrealized_pnl||0, twUp = twPnl >= 0;
+    const twMvEl = document.getElementById('tw-s-mv');
+    const twPnlEl = document.getElementById('tw-s-pnl');
+    const twCntEl = document.getElementById('tw-s-count');
+    if (twMvEl) twMvEl.textContent = 'NT$' + (twData.total_market_value||0).toLocaleString('en',{maximumFractionDigits:0});
+    if (twPnlEl) { twPnlEl.textContent = (twUp?'+':'')+'NT$'+Math.abs(twPnl).toLocaleString('en',{maximumFractionDigits:0})+' ('+( twUp?'+':'')+( twData.total_unrealized_pnl_pct||0).toFixed(1)+'%)'; twPnlEl.className='stat-change '+(twUp?'up':'down'); }
+    if (twCntEl) twCntEl.textContent = twData.holdings_count + ' 台股持倉';
+  }
+}
+
+function _buildHoldingRow(h) {
+  const up=(h.unrealized_pnl||0)>=0, cup=(h.change_pct||0)>=0;
+  const id=h.id||'';
+  const vl = valLight(h.pe_ratio);
+  const cur = h.currency || 'USD';
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td><span class="ticker">${h.symbol}</span></td>
+    <td><div class="co-name">${h.name||h.symbol}</div><div class="co-sector">${h.sector||''}</div></td>
+    <td><strong>${formatMoneyDec(h.current_price||0, cur)}</strong></td>
+    <td style="color:${cup?'var(--green)':'var(--red)'}">${cup?'+':''}${(h.change_pct||0).toFixed(2)}%</td>
+    <td style="color:var(--mid)">${+h.shares % 1 === 0 ? +h.shares : (+h.shares).toFixed(4).replace(/\.?0+$/,'')}</td>
+    <td style="color:var(--mid)">${formatMoneyDec(h.avg_cost||0, cur)}</td>
+    <td><strong>${formatMoney(h.market_value||0, cur)}</strong></td>
+    <td style="color:${up?'var(--green)':'var(--red)'}"><strong>${up?'+':''}${formatMoney(Math.abs(h.unrealized_pnl||0), cur)}</strong></td>
+    <td><span class="tag ${up?'tag-green':'tag-red'}">${up?'+':''}${(h.unrealized_pnl_pct||0).toFixed(2)}%</span></td>
+    <td>
+      <span class="val-wrap">
+        <span class="val-dot ${vl.cls}"></span>
+        <span style="font-size:11px;color:var(--mid)">${h.pe_ratio ? h.pe_ratio.toFixed(0) : '—'}</span>
+        <span class="val-tip">${vl.label}<br>${vl.advice}</span>
+      </span>
+    </td>
+    <td><span class="tag tag-gray" style="font-size:10px">${h.sector||'—'}</span></td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px;color:var(--green);border-color:var(--green)" onclick="openTransactionModal('${h.symbol}','BUY')">加倉</button>
+      <button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px" onclick="editHolding('${id}','${h.symbol}',${h.shares},${h.avg_cost})">編輯</button>
+      <button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px;color:var(--red)" onclick="deleteHolding('${id}','${h.symbol}')">刪除</button>
+    </td>
+  `;
+  return tr;
 }
 
 function renderHoldings(holdings) {
@@ -1321,37 +1424,25 @@ function renderHoldings(holdings) {
   document.getElementById('holdingsSub').textContent = `${holdings.length} positions`;
   if(!holdings.length){tbody.innerHTML=`<tr><td colspan="12"><div class="empty-state"><div class="es-text">No holdings yet</div><div class="es-sub">Click "+ 新增持倉" to add your first position</div></div></td></tr>`;return}
   tbody.innerHTML='';
-  holdings.forEach(h=>{
-    const up=(h.unrealized_pnl||0)>=0, cup=(h.change_pct||0)>=0;
-    const tr=document.createElement('tr');
-    const id=h.id||'';
-    const vl = valLight(h.pe_ratio);
-    tr.innerHTML=`
-      <td><span class="ticker">${h.symbol}</span></td>
-      <td><div class="co-name">${h.name||h.symbol}</div><div class="co-sector">${h.sector||''}</div></td>
-      <td><strong>$${(h.current_price||0).toFixed(2)}</strong></td>
-      <td style="color:${cup?'var(--green)':'var(--red)'}">${cup?'+':''}${(h.change_pct||0).toFixed(2)}%</td>
-      <td style="color:var(--mid)">${+h.shares % 1 === 0 ? +h.shares : (+h.shares).toFixed(4).replace(/\.?0+$/,'')}</td>
-      <td style="color:var(--mid)">$${(h.avg_cost||0).toFixed(2)}</td>
-      <td><strong>$${(h.market_value||0).toLocaleString('en',{maximumFractionDigits:0})}</strong></td>
-      <td style="color:${up?'var(--green)':'var(--red)'}"><strong>${up?'+':''}$${Math.abs(h.unrealized_pnl||0).toLocaleString('en',{maximumFractionDigits:0})}</strong></td>
-      <td><span class="tag ${up?'tag-green':'tag-red'}">${up?'+':''}${(h.unrealized_pnl_pct||0).toFixed(2)}%</span></td>
-      <td>
-        <span class="val-wrap">
-          <span class="val-dot ${vl.cls}"></span>
-          <span style="font-size:11px;color:var(--mid)">${h.pe_ratio ? h.pe_ratio.toFixed(0) : '—'}</span>
-          <span class="val-tip">${vl.label}<br>${vl.advice}</span>
-        </span>
-      </td>
-      <td><span class="tag tag-gray" style="font-size:10px">${h.sector||'—'}</span></td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px;color:var(--green);border-color:var(--green)" onclick="openTransactionModal('${h.symbol}','BUY')">加倉</button>
-        <button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px" onclick="editHolding('${id}','${h.symbol}',${h.shares},${h.avg_cost})">編輯</button>
-        <button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px;color:var(--red)" onclick="deleteHolding('${id}','${h.symbol}')">刪除</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+
+  const usH = holdings.filter(h => (h.currency||'USD') === 'USD');
+  const twH = holdings.filter(h => (h.currency||'USD') === 'TWD');
+
+  // 美股區塊
+  if (usH.length) {
+    const hdr = document.createElement('tr');
+    hdr.innerHTML = `<td colspan="12" style="background:var(--bg);padding:8px 12px;font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">美股 (USD) · ${usH.length} 持倉</td>`;
+    tbody.appendChild(hdr);
+    usH.forEach(h => tbody.appendChild(_buildHoldingRow(h)));
+  }
+
+  // 台股區塊
+  if (twH.length) {
+    const hdr = document.createElement('tr');
+    hdr.innerHTML = `<td colspan="12" style="background:#FFF5F5;padding:8px 12px;font-size:10px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">台股 (TWD) · ${twH.length} 持倉</td>`;
+    tbody.appendChild(hdr);
+    twH.forEach(h => tbody.appendChild(_buildHoldingRow(h)));
+  }
 }
 
 function renderSectorChart(allocation) {
@@ -1470,12 +1561,14 @@ async function loadRiskPage() {
 // ── SCREENER ──────────────────────────────────────────────────
 async function runScreener() {
   const params = new URLSearchParams();
+  const market = document.getElementById('f-market').value;
   const sector = document.getElementById('f-sector').value;
   const pe   = document.getElementById('f-pe').value;
   const roe  = document.getElementById('f-roe').value;
   const div  = document.getElementById('f-div').value;
   const beta = document.getElementById('f-beta').value;
   const score= document.getElementById('f-score').value;
+  if(market) params.set('market',market);
   if(sector) params.set('sector',sector);
   if(pe)     params.set('pe_max',pe);
   if(roe)    params.set('roe_min',roe);
@@ -1524,10 +1617,12 @@ async function runScreener() {
       const aMap={'買入':'tag-green','持有':'tag-amber','觀察':'tag-blue'};
       const mcap=s.market_cap;
       const mcStr=mcap>=200e9?'Mega':mcap>=20e9?'Large':'Mid';
+      const cur = s.currency || 'USD';
+      const isTW = cur === 'TWD';
       const tr=document.createElement('tr'); tr.innerHTML=`
-        <td><span class="ticker">${s.symbol}</span></td>
+        <td><span class="ticker">${s.symbol}</span>${isTW?'<span class="tag tag-red" style="font-size:9px;margin-left:4px;vertical-align:middle">TW</span>':''}</td>
         <td><div class="co-name">${s.name||s.symbol}</div><div class="co-sector">${s.sector||''}</div></td>
-        <td><strong>$${(s.price||0).toFixed(2)}</strong></td>
+        <td><strong>${formatMoneyDec(s.price||0, cur)}</strong></td>
         <td>${s.pe_ratio?s.pe_ratio.toFixed(1):'—'}</td>
         <td>${s.roe?s.roe.toFixed(1)+'%':'—'}</td>
         <td>${s.dividend_yield?s.dividend_yield.toFixed(2)+'%':'—'}</td>
@@ -1543,7 +1638,7 @@ async function runScreener() {
 }
 
 function resetScreener(){
-  ['f-sector','f-score'].forEach(id=>document.getElementById(id).value='');
+  ['f-market','f-sector','f-score'].forEach(id=>document.getElementById(id).value='');
   ['f-pe','f-roe','f-div','f-beta'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('screenerTbody').innerHTML='';
   document.getElementById('screenerCount').textContent='—';
