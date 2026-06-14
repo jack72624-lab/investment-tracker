@@ -916,7 +916,14 @@ tr:hover td{background:var(--bg)}
       <div>
         <div class="card mb-16">
           <div class="card-header"><div class="card-title">Portfolio Allocation</div><div class="card-sub">By market value</div></div>
-          <div class="card-body"><div class="chart-wrap"><canvas id="allocChart"></canvas></div></div>
+          <div class="card-body">
+            <div style="font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">美股 USD</div>
+            <div class="chart-wrap"><canvas id="allocChart"></canvas></div>
+            <div id="alloc-tw-block" style="display:none">
+              <div style="font-size:10px;font-weight:700;color:#DC2626;text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:16px">台股 TWD</div>
+              <div class="chart-wrap"><canvas id="allocChartTW"></canvas></div>
+            </div>
+          </div>
         </div>
         <div class="card">
           <div class="card-header"><div class="card-title">Top Picks from Screener</div><div class="card-sub">AI score ≥ 80</div></div>
@@ -926,7 +933,10 @@ tr:hover td{background:var(--bg)}
       <div>
         <div class="card mb-16">
           <div class="card-header"><div class="card-title">Position Breakdown</div></div>
-          <div class="card-body" id="allocList"></div>
+          <div class="card-body">
+            <div id="allocList"></div>
+            <div id="allocListTW" style="display:none"></div>
+          </div>
         </div>
         <div class="card">
           <div class="card-header"><div class="card-title">Portfolio Stats</div></div>
@@ -1555,18 +1565,43 @@ function renderAiInsight(summary) {
 }
 
 // ── PORTFOLIO PAGE ────────────────────────────────────────────
-let allocChart;
-async function loadPortfolioPage(holdings, summary) {
-  const ctx=document.getElementById('allocChart').getContext('2d');
-  if(allocChart) allocChart.destroy();
-  const colors=['#006FFF','#7C3AED','#16A34A','#D97706','#DC2626','#0891B2','#EA580C','#65A30D','#9CA3AF'];
-  const total=summary.total_market_value||1;
+let allocChart, allocChartTW;
+const ALLOC_COLORS=['#006FFF','#7C3AED','#16A34A','#D97706','#DC2626','#0891B2','#EA580C','#65A30D','#9CA3AF'];
+
+// 渲染單一幣別群組的配置圖 + 持倉明細列表，回傳 Chart 實例供下次刷新時 destroy
+function renderAllocGroup(canvasId, listId, holdings, total, prevChart) {
+  const ctx=document.getElementById(canvasId).getContext('2d');
+  if(prevChart) prevChart.destroy();
   const labels=holdings.map(h=>`${h.symbol} ${((h.market_value/total)*100).toFixed(0)}%`);
   const data=holdings.map(h=>h.market_value);
-  allocChart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:8,color:'#6B7280'}}}}});
+  const chart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:ALLOC_COLORS,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:8,color:'#6B7280'}}}}});
 
-  const list=document.getElementById('allocList'); list.innerHTML='';
-  holdings.forEach((h,i)=>{const pct=((h.market_value/total)*100).toFixed(1);list.innerHTML+=`<div class="alloc-item"><div class="alloc-dot" style="background:${colors[i%colors.length]}"></div><div><div class="alloc-name">${h.symbol}</div><div class="alloc-sub">${h.name||''}</div></div><div class="alloc-bar-wrap"><div class="alloc-bar"><div class="alloc-bar-fill" style="width:${pct*100/30}%;background:${colors[i%colors.length]}"></div></div></div><div class="alloc-pct">${pct}%</div></div>`;});
+  const list=document.getElementById(listId); list.innerHTML='';
+  holdings.forEach((h,i)=>{const pct=((h.market_value/total)*100).toFixed(1);list.innerHTML+=`<div class="alloc-item"><div class="alloc-dot" style="background:${ALLOC_COLORS[i%ALLOC_COLORS.length]}"></div><div><div class="alloc-name">${h.symbol}</div><div class="alloc-sub">${h.name||''}</div></div><div class="alloc-bar-wrap"><div class="alloc-bar"><div class="alloc-bar-fill" style="width:${Math.min(pct*100/30,100)}%;background:${ALLOC_COLORS[i%ALLOC_COLORS.length]}"></div></div></div><div class="alloc-pct">${pct}%</div></div>`;});
+  return chart;
+}
+
+async function loadPortfolioPage(holdings, summary) {
+  const usH=holdings.filter(h=>(h.currency||'USD')==='USD');
+  const twH=holdings.filter(h=>(h.currency||'USD')==='TWD');
+
+  // 美股配置：分母用美股總市值，避免跟台股原始數字混算造成佔比錯誤
+  const usTotal=(summary.us&&summary.us.total_market_value)||summary.total_market_value||usH.reduce((a,h)=>a+(h.market_value||0),0)||1;
+  allocChart=renderAllocGroup('allocChart','allocList',usH,usTotal,allocChart);
+
+  // 台股配置（有台股持倉時才顯示），分母用台股總市值
+  const twBlock=document.getElementById('alloc-tw-block');
+  const twList=document.getElementById('allocListTW');
+  if(twH.length){
+    twBlock.style.display='';
+    twList.style.display='';
+    const twTotal=(summary.tw&&summary.tw.total_market_value)||twH.reduce((a,h)=>a+(h.market_value||0),0)||1;
+    allocChartTW=renderAllocGroup('allocChartTW','allocListTW',twH,twTotal,allocChartTW);
+  } else {
+    twBlock.style.display='none';
+    twList.style.display='none';
+    if(allocChartTW){allocChartTW.destroy();allocChartTW=null;}
+  }
 
   // Top screener picks
   const recDiv=document.getElementById('recCards'); recDiv.innerHTML='';
