@@ -2225,6 +2225,7 @@ async function loadRebalancePage() {
       renderTargetAllocationTable(m, alloc);
       renderRebalanceAdvice(m, alloc, h);
       renderDividendReinvest(m, div, alloc, h);
+      pushTargetToBackend(m);   // 把既有 localStorage 目標同步到後端（給晨報用，自動遷移）
     });
   } catch(e) {
     console.error('rebalance error', e);
@@ -2298,8 +2299,19 @@ function saveTargetAllocation(market) {
     if(inp.value) alloc[inp.dataset.sector]=parseFloat(inp.value);
   });
   localStorage.setItem('targetAlloc_' + market, JSON.stringify(alloc));
+  pushTargetToBackend(market);          // write-through：晨報排程才算得到再平衡偏移
   showToast(`${MKT_NAME[market]}目標配置已儲存`);
   loadRebalancePage();
+}
+
+// 把單一市場的目標配置上傳後端（給晨報排程讀）。fire-and-forget，失敗不擋 UI。
+// 只在有設定值時上傳，避免用空 {} 覆蓋後端。
+async function pushTargetToBackend(market) {
+  if (DEMO_MODE) return;
+  const alloc = getSavedAlloc(market);
+  if (!alloc || !Object.keys(alloc).length) return;
+  try { await api('/api/settings/target-allocation', 'PUT', { market, allocation: alloc }); }
+  catch(e) { /* 後端暫時不可用時略過，不影響本地操作 */ }
 }
 
 function renderRebalanceAdvice(market, sectorAlloc, holdings) {

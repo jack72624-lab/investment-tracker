@@ -1,0 +1,129 @@
+-- ============================================================
+-- Investment OS — Supabase Schema
+-- 貼到 Supabase SQL Editor 執行一次即可
+-- ============================================================
+
+-- 啟用 UUID 擴充功能
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- ── 持倉表 ──────────────────────────────────────────────────
+-- 每一筆代表你「目前持有」某支股票的狀態
+CREATE TABLE IF NOT EXISTS holdings (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  symbol        TEXT    NOT NULL,           -- 股票代號，例如 "NVDA"
+  shares        NUMERIC NOT NULL,           -- 持股數量
+  avg_cost      NUMERIC NOT NULL,           -- 平均成本（美元）
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── 交易記錄表 ───────────────────────────────────────────────
+-- 每一筆買賣都記下來，是計算損益的原始資料
+CREATE TABLE IF NOT EXISTS transactions (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  symbol           TEXT    NOT NULL,
+  transaction_type TEXT    NOT NULL CHECK (transaction_type IN ('BUY','SELL')),
+  shares           NUMERIC NOT NULL,
+  price            NUMERIC NOT NULL,        -- 成交價（美元）
+  total_amount     NUMERIC NOT NULL,        -- shares × price
+  transaction_date DATE    NOT NULL,
+  notes            TEXT,
+  realized_pnl     NUMERIC,                 -- 已實現損益（僅 SELL 有值 =(賣價-均成本)×股數）
+  created_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 既有資料庫補欄位用（新建可忽略，已含在上面 CREATE）：
+-- ALTER TABLE transactions ADD COLUMN IF NOT EXISTS realized_pnl NUMERIC;
+
+-- ── 觀察清單表 ───────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS watchlist (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  symbol       TEXT    NOT NULL UNIQUE,
+  target_price NUMERIC,                     -- 你設定的目標價
+  notes        TEXT,
+  added_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── 股價快取表 ───────────────────────────────────────────────
+-- 快取 yfinance 抓回來的資料，避免頻繁打外部 API
+CREATE TABLE IF NOT EXISTS stock_price_cache (
+  symbol              TEXT PRIMARY KEY,
+  name                TEXT,
+  sector              TEXT,
+  price               NUMERIC,
+  change_pct          NUMERIC,              -- 今日漲跌幅 %
+  pe_ratio            NUMERIC,
+  roe                 NUMERIC,              -- 以百分比儲存，例如 25.4
+  dividend_yield      NUMERIC,              -- 以百分比儲存，例如 1.38
+  market_cap          BIGINT,               -- 以美元儲存
+  beta                NUMERIC,
+  fifty_two_week_high NUMERIC,
+  fifty_two_week_low  NUMERIC,
+  eps_growth          NUMERIC,              -- 年度 EPS 成長率 %
+  target_price        NUMERIC,              -- 分析師目標價（中位數）
+  cached_at           TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── 自動更新 updated_at ──────────────────────────────────────
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql
+SET search_path = '';   -- 2026-06-17 修 Security Advisor 的 search_path mutable 警告
+
+CREATE TRIGGER holdings_updated_at
+  BEFORE UPDATE ON holdings
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ── RLS（Row Level Security）：2026-06-17 改為開啟 ───────────
+-- 後端走 service_role key 會自動繞過 RLS，不加 anon policy 即等於
+-- 對 anon/public 全鎖（deny-all）。修掉 Supabase Security Advisor 的
+-- "RLS Disabled in Public" ERROR。日後新增表務必比照開啟。
+ALTER TABLE holdings            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE transactions        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE watchlist           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE stock_price_cache   ENABLE ROW LEVEL SECURITY;
+
+-- ── 每日 NAV 快照表（2026-06-19 晨報投資版新增）─────────────────
+-- 由晨報排程（台灣 07:30 = 美股收盤後）每天寫一筆，做真正的權益曲線。
+-- snapshot_date 用「美股交易日」(America/New_York 當下日期)，每日一筆 upsert。
+CREATE TABLE IF NOT EXISTS nav_snapshot (
+  snapshot_date  DATE PRIMARY KEY,          -- 美股交易日
+  total_value    NUMERIC NOT NULL,          -- 全組合市值（美股+台股，已折算的話另計，此處原幣加總）
+  us_value       NUMERIC,
+  tw_value       NUMERIC,
+  unrealized_pnl NUMERIC,
+  created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE nav_snapshot ENABLE ROW LEVEL SECURITY;
+
+-- ── 應用設定表（2026-06-19 新增）────────────────────────────────
+-- 通用 key→JSONB 設定。目前用途：把再平衡「目標配置」從前端 localStorage
+-- 搬到伺服器端，讓晨報排程算得到偏移。
+--   key = target_alloc_us / target_alloc_tw，value = { "Technology": 40, "ETF": 30, ... }
+CREATE TABLE IF NOT EXISTS app_settings (
+  key        TEXT PRIMARY KEY,
+  value      JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE app_settings ENABLE ROW LEVEL SECURITY;
+
+-- ── 範例初始資料（可選）────────────────────────────────────────
+-- 貼入後你可以在 Dashboard 立刻看到資料，確認系統正常運作
+INSERT INTO holdings (symbol, shares, avg_cost) VALUES
+  ('NVDA', 15, 620.00),
+  ('AAPL', 40, 165.00),
+  ('MSFT', 20, 370.00),
+  ('VOO',  30, 430.00),
+  ('JPM',  25, 178.00)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO watchlist (symbol, target_price, notes) VALUES
+  ('AMD',  220.00, 'AI GPU 競爭者，關注 MI300 出貨量'),
+  ('PLTR', 40.00,  'AI 政府合約持續成長'),
+  ('CRWD', 430.00, '資安龍頭，訂閱制收入穩定'),
+  ('AVGO', 1800.00,'AI 網路晶片需求強')
+ON CONFLICT DO NOTHING;
