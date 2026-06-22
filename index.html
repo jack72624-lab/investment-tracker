@@ -2842,6 +2842,14 @@ function toggleBosBd(id, row) {
   if (btn) btn.textContent = open ? '▼' : '▲';
 }
 
+// 降級提示：後端整批抓不到即時資料時會回退上次成功結果並帶 stale 旗標，
+// 在筆數後附註，避免用戶以為系統壞掉（紅色錯誤已改由後端降級吸收）。
+function _staleSuffix(data) {
+  return (data && data.stale)
+    ? ` · 即時來源限流中，顯示 ${data.stale_age_min} 分前資料`
+    : '';
+}
+
 async function runBosScreen() {
   _showBosTableView();
   const raw     = document.getElementById('bos-symbols').value.trim();
@@ -2870,7 +2878,7 @@ async function runBosScreen() {
       const sym_param = symbols.length ? `?symbols=${symbols.join(',')}` : '';
       const data = await api(`/api/screener/bos${sym_param}`);
       if (!data || !data.results) throw new Error('No results');
-      count.textContent = `${data.results.length} 支股票`;
+      count.textContent = `${data.results.length} 支股票` + _staleSuffix(data);
       if (data.results.length === 0) {
         tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--light)">沒有找到結果，請輸入有效的股票代號</td></tr>';
       } else {
@@ -3472,7 +3480,7 @@ async function runBosDiscover() {
         tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--light)">沒有找到結果</td></tr>';
       } else {
         tbody.innerHTML = data.results.map((r,i) => renderBosRow(r,i)).join('');
-        count.textContent = `AI 推薦 ${n} 支品質股`;
+        count.textContent = `AI 推薦 ${n} 支品質股` + _staleSuffix(data);
       }
     }
   } catch(e) {
@@ -3741,7 +3749,7 @@ async function runDgmDiscoverSectors() {
       if (!data || !data.results) throw new Error('No results returned');
       _cacheStocksToStore(data.results, 'DGM');
       document.getElementById('dgmSectorView').innerHTML = renderDgmSectorCards(data.results);
-      count.textContent = `分領域推薦：${data.results.length} 大板塊`;
+      count.textContent = `分領域推薦：${data.results.length} 大板塊` + _staleSuffix(data);
     }
   } catch(e) {
     console.error(e);
@@ -3770,7 +3778,7 @@ async function runDgmDiscover() {
       const data = await api('/api/screener/dgm/discover');
       if (!data || !data.results) throw new Error('No results returned');
       const n = data.results.length;
-      count.textContent = `AI 推薦 ${n} 支股息股`;
+      count.textContent = `AI 推薦 ${n} 支股息股` + _staleSuffix(data);
       if (n === 0) {
         tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--light)">AI 未找到合適的股息股</td></tr>';
       } else {
