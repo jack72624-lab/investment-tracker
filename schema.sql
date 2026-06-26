@@ -115,6 +115,26 @@ CREATE TABLE IF NOT EXISTS app_settings (
 );
 ALTER TABLE app_settings ENABLE ROW LEVEL SECURITY;
 
+-- ── 持倉體質月度快照表（2026-06-26 體質監控新增）─────────────────
+-- 每月一筆/每支「個股」持倉，記基本面快照，用來跟上月比、抓體質惡化。
+-- ETF 不記（一籃子無單一公司體質）。
+CREATE TABLE IF NOT EXISTS fundamental_snapshot (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  symbol              TEXT NOT NULL,
+  snapshot_date       DATE NOT NULL,            -- 快照日（每月一次）
+  roe                 NUMERIC,                  -- 股東權益報酬率 %
+  revenue_growth      NUMERIC,                  -- 營收成長率 %
+  net_margin          NUMERIC,                  -- 淨利率 %
+  debt_to_equity      NUMERIC,                  -- 負債/權益（比值，如 1.73）
+  recommendation_mean NUMERIC,                  -- 分析師評等均值（1強買..5賣）
+  target_price        NUMERIC,                  -- 分析師目標價（中位）
+  forward_pe          NUMERIC,                  -- 前瞻本益比
+  price               NUMERIC,                  -- 快照當下股價
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(symbol, snapshot_date)
+);
+ALTER TABLE fundamental_snapshot ENABLE ROW LEVEL SECURITY;
+
 -- ── 範例初始資料（可選）────────────────────────────────────────
 -- 貼入後你可以在 Dashboard 立刻看到資料，確認系統正常運作
 INSERT INTO holdings (symbol, shares, avg_cost) VALUES

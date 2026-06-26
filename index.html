@@ -471,6 +471,32 @@ tr:hover td{background:var(--bg)}
 .vc-flag{margin-top:8px;font-size:10.5px;border-radius:6px;padding:6px 9px;line-height:1.5;background:var(--amber-lt);color:var(--amber)}
 .vc-flag.info{background:var(--accent);color:var(--mid)}
 .vc-foot{margin-top:12px;font-size:10px;color:var(--mid);line-height:1.6}
+/* ── 持倉體質監控 ──────────────────────────────────────────── */
+.hm-wrap{padding:14px 16px}
+.hm-alert{margin-bottom:12px;padding:11px 13px;border-radius:8px;background:var(--red-lt);border-left:3px solid var(--red);font-size:12.5px;color:#991B1B;line-height:1.5}
+.hm-alert b{font-weight:800}
+.hm-alert.ok{background:var(--green-lt);border-left-color:var(--green);color:#166534}
+.hm-sec{font-size:10px;color:var(--light);font-weight:700;letter-spacing:.04em;padding:8px 0 4px;text-transform:uppercase}
+.hm{padding:13px 0;border-bottom:1px solid var(--border)}
+.hm-top{display:flex;align-items:center;gap:9px}
+.hm-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.hm-dot.green{background:var(--green)}.hm-dot.amber{background:var(--amber)}.hm-dot.red{background:var(--red)}.hm-dot.gray{background:var(--light)}
+.hm-sym{font-size:13px;font-weight:800;font-family:'SF Mono',monospace;color:var(--blue)}
+.hm-name{font-size:11.5px;color:var(--mid);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hm-badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.hm-badge.green{background:var(--green-lt);color:var(--green)}.hm-badge.amber{background:var(--amber-lt);color:var(--amber)}.hm-badge.red{background:var(--red-lt);color:var(--red)}.hm-badge.gray{background:var(--bg);color:var(--mid)}
+.hm-metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;margin-top:10px}
+.hm-m{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;border-bottom:1px dashed var(--border);padding-bottom:4px}
+.hm-mv{font-weight:700;font-family:'SF Mono',monospace}
+.hm-tr{font-size:10.5px;font-weight:700;margin-left:5px}
+.hm-up{color:var(--green)}.hm-down{color:var(--red)}.hm-flat{color:var(--light)}
+.hm-flag{margin-top:10px;font-size:11.5px;border-radius:7px;padding:8px 11px;line-height:1.55;background:var(--red-lt);color:#991B1B}
+.hm-foot{margin-top:14px;font-size:10px;color:var(--mid);line-height:1.7}
+.hm-foot b{color:var(--dark)}
+/* 名詞解釋 tooltip：虛線底線，滑鼠靠近跳白話說明 */
+.jargon{position:relative;border-bottom:1px dotted var(--light);cursor:help;color:var(--mid);font-size:11px}
+.jargon .jbox{position:absolute;bottom:calc(100% + 7px);left:0;background:#1a2035;color:#e8eaf0;font-size:11px;font-weight:400;padding:8px 11px;border-radius:7px;width:210px;line-height:1.55;opacity:0;pointer-events:none;transition:opacity .15s;z-index:80;box-shadow:0 6px 20px rgba(0,0,0,.22)}
+.jargon:hover .jbox{opacity:1}
 /* ── 績效對比大盤 ─────────────────────────────────────────── */
 .perf-compare-grid{width:100%}
 .perf-compare-row{display:grid;grid-template-columns:130px 1fr 1fr 1fr;align-items:center;padding:10px 16px;gap:8px}
@@ -663,6 +689,10 @@ tr:hover td{background:var(--bg)}
     <div class="nav-item" onclick="showPage('risk')" data-label="風險評估">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5 L14.5 13.5 H1.5 Z"/><line x1="8" y1="6" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r=".6" fill="currentColor" stroke="none"/></svg></span>
       <span class="nav-item-text">風險評估</span>
+    </div>
+    <div class="nav-item" onclick="showPage('health')" data-label="體質監控">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8.5 H4 L5.5 4.5 L8 11.5 L9.5 7.5 L10.8 8.5 H14.5"/></svg></span>
+      <span class="nav-item-text">體質監控</span>
     </div>
     <div class="nav-item" onclick="showPage('transactions')" data-label="交易記錄">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="8.5" x2="11" y2="8.5"/><line x1="5" y1="11" x2="8" y2="11"/></svg></span>
@@ -1201,6 +1231,17 @@ tr:hover td{background:var(--bg)}
     </div>
   </div>
 
+  <!-- PAGE: 體質監控 -->
+  <div class="page" id="page-health">
+    <div class="card">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><div class="card-title">持倉體質監控</div><div class="card-sub">每月檢查持倉公司基本面，體質轉弱主動提醒</div></div>
+        <div id="healthChk" style="font-size:10px;color:var(--light);text-align:right;line-height:1.5"></div>
+      </div>
+      <div id="healthBody"><div style="text-align:center;padding:30px;color:var(--mid)">載入中...</div></div>
+    </div>
+  </div>
+
   <!-- PAGE: 交易記錄 -->
   <div class="page" id="page-transactions">
     <div class="card">
@@ -1364,6 +1405,7 @@ const PAGE_META = {
   portfolio:     ['組合配置','Portfolio'],
   technical:     ['技術分析','Technical Analysis'],
   risk:          ['風險評估','Risk'],
+  health:        ['體質監控','Holdings Health'],
   watchlist:     ['觀察清單','Watchlist'],
   transactions:  ['交易記錄','Transactions'],
   calculator:    ['DCA 計算器','Calculator'],
@@ -1379,6 +1421,7 @@ function showPage(id) {
   document.getElementById('page-breadcrumb').textContent = b;
   if (id === 'screener') loadScreenerWatchlist();
   if (id === 'transactions') loadTransactionsPage();
+  if (id === 'health') loadHealthPage();
   if (id === 'calculator') { runCalculator(); }
   if (id === 'rebalance') { loadRebalancePage(); }
   closeMobileSidebar();
@@ -3353,6 +3396,64 @@ const DEMO_TRANSACTIONS = [
   {id:'t1',symbol:'BRK-B',transaction_type:'BUY',shares:6,   price:474.34,total_amount:2846.04,transaction_date:'2026-05-20',notes:'初始建倉'},
   {id:'t2',symbol:'VOO',  transaction_type:'BUY',shares:0.145,price:690,  total_amount:100.05, transaction_date:'2026-05-28',notes:'定期定額'},
 ];
+
+// ── 持倉體質監控 ──────────────────────────────────────────────
+const JARGON = {
+  revenue_growth: '今年營收比去年成長多少 %。看公司生意有沒有越做越大；轉負代表生意在縮。',
+  net_margin:     '每 100 元營收，扣掉所有成本後真正賺進口袋幾元。越高越好賺。',
+  roe:            '股東權益報酬率：公司用「股東的錢」賺錢的效率。20% = 股東每投 100 元、一年幫你賺 20 元。',
+  debt_to_equity: '公司借的錢相對自有資本的比例。越低越穩健；太高代表槓桿大、利率升或景氣差時風險高。',
+  forward_pe:     '前瞻本益比：用「分析師預估的未來一年獲利」算的本益比。越高越貴；比一般 PE 更看未來。',
+  target_price:   '券商分析師預估這支股票「合理應該值多少」的平均價。被往下調是體質/前景轉差的早期警訊。',
+  recommendation: '券商分析師對這支股票的綜合建議：買進 / 持有 / 賣出。從買進被降級是警訊。',
+};
+const TR_LABEL = { up:'↗ 改善', down:'↘ 轉弱', flat:'→ 持平' };
+const DEMO_HEALTH = { as_of:'2026-06-01', holdings:[
+  {symbol:'3163.TW',name:'波若威',is_etf:false,verdict:{level:'red',label:'體質轉弱'},
+   flag:'體質轉弱訊號：營收成長惡化、淨利率惡化、負債/權益惡化。建議重看基本面，確認是不是賣出的理由。',
+   metrics:[{key:'revenue_growth',label:'營收成長',value:'+58%',trend:'down'},{key:'net_margin',label:'淨利率',value:'18%',trend:'down'},{key:'roe',label:'ROE',value:'22%',trend:'flat'},{key:'debt_to_equity',label:'負債/權益',value:'0.9',trend:'down'},{key:'target_price',label:'分析師目標價',value:'—',trend:'flat'},{key:'recommendation',label:'分析師評等',value:'—',trend:'flat'}]},
+  {symbol:'2330.TW',name:'台積電',is_etf:false,verdict:{level:'green',label:'健康'},flag:null,
+   metrics:[{key:'revenue_growth',label:'營收成長',value:'+34%',trend:'up'},{key:'net_margin',label:'淨利率',value:'42%',trend:'flat'},{key:'roe',label:'ROE',value:'28%',trend:'up'},{key:'debt_to_equity',label:'負債/權益',value:'0.2',trend:'flat'},{key:'target_price',label:'分析師目標價',value:'1300',trend:'up'},{key:'recommendation',label:'分析師評等',value:'買進',trend:'flat'}]},
+  {symbol:'VOO',name:'Vanguard S&P 500 ETF',is_etf:true,verdict:{level:'gray',label:'不適用'},metrics:[],flag:null},
+]};
+
+async function loadHealthPage() {
+  const body = document.getElementById('healthBody');
+  try {
+    const data = DEMO_MODE ? DEMO_HEALTH : await api('/api/health');
+    renderHealth(data);
+  } catch(e) { console.error(e); body.innerHTML = '<div style="padding:24px;color:var(--mid)">體質資料載入失敗</div>'; }
+}
+
+function renderHealth(data) {
+  const body = document.getElementById('healthBody');
+  document.getElementById('healthChk').innerHTML = data.as_of ? `上次檢查 ${data.as_of}` : '尚未快照';
+  const hs = data.holdings || [];
+  const stocks = hs.filter(h=>!h.is_etf), etfs = hs.filter(h=>h.is_etf);
+  const weak = stocks.filter(h=>h.verdict.level==='red');
+
+  let alert;
+  if (weak.length) alert = `<div class="hm-alert"><b>${weak.length} 支體質轉弱</b>：${weak.map(h=>h.symbol+' '+(h.name||'')).join('、')} — 建議重看基本面。</div>`;
+  else if (stocks.some(h=>h.metrics.length)) alert = `<div class="hm-alert ok">持倉個股體質目前都正常。</div>`;
+  else alert = `<div class="hm-alert ok" style="background:var(--bg);border-left-color:var(--light);color:var(--mid)">資料蒐集中：第一次快照後開始顯示，趨勢箭頭從第二個月起出現。</div>`;
+
+  const card = h => {
+    const head = `<div class="hm-top"><span class="hm-dot ${h.verdict.level}"></span><span class="hm-sym">${h.symbol}</span><span class="hm-name">${h.name||''}</span><span class="hm-badge ${h.verdict.level}">${h.verdict.label}</span></div>`;
+    if (!h.metrics.length) return `<div class="hm">${head}</div>`;
+    const metrics = h.metrics.map(m=>{
+      const lbl = JARGON[m.key] ? `<span class="jargon">${m.label}<span class="jbox">${JARGON[m.key]}</span></span>` : `<span style="color:var(--mid);font-size:11px">${m.label}</span>`;
+      return `<div class="hm-m">${lbl}<span class="hm-mv">${m.value} <span class="hm-tr hm-${m.trend}">${TR_LABEL[m.trend]||''}</span></span></div>`;
+    }).join('');
+    const flag = h.flag ? `<div class="hm-flag"><b>體質轉弱訊號</b>：${h.flag.replace(/^體質轉弱訊號：/,'')}</div>` : '';
+    return `<div class="hm">${head}<div class="hm-metrics">${metrics}</div>${flag}</div>`;
+  };
+
+  let html = `<div class="hm-wrap">${alert}`;
+  if (stocks.length) html += `<div class="hm-sec">個股持倉</div>` + stocks.map(card).join('');
+  if (etfs.length)   html += `<div class="hm-sec">ETF（一籃子，不做個股體質監控）</div>` + etfs.map(card).join('');
+  html += `<div class="hm-foot"><b>每月自動快照</b>每支個股的基本面，跟上月比標出趨勢。<b>體質轉弱</b> = 跌破門檻（成長/ROE 轉負）或多項連續惡化（含分析師調降），觸發時晨報也會提醒。ETF 跳過。基本面季更新，多數月份是「持平」，有變動才是重點。</div></div>`;
+  body.innerHTML = html;
+}
 
 async function loadTransactionsPage() {
   try {
