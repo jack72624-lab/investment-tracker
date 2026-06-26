@@ -245,9 +245,21 @@ tr:hover td{background:var(--bg)}
 .risk-metric-desc{font-size:11px;color:var(--light);margin-top:4px}
 
 /* CHIPS + TIMEFRAME */
-.stock-chip{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--mid);transition:all .13s;font-family:'SF Mono','Fira Code',monospace}
+.stock-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--mid);transition:all .13s;font-family:'SF Mono','Fira Code',monospace}
 .stock-chip:hover{border-color:var(--blue);color:var(--blue)}
 .stock-chip.active{border-color:var(--blue);background:var(--blue);color:#fff}
+.chip-x{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;font-size:13px;line-height:1;color:var(--light);margin-right:-3px}
+.stock-chip:hover .chip-x{color:var(--red)}
+.stock-chip.active .chip-x{color:rgba(255,255,255,.7)}
+.chip-x:hover{background:rgba(0,0,0,.08)}
+.stock-chip.active .chip-x:hover{background:rgba(255,255,255,.25)}
+.tech-add{display:flex;gap:8px;margin-bottom:10px}
+.tech-add input{flex:1;min-width:0;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'SF Mono','Fira Code',monospace;color:var(--dark);outline:none;text-transform:uppercase;background:var(--white)}
+.tech-add input::placeholder{text-transform:none;color:var(--light);font-family:'Inter',sans-serif;letter-spacing:0}
+.tech-add input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-lt)}
+.tech-add button{padding:9px 16px;border:none;border-radius:8px;background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.tech-add button:active{opacity:.8}
+.tech-hint{font-size:11px;color:var(--mid);margin:0 2px 12px;line-height:1.4}
 .timeframe-row{display:flex;gap:2px}
 .tf-btn{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--mid);transition:all .13s;font-family:'Inter',sans-serif}
 .tf-btn:hover{background:var(--bg);color:var(--dark)}
@@ -1039,11 +1051,14 @@ tr:hover td{background:var(--bg)}
   <!-- PAGE: 技術分析 -->
   <div class="page" id="page-technical">
     <div class="card mb-16">
-      <div class="card-header">
-        <div style="display:flex;align-items:center;gap:12px;flex:1">
-          <div id="techChips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      <div class="card-header" style="display:block">
+        <div class="tech-add">
+          <input id="techSymInput" placeholder="輸入代號分析…（TSLA / 2330）" maxlength="12" autocomplete="off" onkeydown="if(event.key==='Enter')addTechSym()">
+          <button onclick="addTechSym()">分析</button>
         </div>
-        <div class="timeframe-row">
+        <div class="tech-hint">美股直接打代號（TSLA、GOOGL）；台股打數字（2330）會自動補 .TW。打過的會記住變成下方按鈕。</div>
+        <div id="techChips" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
+        <div class="timeframe-row" style="justify-content:flex-end;margin-top:12px">
           <button class="tf-btn active" onclick="setChartTF(this,'1y')">1Y</button>
           <button class="tf-btn" onclick="setChartTF(this,'6mo')">6M</button>
           <button class="tf-btn" onclick="setChartTF(this,'3mo')">3M</button>
@@ -1422,8 +1437,8 @@ function genDates(n){const dates=[],end=new Date(2026,4,27);for(let i=n-1;i>=0;i
 // ── INIT APP ──────────────────────────────────────────────────
 async function initApp() {
   await loadOverview();
-  buildTechChips([]);
-  loadTechnical('NVDA','1y');
+  buildTechChips();
+  if(curTechSym) loadTechnical(curTechSym,curTechTF);
 }
 
 async function refreshAll() {
@@ -1844,18 +1859,57 @@ function resetScreener(){
 }
 
 // ── TECHNICAL ─────────────────────────────────────────────────
-let pChart,rChart,vChart,curTechSym='NVDA',curTechTF='1y';
+let pChart,rChart,vChart,curTechTF='1y';
 
-function buildTechChips(holdings=[]) {
-  const syms=[...new Set([...holdings.map(h=>h.symbol),'NVDA','AAPL','MSFT','VOO','META'])].slice(0,8);
+// 技術分析的股票清單：使用者完全掌控（可加可刪），存 localStorage。
+// 第一次載入用這五顆當種子；之後增刪都記住，每顆 chip 都可刪。
+const TECH_DEFAULTS=['NVDA','AAPL','MSFT','VOO','META'];
+let techSyms=JSON.parse(localStorage.getItem('techSyms')||'null');
+if(techSyms===null){ techSyms=[...TECH_DEFAULTS]; localStorage.setItem('techSyms',JSON.stringify(techSyms)); }
+let curTechSym=techSyms[0]||null;
+
+function saveTechSyms(){ localStorage.setItem('techSyms',JSON.stringify(techSyms)); }
+
+// 純數字（4–6 碼）視為台股，自動補 .TW，與後端 normalize_symbol 一致
+function normalizeTechSym(s){ s=s.trim().toUpperCase(); if(/^\d{4,6}$/.test(s)) s+='.TW'; return s; }
+
+function buildTechChips() {
   const div=document.getElementById('techChips'); div.innerHTML='';
-  syms.forEach(sym=>{
+  if(!techSyms.length){
+    div.innerHTML='<span style="font-size:12px;color:var(--light);padding:4px 2px">清單空了，上方輸入代號開始分析。</span>';
+    return;
+  }
+  techSyms.forEach(sym=>{
     const c=document.createElement('div');
     c.className='stock-chip'+(sym===curTechSym?' active':'');
-    c.textContent=sym;
-    c.onclick=()=>{curTechSym=sym;buildTechChips(holdings);loadTechnical(sym,curTechTF)};
+    c.appendChild(document.createTextNode(sym));
+    c.onclick=()=>{curTechSym=sym;buildTechChips();loadTechnical(sym,curTechTF)};
+    const x=document.createElement('span');               // 每顆都可刪
+    x.className='chip-x'; x.textContent='×'; x.title='移除';
+    x.onclick=(e)=>{e.stopPropagation();removeTechSym(sym);};
+    c.appendChild(x);
     div.appendChild(c);
   });
+}
+
+function addTechSym(){
+  const inp=document.getElementById('techSymInput');
+  if(!inp.value.trim()) return;
+  const sym=normalizeTechSym(inp.value);
+  if(!techSyms.includes(sym)){ techSyms.unshift(sym); techSyms=techSyms.slice(0,20); saveTechSyms(); }
+  inp.value='';
+  curTechSym=sym; buildTechChips(); loadTechnical(sym,curTechTF);
+}
+
+function removeTechSym(sym){
+  techSyms=techSyms.filter(s=>s!==sym); saveTechSyms();
+  if(curTechSym===sym){
+    curTechSym=techSyms[0]||null;
+    buildTechChips();
+    if(curTechSym) loadTechnical(curTechSym,curTechTF);
+  } else {
+    buildTechChips();
+  }
 }
 
 function setChartTF(btn,tf){
@@ -1872,6 +1926,7 @@ function switchTab(el,tab){
 }
 
 async function loadTechnical(symbol, period) {
+  if(!symbol) return;                       // 清單清空時不觸發
   document.getElementById('priceLoading').style.display='flex';
   document.getElementById('techTicker').textContent=symbol;
   document.getElementById('techName').textContent='Loading...';
