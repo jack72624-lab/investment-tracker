@@ -11,8 +11,10 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE TABLE IF NOT EXISTS holdings (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   symbol        TEXT    NOT NULL,           -- 股票代號，例如 "NVDA"
-  shares        NUMERIC NOT NULL,           -- 持股數量
-  avg_cost      NUMERIC NOT NULL,           -- 平均成本（美元）
+  shares        NUMERIC NOT NULL,           -- 持股數量（= 起始基準 + 交易回放，由後端重算）
+  avg_cost      NUMERIC NOT NULL,           -- 平均成本（同上，重算結果）
+  opening_shares    NUMERIC,                -- 起始基準股數（交易記錄之前的部位）
+  opening_avg_cost  NUMERIC,                -- 起始基準成本
   created_at    TIMESTAMPTZ DEFAULT NOW(),
   updated_at    TIMESTAMPTZ DEFAULT NOW()
 );

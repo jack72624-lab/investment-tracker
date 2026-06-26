@@ -1215,7 +1215,7 @@ tr:hover td{background:var(--bg)}
       </div>
       <div class="table-wrap">
         <table><thead><tr>
-          <th>日期</th><th>股票</th><th>類型</th><th>股數</th><th>價格</th><th>總金額</th><th>備注</th>
+          <th>日期</th><th>股票</th><th>類型</th><th>股數</th><th>價格</th><th>總金額</th><th>備注</th><th>操作</th>
         </tr></thead>
         <tbody id="txTbody"></tbody>
         </table>
@@ -3370,7 +3370,7 @@ function renderTransactionsTable() {
   const tbody = document.getElementById('txTbody');
   document.getElementById('txSub').textContent = `${data.length} 筆記錄`;
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state" style="padding:28px"><div class="es-text">沒有交易記錄</div><div class="es-sub">點「+ 新增交易」或在持倉列表點「加倉」開始記錄</div></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state" style="padding:28px"><div class="es-text">沒有交易記錄</div><div class="es-sub">點「+ 新增交易」或在持倉列表點「加倉」開始記錄</div></div></td></tr>';
     return;
   }
   tbody.innerHTML = data.map(t => {
@@ -3384,8 +3384,23 @@ function renderTransactionsTable() {
       <td>$${parseFloat(t.price||0).toFixed(2)}</td>
       <td><strong>$${parseFloat(t.total_amount||0).toLocaleString('en',{maximumFractionDigits:2})}</strong></td>
       <td style="color:var(--mid);font-size:12px">${t.notes||'—'}</td>
+      <td style="white-space:nowrap">${t.id ? `<button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px;color:var(--red)" onclick="deleteTransaction('${t.id}')">刪除</button>` : '<span style="color:var(--light);font-size:11px">—</span>'}</td>
     </tr>`;
   }).join('');
+}
+
+// 刪除一筆交易 → 後端會把持倉「回放重算」，所以持倉跟著連動
+async function deleteTransaction(id) {
+  if (!id) return;
+  if (!confirm('刪除這筆交易？\n\n刪除後你的持倉股數／平均成本會自動重算（這筆交易的影響會被移除、持倉跟著調整）。')) return;
+  try {
+    await api(`/api/portfolio/transactions/${id}`, 'DELETE');
+    showToast('交易已刪除，持倉已重算');
+    await loadTransactionsPage();   // 刷新交易列表
+    await refreshPortfolio();       // 刷新持倉（已連動）
+  } catch(e) {
+    alert('刪除失敗：' + (e.message || '未知錯誤'));
+  }
 }
 
 // 交易 modal 的 symbol 輸入動態更新幣別標籤
