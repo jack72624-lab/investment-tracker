@@ -447,6 +447,30 @@ tr:hover td{background:var(--bg)}
 .val-wrap{display:inline-flex;align-items:center;gap:5px;cursor:help;position:relative}
 .val-wrap .val-tip{position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:#1a2035;color:#e8eaf0;font-size:11px;padding:7px 11px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;z-index:300;transition:opacity .15s;min-width:180px;line-height:1.55;box-shadow:0 4px 16px rgba(0,0,0,.18)}
 .val-wrap:hover .val-tip{opacity:1}
+/* ── 估值燈號 2.0：三維綜合 ──────────────────────────────── */
+.vc-anchor{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--blue-lt);border-radius:8px;font-size:12px;margin-bottom:12px;flex-wrap:wrap}
+.vc-anchor b{font-weight:800;font-family:'SF Mono',monospace}
+.vc-anchor .vc-atag{margin-left:auto;font-size:10px;color:var(--mid)}
+.vc-legend{font-size:11px;color:var(--mid);line-height:1.6;margin-bottom:10px}
+.vc-h{padding:12px 0;border-bottom:1px solid var(--border)}
+.vc-h:last-child{border-bottom:none}
+.vc-htop{display:flex;align-items:center;gap:9px}
+.vc-sym{font-size:13px;font-weight:800;font-family:'SF Mono',monospace;color:var(--blue)}
+.vc-name{font-size:11px;color:var(--mid);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vc-verdict{font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.vc-verdict.green{background:var(--green-lt);color:var(--green)}
+.vc-verdict.yellow{background:var(--amber-lt);color:var(--amber)}
+.vc-verdict.red{background:var(--red-lt);color:var(--red)}
+.vc-verdict.gray{background:var(--accent);color:var(--mid)}
+.vc-dims{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.vc-dim{flex:1;min-width:92px;border:1px solid var(--border);border-radius:8px;padding:6px 9px;border-left-width:3px}
+.vc-dim.green{border-left-color:var(--green)}.vc-dim.yellow{border-left-color:var(--amber)}.vc-dim.red{border-left-color:var(--red)}.vc-dim.gray{border-left-color:var(--light)}
+.vc-dimk{font-size:10px;color:var(--mid);font-weight:600}
+.vc-dimv{font-size:12px;font-weight:700;margin-top:2px;font-family:'SF Mono',monospace}
+.vc-dimsub{font-size:10px;color:var(--mid);margin-top:1px}
+.vc-flag{margin-top:8px;font-size:10.5px;border-radius:6px;padding:6px 9px;line-height:1.5;background:var(--amber-lt);color:var(--amber)}
+.vc-flag.info{background:var(--accent);color:var(--mid)}
+.vc-foot{margin-top:12px;font-size:10px;color:var(--mid);line-height:1.6}
 /* ── 績效對比大盤 ─────────────────────────────────────────── */
 .perf-compare-grid{width:100%}
 .perf-compare-row{display:grid;grid-template-columns:130px 1fr 1fr 1fr;align-items:center;padding:10px 16px;gap:8px}
@@ -1418,11 +1442,11 @@ async function api(path, method = 'GET', body = null) {
 
 // ── DEMO DATA (fallback) ──────────────────────────────────────
 const DEMO_HOLDINGS = [
-  {symbol:'NVDA',name:'NVIDIA Corp',sector:'Technology',shares:15,avg_cost:620,current_price:875.50,change_pct:2.3,market_value:13132.5,unrealized_pnl:3832.5,unrealized_pnl_pct:41.3,pe_ratio:45.2,beta:1.72},
-  {symbol:'AAPL',name:'Apple Inc',sector:'Technology',shares:40,avg_cost:165,current_price:189.20,change_pct:-0.4,market_value:7568,unrealized_pnl:968,unrealized_pnl_pct:14.7,pe_ratio:29.4,beta:1.19},
-  {symbol:'MSFT',name:'Microsoft Corp',sector:'Technology',shares:20,avg_cost:370,current_price:415.80,change_pct:0.8,market_value:8316,unrealized_pnl:916,unrealized_pnl_pct:12.4,pe_ratio:35.1,beta:0.92},
-  {symbol:'VOO',name:'Vanguard S&P 500',sector:'ETF',shares:30,avg_cost:430,current_price:498.20,change_pct:0.6,market_value:14946,unrealized_pnl:2046,unrealized_pnl_pct:15.9,pe_ratio:23.4,beta:1.00},
-  {symbol:'JPM',name:'JPMorgan Chase',sector:'Financials',shares:25,avg_cost:178,current_price:198.40,change_pct:1.1,market_value:4960,unrealized_pnl:510,unrealized_pnl_pct:11.5,pe_ratio:12.1,beta:1.18},
+  {symbol:'NVDA',name:'NVIDIA Corp',sector:'Technology',shares:15,avg_cost:620,current_price:875.50,change_pct:2.3,market_value:13132.5,unrealized_pnl:3832.5,unrealized_pnl_pct:41.3,pe_ratio:45.2,forward_pe:32,earnings_growth:40,beta:1.72},
+  {symbol:'AAPL',name:'Apple Inc',sector:'Technology',shares:40,avg_cost:165,current_price:189.20,change_pct:-0.4,market_value:7568,unrealized_pnl:968,unrealized_pnl_pct:14.7,pe_ratio:29.4,forward_pe:28,earnings_growth:9,beta:1.19},
+  {symbol:'MSFT',name:'Microsoft Corp',sector:'Technology',shares:20,avg_cost:370,current_price:415.80,change_pct:0.8,market_value:8316,unrealized_pnl:916,unrealized_pnl_pct:12.4,pe_ratio:35.1,forward_pe:30,earnings_growth:14,beta:0.92},
+  {symbol:'VOO',name:'Vanguard S&P 500',sector:'ETF',shares:30,avg_cost:430,current_price:498.20,change_pct:0.6,market_value:14946,unrealized_pnl:2046,unrealized_pnl_pct:15.9,pe_ratio:23.4,forward_pe:21,earnings_growth:null,beta:1.00},
+  {symbol:'JPM',name:'JPMorgan Chase',sector:'Financials',shares:25,avg_cost:178,current_price:198.40,change_pct:1.1,market_value:4960,unrealized_pnl:510,unrealized_pnl_pct:11.5,pe_ratio:12.1,forward_pe:11,earnings_growth:6,beta:1.18},
 ];
 const DEMO_SUMMARY = {total_market_value:84327,total_cost:77485,total_unrealized_pnl:6842,total_unrealized_pnl_pct:8.8,day_change:412,day_change_pct:0.49,holdings_count:5,sector_allocation:{Technology:34.5,ETF:28.6,Financials:18.2,Healthcare:12.4,Other:6.3}};
 const DEMO_RISK = {
@@ -1977,6 +2001,18 @@ async function loadTechnical(symbol, period) {
   const cur=prices[prices.length-1];
   const hi=Math.max(...prices.filter(Boolean)), lo=Math.min(...prices.filter(Boolean));
 
+  // 期間標籤：只有 1Y 才是真正「52週」，其餘標實際區間
+  const PNAME  = {'1mo':'近1個月','3mo':'近3個月','6mo':'近6個月','1y':'過去一年','2y':'近2年'}[period] || '本期間';
+  const PTITLE = period==='1y' ? '52週' : PNAME;
+  // 壓力/支撐：用近 30 個交易日（約 6 週）的真實高低當「近期關卡」，比舊版固定 ±8%/−7% 有意義；
+  // 現價已創近期高/低時標示突破、不硬湊數字
+  const swing  = prices.filter(Boolean).slice(-30);
+  const swingHi = Math.max(...swing), swingLo = Math.min(...swing);
+  const resistance = swingHi > cur*1.005 ? swingHi : null;
+  const support    = swingLo < cur*0.995 ? swingLo : null;
+  const resDist = resistance ? '+'+((resistance/cur-1)*100).toFixed(1) : null;
+  const supDist = support    ? ((support/cur-1)*100).toFixed(1) : null;   // 已含負號
+
   const rsiLabel = lastRSI>70 ? '超買（偏高）' : lastRSI<30 ? '超賣（偏低）' : '正常範圍';
   const maVsLabel = cur>lastSMA20 ? '在均線上方' : '在均線下方';
   const maXLabel  = lastSMA20>lastSMA50 ? '黃金交叉（看漲）' : '死亡交叉（看跌）';
@@ -2009,20 +2045,20 @@ async function loadTechnical(symbol, period) {
       <div style="font-weight:700;font-family:monospace;font-size:15px">$${cur.toFixed(2)}</div>
     </div>
     <div class="alloc-item">
-      <div class="alloc-name">52週最高<div style="font-size:10px;color:var(--mid);font-weight:400">過去一年最貴，現在距離 ${distHi}%</div></div>
+      <div class="alloc-name">${PTITLE}最高<div style="font-size:10px;color:var(--mid);font-weight:400">${PNAME}最貴，現在距離 ${distHi}%</div></div>
       <div style="color:var(--red);font-weight:600;font-family:monospace">$${hi.toFixed(2)}</div>
     </div>
     <div class="alloc-item">
-      <div class="alloc-name">52週最低<div style="font-size:10px;color:var(--mid);font-weight:400">過去一年最便宜，現在距離 +${distLo}%</div></div>
+      <div class="alloc-name">${PTITLE}最低<div style="font-size:10px;color:var(--mid);font-weight:400">${PNAME}最便宜，現在距離 +${distLo}%</div></div>
       <div style="color:var(--green);font-weight:600;font-family:monospace">$${lo.toFixed(2)}</div>
     </div>
     <div class="alloc-item">
-      <div class="alloc-name">壓力位（上方阻力）<div style="font-size:10px;color:var(--mid);font-weight:400">估計上方的賣壓區，漲到這裡可能遇阻</div></div>
-      <div style="color:var(--red);font-weight:600;font-family:monospace">$${(cur*1.08).toFixed(2)}</div>
+      <div class="alloc-name">壓力位（上方阻力）<div style="font-size:10px;color:var(--mid);font-weight:400">${resistance?`近 6 週高點，約 ${resDist}% 處可能遇阻`:'已突破近期高點，上方暫無明顯壓力'}</div></div>
+      <div style="color:var(--red);font-weight:600;font-family:monospace">${resistance?'$'+resistance.toFixed(2):'—'}</div>
     </div>
     <div class="alloc-item">
-      <div class="alloc-name">支撐位（下方支撐）<div style="font-size:10px;color:var(--mid);font-weight:400">估計下方的買盤區，跌到這裡可能止跌</div></div>
-      <div style="color:var(--green);font-weight:600;font-family:monospace">$${(cur*0.93).toFixed(2)}</div>
+      <div class="alloc-name">支撐位（下方支撐）<div style="font-size:10px;color:var(--mid);font-weight:400">${support?`近 6 週低點，約 ${supDist}% 處可能止跌`:'已跌破近期低點，下方暫無明顯支撐'}</div></div>
+      <div style="color:var(--green);font-weight:600;font-family:monospace">${support?'$'+support.toFixed(2):'—'}</div>
     </div>`;
   // 決定白話結論
   let sigColor, sigBg, sigTitle, sigText;
@@ -2073,6 +2109,67 @@ function valLight(pe, market='us') {
   if (pe > t.red)    return { cls:'red',    label:`P/E ${pe.toFixed(1)}，估值偏高`,   advice:'考慮逐步減倉 20-30%，獲利了結部分' };
   if (pe > t.yellow) return { cls:'yellow', label:`P/E ${pe.toFixed(1)}，估值合理偏高`, advice:'繼續觀察，暫不追高' };
   return           { cls:'green',  label:`P/E ${pe.toFixed(1)}，估值合理`,     advice:'可繼續持有或加倉' };
+}
+
+// 估值燈號 2.0：水位 × 利率 × 成長 三維綜合
+// h 需含 pe_ratio / forward_pe / earnings_growth / sector；tnx=10年美債殖利率(%)
+function valComposite(h, tnx, market='us') {
+  const t = PE_THRESHOLDS[market] || PE_THRESHOLDS.us;
+  const isETF = (h.sector||'').toUpperCase()==='ETF';
+  const trailing = h.pe_ratio || null;
+  const fwd = h.forward_pe || null;
+  const pe = fwd || trailing;            // 水位優先用 forward，避開 trailing 被一次性損益扭曲
+  const growth = (h.earnings_growth!=null) ? h.earnings_growth : null;
+
+  // 維度 1：水位
+  let lvl;
+  if(!pe) lvl={cls:'gray', v:'—', sub:'無 P/E'};
+  else {
+    const cls = pe<=t.yellow?'green':pe<=t.red?'yellow':'red';
+    lvl={cls, v:pe.toFixed(1), sub:(fwd?`Fwd ${fwd.toFixed(1)}`:`Trailing ${trailing.toFixed(1)}`)};
+  }
+
+  // 維度 2：股債利差（盈餘殖利率 − 10年美債）
+  let rate;
+  if(!pe || tnx==null) rate={cls:'gray', v:'—', sub:tnx==null?'無利率資料':'無 P/E'};
+  else {
+    const ey = 100/pe, spread = ey - tnx;
+    const cls = spread>=2?'green':spread>=-1?'yellow':'red';
+    rate={cls, v:(spread>=0?'+':'')+spread.toFixed(1)+'%', sub:`盈餘殖利率 ${ey.toFixed(1)}%`};
+  }
+
+  // 維度 3：PEG
+  let peg;
+  if(isETF) peg={cls:'gray', v:'—', sub:'ETF 不適用'};
+  else if(!pe || growth==null || growth<=0) peg={cls:'gray', v:'—', sub:'成長資料缺'};
+  else {
+    const p = pe/growth;
+    peg={cls:(p<1?'green':p<=2?'yellow':'red'), v:p.toFixed(2), sub:`成長 ~${growth.toFixed(0)}%`};
+  }
+
+  const dims = [
+    {k:'水位', ...lvl},
+    {k:'股債利差'+(market==='tw'?' *':''), ...rate},
+    {k:'PEG', ...peg},
+  ];
+
+  // 綜合：只看有資料的維度，多數一致才綠/紅，分歧就老實標
+  const active = dims.filter(d=>d.cls!=='gray');
+  const nOk = active.filter(d=>d.cls==='green').length;
+  const nBad = active.filter(d=>d.cls==='red').length;
+  let verdict;
+  if(!active.length)        verdict={cls:'gray',   label:'資料不足'};
+  else if(nOk>0 && nBad>0)  verdict={cls:'yellow', label:'分歧，需自行判斷'};
+  else if(nBad>nOk)         verdict={cls:'red',    label:'偏貴'};
+  else if(nOk>nBad)         verdict={cls:'green',  label:'合理偏便宜'};
+  else                      verdict={cls:'yellow', label:'中性'};
+
+  // forward 救援提示：trailing 與 forward 落差大
+  let flag=null;
+  if(fwd && trailing && (trailing/fwd>1.5 || trailing/fwd<0.67))
+    flag=`trailing P/E ${trailing.toFixed(1)} 與 forward 落差大，已以 forward P/E ${fwd.toFixed(1)} 評估`;
+
+  return {dims, verdict, flag};
 }
 
 // ── 績效對比大盤 ─────────────────────────────────────────────
@@ -2232,7 +2329,7 @@ function rebalMarketBlockHtml(m) {
   return `
   ${showHd ? `<div class="rebal-mkt-section-hd">${MKT_NAME[m]}<span class="rebal-cur">幣別 ${MKT_CUR[m]}</span></div>` : ''}
   <div class="card mb-20">
-    <div class="card-header"><div><div class="card-title">估值燈號</div><div class="card-sub">依 P/E 偵測持倉是否偏高估（${MKT_NAME[m]}基準）</div></div></div>
+    <div class="card-header"><div><div class="card-title">估值燈號</div><div class="card-sub">水位 × 利率 × 成長 三維綜合（${MKT_NAME[m]}）</div></div></div>
     <div class="card-body" id="rebalValuation_${m}"><div style="text-align:center;padding:24px;color:var(--mid)">載入中...</div></div>
   </div>
   <div class="grid-2 mb-20">
@@ -2261,12 +2358,14 @@ function rebalMarketBlockHtml(m) {
 
 async function loadRebalancePage() {
   try {
-    const [holdings, divData] = DEMO_MODE
-      ? [DEMO_HOLDINGS, {total_annual_dividend:162, holdings:[]}]
+    const [holdings, divData, tnxRes] = DEMO_MODE
+      ? [DEMO_HOLDINGS, {total_annual_dividend:162, holdings:[]}, {value:4.30}]
       : await Promise.all([
           api('/api/portfolio'),
           api('/api/portfolio/dividends').catch(()=>({total_annual_dividend:0, holdings:[]})),
+          api('/api/stocks/treasury10y').catch(()=>({value:null})),
         ]);
+    const tnx = (tnxRes && tnxRes.value != null) ? tnxRes.value : null;
 
     const markets = _rebalMarket === 'all' ? ['us','tw'] : [_rebalMarket];
     const container = document.getElementById('rebalContent');
@@ -2276,7 +2375,7 @@ async function loadRebalancePage() {
       const h     = holdings.filter(x => marketOf(x) === m);
       const alloc = sectorAllocFromHoldings(h);
       const div   = filterDivByMarket(divData, m);
-      renderValuationAlerts(m, h);
+      renderValuationAlerts(m, h, tnx);
       renderTargetAllocationTable(m, alloc);
       renderRebalanceAdvice(m, alloc, h);
       renderDividendReinvest(m, div, alloc, h);
@@ -2288,36 +2387,33 @@ async function loadRebalancePage() {
   }
 }
 
-function renderValuationAlerts(market, holdings) {
+function renderValuationAlerts(market, holdings, tnx) {
   const el = document.getElementById('rebalValuation_' + market);
   if (!el) return;
   if (!holdings.length) { el.innerHTML=`<div style="color:var(--mid);padding:12px">尚無${MKT_NAME[market]}持倉</div>`; return; }
   const t = PE_THRESHOLDS[market] || PE_THRESHOLDS.us;
-  const legend = `<div style="display:flex;gap:14px;font-size:11px;color:var(--mid);margin-bottom:14px;flex-wrap:wrap">
-    <span><span class="val-dot green"></span> P/E &lt;${t.yellow} 合理</span>
-    <span><span class="val-dot yellow"></span> P/E ${t.yellow}-${t.red} 偏高</span>
-    <span><span class="val-dot red"></span> P/E &gt;${t.red} 高估，考慮減倉</span>
-    <span><span class="val-dot gray"></span> 無資料</span></div>`;
+
+  const anchor = `<div class="vc-anchor">估值基準：10 年期美債殖利率 <b>${tnx!=null?tnx.toFixed(2)+'%':'—'}</b><span class="vc-atag">${tnx!=null?'利率越高，合理 P/E 越低':'利率暫缺，利差維度略過'}</span></div>`;
+  const legend = `<div class="vc-legend">三維各給一個燈，<b>多數一致才轉綠/紅；分歧時標「分歧」</b>讓你自行判斷。水位門檻 fwd P/E ${t.yellow}/${t.red}。</div>`;
+
   const rows = holdings.map(h => {
-    const vl = valLight(h.pe_ratio, market);
-    const clsTag = {green:'tag-green',yellow:'tag-amber',red:'tag-red',gray:'tag-gray'}[vl.cls];
-    const pct = h.unrealized_pnl_pct||0; const up=pct>=0;
-    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:12px">
-      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
-        <span class="val-dot ${vl.cls}"></span>
-        <div style="min-width:0">
-          <span class="ticker" style="font-size:13px">${h.symbol}</span>
-          <span style="font-size:11px;color:var(--mid);margin-left:8px">${h.name||''}</span>
-        </div>
+    const vc = valComposite(h, tnx, market);
+    const dimHtml = vc.dims.map(d=>`<div class="vc-dim ${d.cls}"><div class="vc-dimk">${d.k}</div><div class="vc-dimv">${d.v}</div><div class="vc-dimsub">${d.sub}</div></div>`).join('');
+    const flagHtml = vc.flag ? `<div class="vc-flag">${vc.flag}</div>` : '';
+    return `<div class="vc-h">
+      <div class="vc-htop">
+        <span class="vc-sym">${h.symbol}</span>
+        <span class="vc-name">${h.name||''}</span>
+        <span class="vc-verdict ${vc.verdict.cls}">${vc.verdict.label}</span>
       </div>
-      <div style="display:flex;align-items:center;gap:14px;font-size:11px;flex-shrink:0">
-        <span style="color:var(--mid)">P/E <strong style="color:${vl.cls==='red'?'var(--red)':vl.cls==='yellow'?'var(--amber)':'var(--text)'}">${h.pe_ratio?h.pe_ratio.toFixed(1):'—'}</strong></span>
-        <span style="color:${up?'var(--green)':'var(--red)'}"><strong>${up?'+':''}${pct.toFixed(1)}%</strong></span>
-        <span class="tag ${clsTag}" style="font-size:10px;white-space:nowrap">${vl.advice}</span>
-      </div>
+      <div class="vc-dims">${dimHtml}</div>
+      ${flagHtml}
     </div>`;
   }).join('');
-  el.innerHTML = legend + rows;
+
+  const foot = `<div class="vc-foot"><b>股債利差</b> = 盈餘殖利率（1÷forward P/E）− 10年美債殖利率；為正越大＝盈餘回報越勝過無風險債券（相對便宜），轉負＝相對貴。<b>PEG</b> = P/E ÷ 盈餘成長率，~1 合理、&lt;1 便宜、&gt;2 偏貴。${market==='tw'?'<br>* 台股利率以美債 10yr 當全球代理，非台灣公債殖利率，僅供相對參考。':''}<br>資料來源 yfinance，個別標的可能缺值；trailing 被扭曲時自動改用 forward。</div>`;
+
+  el.innerHTML = anchor + legend + rows + foot;
 }
 
 function renderTargetAllocationTable(market, sectorAlloc) {

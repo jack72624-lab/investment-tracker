@@ -53,6 +53,8 @@ CREATE TABLE IF NOT EXISTS stock_price_cache (
   price               NUMERIC,
   change_pct          NUMERIC,              -- 今日漲跌幅 %
   pe_ratio            NUMERIC,
+  forward_pe          NUMERIC,              -- 估值燈號 2.0：forward P/E
+  earnings_growth     NUMERIC,              -- 估值燈號 2.0：盈餘成長率 %（PEG 用）
   roe                 NUMERIC,              -- 以百分比儲存，例如 25.4
   dividend_yield      NUMERIC,              -- 以百分比儲存，例如 1.38
   market_cap          BIGINT,               -- 以美元儲存
