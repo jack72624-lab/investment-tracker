@@ -497,6 +497,29 @@ tr:hover td{background:var(--bg)}
 .jargon{position:relative;border-bottom:1px dotted var(--light);cursor:help;color:var(--mid);font-size:11px}
 .jargon .jbox{position:absolute;bottom:calc(100% + 7px);left:0;background:#1a2035;color:#e8eaf0;font-size:11px;font-weight:400;padding:8px 11px;border-radius:7px;width:210px;line-height:1.55;opacity:0;pointer-events:none;transition:opacity .15s;z-index:80;box-shadow:0 6px 20px rgba(0,0,0,.22)}
 .jargon:hover .jbox{opacity:1}
+/* ── 訊號計分板 ────────────────────────────────────────────── */
+.sb-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.sb-stat{border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.sb-sl{font-size:10.5px;color:var(--mid);font-weight:600}
+.sb-sv{font-size:19px;font-weight:800;letter-spacing:-.4px;margin-top:3px}
+.sb-ss{font-size:10px;color:var(--mid);margin-top:1px}
+.sb-seg{display:flex;gap:2px;padding:12px 16px 0}
+.sb-seg button{flex:1;padding:6px;border:1px solid var(--border);background:var(--white);font-size:11px;font-weight:600;color:var(--mid);cursor:pointer}
+.sb-seg button:first-child{border-radius:7px 0 0 7px}.sb-seg button:last-child{border-radius:0 7px 7px 0}
+.sb-seg button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.sb-twrap{overflow-x:auto;padding:12px 16px 0}
+.sb-tbl{width:100%;border-collapse:collapse;font-size:11.5px;min-width:560px}
+.sb-tbl th{font-size:9.5px;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.04em;padding:9px 8px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap}
+.sb-tbl th:nth-child(1),.sb-tbl th:nth-child(2){text-align:left}
+.sb-tbl td{padding:9px 8px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sb-tbl td:nth-child(1),.sb-tbl td:nth-child(2){text-align:left}
+.sb-tbl tr:last-child td{border-bottom:none}
+.sb-sym{font-weight:800;font-family:'SF Mono',monospace;color:var(--blue)}
+.sb-score{display:inline-block;min-width:30px;text-align:center;padding:1px 6px;border-radius:5px;font-weight:800;font-size:11px;background:var(--green-lt);color:var(--green)}
+.sb-pos{color:var(--green);font-weight:700}.sb-neg{color:var(--red);font-weight:700}.sb-mut{color:var(--mid)}
+.sb-foot{padding:12px 16px;font-size:10px;color:var(--mid);line-height:1.7;background:#FCFCFD;border-radius:0 0 var(--radius) var(--radius)}
+.sb-foot b{color:var(--dark)}
+.sb-empty{padding:30px 16px;text-align:center;color:var(--mid);font-size:13px;line-height:1.7}
 /* ── 績效對比大盤 ─────────────────────────────────────────── */
 .perf-compare-grid{width:100%}
 .perf-compare-row{display:grid;grid-template-columns:130px 1fr 1fr 1fr;align-items:center;padding:10px 16px;gap:8px}
@@ -693,6 +716,10 @@ tr:hover td{background:var(--bg)}
     <div class="nav-item" onclick="showPage('health')" data-label="體質監控">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8.5 H4 L5.5 4.5 L8 11.5 L9.5 7.5 L10.8 8.5 H14.5"/></svg></span>
       <span class="nav-item-text">體質監控</span>
+    </div>
+    <div class="nav-item" onclick="showPage('signals')" data-label="訊號計分板">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 14 V9 M6 14 V5 M10 14 V7 M14 14 V3"/></svg></span>
+      <span class="nav-item-text">訊號計分板</span>
     </div>
     <div class="nav-item" onclick="showPage('transactions')" data-label="交易記錄">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="8.5" x2="11" y2="8.5"/><line x1="5" y1="11" x2="8" y2="11"/></svg></span>
@@ -1242,6 +1269,14 @@ tr:hover td{background:var(--bg)}
     </div>
   </div>
 
+  <!-- PAGE: 訊號計分板 -->
+  <div class="page" id="page-signals">
+    <div class="card">
+      <div class="card-header"><div><div class="card-title">訊號計分板</div><div class="card-sub">評分訊號發出後到底準不準 · 每週自動記錄、跟大盤比</div></div></div>
+      <div id="signalsBody"><div style="text-align:center;padding:30px;color:var(--mid)">載入中...</div></div>
+    </div>
+  </div>
+
   <!-- PAGE: 交易記錄 -->
   <div class="page" id="page-transactions">
     <div class="card">
@@ -1406,6 +1441,7 @@ const PAGE_META = {
   technical:     ['技術分析','Technical Analysis'],
   risk:          ['風險評估','Risk'],
   health:        ['體質監控','Holdings Health'],
+  signals:       ['訊號計分板','Signal Scoreboard'],
   watchlist:     ['觀察清單','Watchlist'],
   transactions:  ['交易記錄','Transactions'],
   calculator:    ['DCA 計算器','Calculator'],
@@ -1422,6 +1458,7 @@ function showPage(id) {
   if (id === 'screener') loadScreenerWatchlist();
   if (id === 'transactions') loadTransactionsPage();
   if (id === 'health') loadHealthPage();
+  if (id === 'signals') loadSignalsPage();
   if (id === 'calculator') { runCalculator(); }
   if (id === 'rebalance') { loadRebalancePage(); }
   closeMobileSidebar();
@@ -3453,6 +3490,67 @@ function renderHealth(data) {
   if (etfs.length)   html += `<div class="hm-sec">ETF（一籃子，不做個股體質監控）</div>` + etfs.map(card).join('');
   html += `<div class="hm-foot"><b>每月自動快照</b>每支個股的基本面，跟上月比標出趨勢。<b>體質轉弱</b> = 跌破門檻（成長/ROE 轉負）或多項連續惡化（含分析師調降），觸發時晨報也會提醒。ETF 跳過。基本面季更新，多數月份是「持平」，有變動才是重點。</div></div>`;
   body.innerHTML = html;
+}
+
+// ── 訊號計分板（B）──────────────────────────────────────────────
+let _signalData = null, _sbFilter = 0;   // 0=全部；7/30/90/180 = 滿 N 天
+const DEMO_SIGNALS = { summary:{}, signals:[
+  {symbol:'NVDA',name:'NVIDIA',signal_date:'2026-04-01',ai_score:92,market:'us',price_at_signal:850,current_price:875.5,return_pct:3.0,benchmark_return_pct:1.5,excess_pct:1.5,days:86},
+  {symbol:'JPM',name:'JPMorgan',signal_date:'2026-04-01',ai_score:81,market:'us',price_at_signal:178,current_price:198.4,return_pct:11.5,benchmark_return_pct:1.5,excess_pct:10.0,days:86},
+  {symbol:'2330.TW',name:'台積電',signal_date:'2026-04-15',ai_score:88,market:'tw',price_at_signal:2100,current_price:2355,return_pct:12.1,benchmark_return_pct:4.2,excess_pct:7.9,days:72},
+  {symbol:'META',name:'Meta',signal_date:'2026-04-15',ai_score:84,market:'us',price_at_signal:560,current_price:510.6,return_pct:-8.8,benchmark_return_pct:2.0,excess_pct:-10.8,days:72},
+  {symbol:'UNH',name:'UnitedHealth',signal_date:'2026-05-01',ai_score:80,market:'us',price_at_signal:520,current_price:492.6,return_pct:-5.3,benchmark_return_pct:0.8,excess_pct:-6.1,days:56},
+  {symbol:'AVGO',name:'Broadcom',signal_date:'2026-05-20',ai_score:90,market:'us',price_at_signal:1320,current_price:1455,return_pct:10.2,benchmark_return_pct:3.1,excess_pct:7.1,days:37},
+  {symbol:'0050.TW',name:'元大台灣50',signal_date:'2026-05-20',ai_score:83,market:'tw',price_at_signal:185,current_price:192,return_pct:3.8,benchmark_return_pct:3.8,excess_pct:0.0,days:37},
+]};
+
+async function loadSignalsPage() {
+  const body = document.getElementById('signalsBody');
+  try {
+    _signalData = DEMO_MODE ? DEMO_SIGNALS : await api('/api/signals/scoreboard');
+    _sbFilter = 0; renderSignals();
+  } catch(e){ console.error(e); body.innerHTML='<div class="sb-empty">計分板載入失敗</div>'; }
+}
+function setSbFilter(days, btn){ _sbFilter=days; renderSignals(); }
+
+function renderSignals() {
+  const body = document.getElementById('signalsBody');
+  const all = (_signalData && _signalData.signals) || [];
+  if (!all.length) {
+    body.innerHTML = `<div class="sb-empty">還沒有訊號紀錄。<br><span style="font-size:11px">每週自動記錄篩選器評分 ≥80 的標的；累積一陣子後就能看後續報酬與是否打敗大盤。</span></div>`;
+    return;
+  }
+  const rows = _sbFilter ? all.filter(s=>(s.days||0) >= _sbFilter) : all;
+  const valid = rows.filter(s=>s.excess_pct!=null);
+  const n = valid.length;
+  const avgRet = n ? valid.reduce((a,s)=>a+s.return_pct,0)/n : null;
+  const avgEx  = n ? valid.reduce((a,s)=>a+s.excess_pct,0)/n : null;
+  const beat   = valid.filter(s=>s.excess_pct>0).length;
+  const beatRate = n ? Math.round(beat/n*100) : null;
+  const pn  = v => v==null?'sb-mut':(v>=0?'sb-pos':'sb-neg');
+  const sgn = v => v==null?'—':((v>=0?'+':'')+(+v).toFixed(1)+'%');
+
+  const stats = `<div class="sb-stats">
+    <div class="sb-stat"><div class="sb-sl">追蹤訊號數</div><div class="sb-sv">${rows.length}</div><div class="sb-ss">${_sbFilter?('滿'+_sbFilter+'天'):'全部'}</div></div>
+    <div class="sb-stat"><div class="sb-sl">平均報酬</div><div class="sb-sv ${pn(avgRet)}">${sgn(avgRet)}</div><div class="sb-ss">訊號後至今</div></div>
+    <div class="sb-stat"><div class="sb-sl">平均超額報酬</div><div class="sb-sv ${pn(avgEx)}">${sgn(avgEx)}</div><div class="sb-ss">扣同期大盤後</div></div>
+    <div class="sb-stat"><div class="sb-sl">打敗大盤比例</div><div class="sb-sv">${beatRate==null?'—':beatRate+'%'}</div><div class="sb-ss">${n?beat+' / '+n+' 筆贏大盤':'尚無'}</div></div>
+  </div>`;
+  const seg = `<div class="sb-seg">${[['全部',0],['滿1週',7],['滿1月',30],['滿3月',90],['滿6月',180]].map(([l,d])=>`<button class="${_sbFilter===d?'on':''}" onclick="setSbFilter(${d},this)">${l}</button>`).join('')}</div>`;
+  const trs = rows.map(s=>`<tr>
+    <td class="sb-mut">${(s.signal_date||'').slice(5)}</td>
+    <td><span class="sb-sym">${s.symbol}</span></td>
+    <td><span class="sb-score">${s.ai_score??'—'}</span></td>
+    <td>${s.price_at_signal!=null?(+s.price_at_signal).toFixed(2):'—'}</td>
+    <td>${s.current_price!=null?(+s.current_price).toFixed(2):'—'}</td>
+    <td class="${pn(s.return_pct)}">${sgn(s.return_pct)}</td>
+    <td class="sb-mut">${sgn(s.benchmark_return_pct)}</td>
+    <td class="${pn(s.excess_pct)}">${sgn(s.excess_pct)}</td>
+    <td class="sb-mut">${s.days??'—'}</td></tr>`).join('');
+
+  body.innerHTML = stats + seg +
+    `<div class="sb-twrap"><table class="sb-tbl"><thead><tr><th>訊號日</th><th>股票</th><th>分數</th><th>訊號價</th><th>現價</th><th>報酬</th><th>大盤同期</th><th>超額</th><th>天數</th></tr></thead><tbody>${trs}</tbody></table></div>` +
+    `<div class="sb-foot"><b>每週自動記錄</b>評分 ≥80 的標的（訊號日 + 當下價 + 同期大盤價）。<b>報酬</b> = 現價 ÷ 訊號價 − 1；<b>超額</b> = 報酬 − 同期大盤（美股比 VOO、台股比 0050）。<br><b>只呈現證據、不自動調權重</b>——累積夠多再判斷要不要調評分。樣本少時別過度解讀。</div>`;
 }
 
 async function loadTransactionsPage() {

@@ -135,6 +135,24 @@ CREATE TABLE IF NOT EXISTS fundamental_snapshot (
 );
 ALTER TABLE fundamental_snapshot ENABLE ROW LEVEL SECURITY;
 
+-- ── 訊號回饋計分板（2026-06-27 B 新增）─────────────────────────
+-- 每週把篩選器「AI Score ≥80（買入）」的標的記一筆，含當下價 + 同期大盤價，
+-- 之後對答案算「後續報酬」與「超額報酬（扣同期大盤）」，驗證選股評分準不準。
+CREATE TABLE IF NOT EXISTS signal_log (
+  id                        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  symbol                    TEXT NOT NULL,
+  name                      TEXT,
+  signal_date               DATE NOT NULL,          -- 訊號發出日（每週一次）
+  ai_score                  INTEGER,
+  market                    TEXT,                   -- 'us' | 'tw'
+  price_at_signal           NUMERIC,                -- 訊號當下股價
+  benchmark_symbol          TEXT,                   -- 'VOO'（美股）| '0050.TW'（台股）
+  benchmark_price_at_signal NUMERIC,                -- 同期大盤當下價
+  created_at                TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(symbol, signal_date)
+);
+ALTER TABLE signal_log ENABLE ROW LEVEL SECURITY;
+
 -- ── 範例初始資料（可選）────────────────────────────────────────
 -- 貼入後你可以在 Dashboard 立刻看到資料，確認系統正常運作
 INSERT INTO holdings (symbol, shares, avg_cost) VALUES
