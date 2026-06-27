@@ -2255,7 +2255,7 @@ function valComposite(h, tnx, market='us') {
 // ── 績效對比大盤 ─────────────────────────────────────────────
 let _curPerfTF = '1y';
 function setPerfTF(btn, tf) {
-  document.querySelectorAll('.perf-tf-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('[onclick^="setPerfTF"]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   _curPerfTF = tf;
   loadPerformanceVsBenchmark(tf);
@@ -3915,6 +3915,33 @@ function _cacheStocksToStore(sectors, source) {
       _screenerDataStore[s.symbol] = { source, data: s };
     }
   }
+}
+
+// BOS 分領域卡片點擊明細：用 _screenerDataStore 既有資料彈出小視窗（重用 .modal 基建）
+function openBosDetail(symbol) {
+  const d = _screenerDataStore[symbol] && _screenerDataStore[symbol].data;
+  if (!d) { showToast(`${symbol} 無明細資料`, 'warn'); return; }
+  const tags = (arr, cls) => (arr && arr.length)
+    ? arr.map(x => `<span class="tag ${cls}" style="margin:2px 4px 2px 0;display:inline-block">${x}</span>`).join('') : '';
+  const row = (k, v) => (v == null || v === '') ? '' :
+    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F0F1F3"><span style="color:var(--mid)">${k}</span><span style="font-weight:600">${v}</span></div>`;
+  const bd = document.createElement('div');
+  bd.className = 'modal-backdrop'; bd.style.display = 'flex';
+  bd.onclick = (e) => { if (e.target === bd) bd.remove(); };
+  bd.innerHTML = `<div class="modal" style="max-width:420px">
+    <div class="modal-title">${d.symbol || symbol} <span style="font-weight:400;color:var(--mid);font-size:13px">${d.name || ''}</span></div>
+    ${d.summary ? `<div class="bos-summary" style="margin:8px 0 12px">${d.summary}</div>` : ''}
+    ${row('BOS 評分', d.bos_score != null ? `${d.bos_score}/10` : null)}
+    ${row('進場訊號', d.entry_signal || d.recommendation)}
+    ${row('護城河', d.competitive_moat)}
+    ${row('產業', d.sector)}
+    ${row('本益比', d.pe_ratio)}
+    ${row('ROE', d.roe != null ? d.roe + '%' : null)}
+    ${(d.strengths && d.strengths.length) ? `<div style="margin-top:10px;font-size:12px;color:var(--mid)">優勢</div><div>${tags(d.strengths, 'tag-green')}</div>` : ''}
+    ${(d.risks && d.risks.length) ? `<div style="margin-top:8px;font-size:12px;color:var(--mid)">風險</div><div>${tags(d.risks, 'tag-amber')}</div>` : ''}
+    <div class="modal-footer" style="margin-top:14px"><button class="btn btn-primary" onclick="this.closest('.modal-backdrop').remove()">關閉</button></div>
+  </div>`;
+  document.body.appendChild(bd);
 }
 
 function renderSectorCards(sectors) {
