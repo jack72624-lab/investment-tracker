@@ -2286,12 +2286,15 @@ async function loadPerformanceVsBenchmark(period = '1y') {
         api(`/api/portfolio/value-history?period=${periodMap[period]||'1m'}`),
         api(`/api/stocks/history/VOO?period=${period}`),
       ]);
-      if (!portData.values?.length || !vooData.prices?.length) {
+      // 取首/末「非 null」值（yfinance 序列尾端可能有 NaN→null 的當日未完成K，直接 .toFixed 會炸）
+      const firstNum = a => (a||[]).find(x => x != null && isFinite(x)) ?? null;
+      const lastNum  = a => { for (let i=(a||[]).length-1; i>=0; i--) if (a[i]!=null && isFinite(a[i])) return a[i]; return null; };
+      portStart = firstNum(portData.values); portEnd = lastNum(portData.values);
+      vooStart  = firstNum(vooData.prices);  vooEnd  = lastNum(vooData.prices);
+      if ([portStart, portEnd, vooStart, vooEnd].some(x => x == null)) {
         el.innerHTML = '<div style="padding:16px;color:var(--mid);text-align:center">資料不足，請確認持倉均價設定正確</div>';
         return;
       }
-      portStart = portData.values[0]; portEnd = portData.values[portData.values.length-1];
-      vooStart  = vooData.prices[0];  vooEnd  = vooData.prices[vooData.prices.length-1];
       portRet = ((portEnd/portStart)-1)*100;
       vooRet  = ((vooEnd/vooStart)-1)*100;
     }
