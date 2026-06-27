@@ -862,6 +862,8 @@ tr:hover td{background:var(--bg)}
         <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">台股成本</div><div class="stat-value" id="tw-s-cost">—</div><div class="stat-change" id="tw-s-ret"></div><div class="stat-sub">Return</div></div>
         <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">今日變動</div><div class="stat-value" id="tw-s-dayChg">—</div><div class="stat-change" id="tw-s-dayPct"></div><div class="stat-sub">Today's P&L</div></div>
         <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">台股持倉數</div><div class="stat-value" id="tw-s-count">—</div><div class="stat-change" style="color:var(--mid)">Active holdings</div><div class="stat-sub">&nbsp;</div></div>
+        <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">年化股息收益</div><div class="stat-value" id="tw-s-divIncome" style="color:var(--green)">—</div><div class="stat-change" id="tw-s-divYield" style="color:var(--green)">—</div><div class="stat-sub">Portfolio yield</div></div>
+        <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">年化報酬率 IRR</div><div class="stat-value" id="tw-s-irr">—</div><div class="stat-change" id="tw-s-irrLabel" style="color:var(--mid)">—</div><div class="stat-sub">依交易記錄計算</div></div>
       </div>
     </div>
 
@@ -1644,7 +1646,7 @@ async function loadOverview() {
     loadGoal(totalUsd);
     // 新功能
     loadPerformanceVsBenchmark('1y');
-    calcPortfolioIRR(totalUsd);
+    calcPortfolioIRR(summary);
   } catch(e) {
     console.error(e);
     // 不要靜默吞錯：總覽載入失敗時明確提示，避免看起來像成功
@@ -2395,40 +2397,44 @@ async function loadPerformanceVsBenchmark(period = '1y') {
 }
 
 // ── 年化報酬率 IRR ───────────────────────────────────────────
-async function calcPortfolioIRR(currentValue) {
-  const irrEl = document.getElementById('s-irr');
-  const lblEl = document.getElementById('s-irrLabel');
-  try {
-    if (DEMO_MODE) {
-      irrEl.textContent = '+14.2%';
-      irrEl.style.color = 'var(--green)';
-      lblEl.textContent = '持有 1.2 年';
-      return;
-    }
-    const txns = await api('/api/portfolio/transactions').catch(()=>[]);
-    if (!txns.length) { irrEl.textContent='—'; lblEl.textContent='尚無交易記錄'; return; }
-
-    let totalInvested = 0, earliestDate = new Date();
-    const fx = window._usdtwd || null;   // TWD per USD
-    txns.forEach(t => {
-      const d = new Date(t.transaction_date);
-      let amt = Number(t.total_amount);
-      if (String(t.symbol||'').includes('.TW') && fx) amt = amt / fx;  // 台股成交額 TWD → USD，與 currentValue 同基準
-      if (t.transaction_type === 'BUY')  totalInvested += amt;
-      if (t.transaction_type === 'SELL') totalInvested -= amt;
-      if (d < earliestDate) earliestDate = d;
-    });
-    if (totalInvested <= 0 || !currentValue) { irrEl.textContent='—'; return; }
-
-    const years = (Date.now() - earliestDate.getTime()) / (1000*60*60*24*365);
-    if (years < 0.05) { irrEl.textContent='—'; lblEl.textContent='持有期太短'; return; }
-
-    const irr = (Math.pow(currentValue / totalInvested, 1/years) - 1) * 100;
-    const up = irr >= 0;
-    irrEl.textContent = (up?'+':'')+irr.toFixed(1)+'%';
+async function calcPortfolioIRR(summary) {
+  // 美股 IRR（USD）、台股 IRR（TWD）各自獨立：各市場用自己的交易（原幣，不折算）+ 自己的現值
+  const usVal = (summary && summary.us && summary.us.total_market_value) || 0;
+  const twVal = (summary && summary.tw && summary.tw.total_market_value) || 0;
+  let txns = [];
+  if (!DEMO_MODE) txns = await api('/api/portfolio/transactions').catch(()=>[]);
+  _renderMarketIRR('s-irr',    's-irrLabel',    txns, 'us', usVal);
+  _renderMarketIRR('tw-s-irr', 'tw-s-irrLabel', txns, 'tw', twVal);
+}
+function _renderMarketIRR(irrId, lblId, txns, market, currentValue) {
+  const irrEl = document.getElementById(irrId), lblEl = document.getElementById(lblId);
+  if (!irrEl) return;
+  const setLbl = t => { if (lblEl) lblEl.textContent = t; };
+  if (DEMO_MODE) {
+    const up = market !== 'tw';
+    irrEl.textContent = up ? '+14.2%' : '-3.4%';
     irrEl.style.color = up ? 'var(--green)' : 'var(--red)';
-    lblEl.textContent = years<1 ? `持有 ${(years*12).toFixed(0)} 個月` : `持有 ${years.toFixed(1)} 年`;
-  } catch(e) { irrEl.textContent='—'; }
+    setLbl('持有 1.2 年');
+    return;
+  }
+  const isTw = market === 'tw';
+  const mk = (txns||[]).filter(t => isTw === /\.TW$|^\d{4,6}$/i.test(String(t.symbol||'')));
+  if (!mk.length) { irrEl.textContent='—'; irrEl.style.color='var(--mid)'; setLbl('尚無交易記錄'); return; }
+  let invested = 0, earliest = new Date();
+  mk.forEach(t => {
+    const d = new Date(t.transaction_date);
+    const amt = Number(t.total_amount);   // 原幣（美股 USD、台股 TWD），與 currentValue 同基準
+    if (t.transaction_type === 'BUY')  invested += amt;
+    if (t.transaction_type === 'SELL') invested -= amt;
+    if (d < earliest) earliest = d;
+  });
+  if (invested <= 0 || !currentValue) { irrEl.textContent='—'; irrEl.style.color='var(--mid)'; setLbl('—'); return; }
+  const years = (Date.now() - earliest.getTime()) / (1000*60*60*24*365);
+  if (years < 0.05) { irrEl.textContent='—'; setLbl('持有期太短'); return; }
+  const irr = (Math.pow(currentValue / invested, 1/years) - 1) * 100, up = irr >= 0;
+  irrEl.textContent = (up?'+':'') + irr.toFixed(1) + '%';
+  irrEl.style.color = up ? 'var(--green)' : 'var(--red)';
+  setLbl(years<1 ? `持有 ${(years*12).toFixed(0)} 個月` : `持有 ${years.toFixed(1)} 年`);
 }
 
 // ── 再平衡頁面（美股 / 台股各自獨立計算）────────────────────────
@@ -3412,19 +3418,23 @@ const DEMO_DIVIDENDS = {
 async function loadDividends() {
   try {
     const data = DEMO_MODE ? DEMO_DIVIDENDS : await api('/api/portfolio/dividends');
-    const total = data.total_annual_dividend || 0;
     const holdings = data.holdings || [];
+    // 美股 / 台股各自分開（與淨值/成本等卡片一致，原幣顯示、互不重複計算）
+    const isTw = h => (h.currency === 'TWD') || /\.TW$|^\d{4,6}$/i.test(String(h.symbol||''));
+    const usH = holdings.filter(h => !isTw(h));
+    const twH = holdings.filter(h =>  isTw(h));
+    const sumDiv = arr => arr.reduce((a,b)=>a+(b.annual_dividend_total||0),0);
+    const avgY   = arr => arr.length ? arr.reduce((a,b)=>a+(b.dividend_yield||0),0)/arr.length : 0;
+    const us = (data.total_annual_dividend_us != null) ? data.total_annual_dividend_us : sumDiv(usH);
+    const tw = (data.total_annual_dividend_tw != null) ? data.total_annual_dividend_tw : sumDiv(twH);
 
-    // 更新 stat card
-    document.getElementById('s-divIncome').textContent = fmtMoney(total, 2);
-    const avgYield = holdings.length ? holdings.reduce((a,b)=>a+(b.dividend_yield||0),0)/holdings.length : 0;
-    document.getElementById('s-divYield').textContent = avgYield.toFixed(2)+'% avg yield';
-
-    // 若沒有股息，顯示暗示
-    if(total <= 0) {
-      document.getElementById('s-divIncome').textContent = '$0.00';
-      document.getElementById('s-divYield').textContent = '持有股息股才會顯示';
-    }
+    const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+    // 美股（USD）
+    set('s-divIncome', '$' + (us||0).toLocaleString('en', {minimumFractionDigits:2, maximumFractionDigits:2}));
+    set('s-divYield', us>0 ? avgY(usH).toFixed(2)+'% avg yield' : '持有股息股才會顯示');
+    // 台股（TWD）
+    set('tw-s-divIncome', 'NT$' + Math.round(tw||0).toLocaleString('en'));
+    set('tw-s-divYield', tw>0 ? avgY(twH).toFixed(2)+'% avg yield' : '持有股息股才會顯示');
   } catch(e) { console.error('dividends', e); }
 }
 
