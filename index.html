@@ -1562,19 +1562,22 @@ async function loadOverview() {
       ? [DEMO_HOLDINGS, DEMO_SUMMARY]
       : await Promise.all([api('/api/portfolio'), api('/api/portfolio/summary')]);
 
+    window._usdtwd = summary.usdtwd || null;   // 跨幣別換算用（IRR 等）
+    // 「總資產 / 目標進度 / IRR」用台股折 USD 後的合併總值，不再只算美股（漏台股）
+    const totalUsd = (summary.total_value_usd != null) ? summary.total_value_usd : (summary.total_market_value || 0);
     renderSummaryCards(summary);
     renderHoldings(holdings);
-    renderSectorChart(summary.sector_allocation);
+    renderSectorChart(summary.sector_allocation_combined || summary.sector_allocation);
     renderNetWorthChart('1y');
     renderAiInsight(summary);
     await loadPortfolioPage(holdings, summary);
     await loadRiskPage(summary);
     await loadWatchlistPage();
     await loadDividends();
-    loadGoal(summary.total_market_value || 0);
+    loadGoal(totalUsd);
     // 新功能
     loadPerformanceVsBenchmark('1y');
-    calcPortfolioIRR(summary.total_market_value || 0);
+    calcPortfolioIRR(totalUsd);
   } catch(e) {
     console.error(e);
     // 不要靜默吞錯：總覽載入失敗時明確提示，避免看起來像成功
@@ -1654,7 +1657,7 @@ function renderSummaryCards(s) {
 function _buildHoldingRow(h) {
   const up=(h.unrealized_pnl||0)>=0, cup=(h.change_pct||0)>=0;
   const id=h.id||'';
-  const vl = valLight(h.pe_ratio);
+  const vl = valLight(h.pe_ratio, marketOf(h));   // 台股用台股 PE 門檻，不套美股尺規
   const cur = h.currency || 'USD';
   const tr=document.createElement('tr');
   tr.innerHTML=`
@@ -2336,10 +2339,13 @@ async function calcPortfolioIRR(currentValue) {
     if (!txns.length) { irrEl.textContent='—'; lblEl.textContent='尚無交易記錄'; return; }
 
     let totalInvested = 0, earliestDate = new Date();
+    const fx = window._usdtwd || null;   // TWD per USD
     txns.forEach(t => {
       const d = new Date(t.transaction_date);
-      if (t.transaction_type === 'BUY')  totalInvested += Number(t.total_amount);
-      if (t.transaction_type === 'SELL') totalInvested -= Number(t.total_amount);
+      let amt = Number(t.total_amount);
+      if (String(t.symbol||'').includes('.TW') && fx) amt = amt / fx;  // 台股成交額 TWD → USD，與 currentValue 同基準
+      if (t.transaction_type === 'BUY')  totalInvested += amt;
+      if (t.transaction_type === 'SELL') totalInvested -= amt;
       if (d < earliestDate) earliestDate = d;
     });
     if (totalInvested <= 0 || !currentValue) { irrEl.textContent='—'; return; }
