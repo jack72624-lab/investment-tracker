@@ -2271,64 +2271,57 @@ function setPerfTF(btn, tf) {
   loadPerformanceVsBenchmark(tf);
 }
 
+function _perfBlock(portName, benchName, portRet, benchRet, dates) {
+  if (portRet == null || benchRet == null)
+    return `<div style="padding:10px 4px;color:var(--mid);font-size:12px">${portName}：資料不足（此市場持倉歷史不足或無大盤資料）</div>`;
+  const alpha = portRet - benchRet;
+  const c = v => v>=0?'var(--green)':'var(--red)';
+  const sg = v => (v>=0?'+':'')+v.toFixed(2)+'%';
+  const row = (label, val, bg='') => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 11px;${bg}"><span style="color:var(--dark)">${label}</span><span style="font-size:18px;font-weight:800;color:${c(val)}">${sg(val)}</span></div>`;
+  const rng = dates && dates.length ? `（${dates[0]} ~ ${dates[dates.length-1]}）` : '';
+  return `
+    <div style="border:1px solid #EEF0F2;border-radius:10px;overflow:hidden">
+      <div style="padding:8px 11px;background:#F8F9FB;font-weight:700;font-size:13px">${portName} vs ${benchName}<span style="font-size:11px;color:var(--mid);font-weight:400">${rng}</span></div>
+      ${row('我的'+portName+'（時間加權）', portRet)}
+      ${row(benchName, benchRet)}
+      ${row('超越大盤 Alpha（'+(alpha>=0?'跑贏':'跑輸')+'）', alpha, 'background:var(--accent)')}
+    </div>`;
+}
+
 async function loadPerformanceVsBenchmark(period = '1y') {
   const el = document.getElementById('perfContent');
   el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--mid)">計算中...</div>';
   const periodMap = { '1y':'1y', '6mo':'6mo', '3mo':'3mo', '1mo':'1m' };
   try {
-    let portRet, vooRet, portStart, portEnd, vooStart, vooEnd;
     if (DEMO_MODE) {
-      portRet = 8.8; vooRet = 6.2;
-      portStart = 77485; portEnd = 84327;
-      vooStart = 470; vooEnd = 498.2;
-    } else {
-      const [portData, vooData] = await Promise.all([
-        api(`/api/portfolio/value-history?period=${periodMap[period]||'1m'}`),
-        api(`/api/stocks/history/VOO?period=${period}`),
-      ]);
-      // 取首/末「非 null」值（yfinance 序列尾端可能有 NaN→null 的當日未完成K，直接 .toFixed 會炸）
-      const firstNum = a => (a||[]).find(x => x != null && isFinite(x)) ?? null;
-      const lastNum  = a => { for (let i=(a||[]).length-1; i>=0; i--) if (a[i]!=null && isFinite(a[i])) return a[i]; return null; };
-      portStart = firstNum(portData.values); portEnd = lastNum(portData.values);
-      vooStart  = firstNum(vooData.prices);  vooEnd  = lastNum(vooData.prices);
-      if ([portStart, portEnd, vooStart, vooEnd].some(x => x == null)) {
-        el.innerHTML = '<div style="padding:16px;color:var(--mid);text-align:center">資料不足，請確認持倉均價設定正確</div>';
-        return;
-      }
-      portRet = ((portEnd/portStart)-1)*100;
-      vooRet  = ((vooEnd/vooStart)-1)*100;
+      el.innerHTML = _perfBlock('美股組合', 'VOO 標普500', 8.8, 6.2, ['2025-06-27','2026-06-25']);
+      return;
     }
-    const alpha = portRet - vooRet;
-    const pc = portRet>=0?'var(--green)':'var(--red)';
-    const vc = vooRet>=0?'var(--green)':'var(--red)';
-    const ac = alpha>=0?'var(--green)':'var(--red)';
-    const alphaMsg = alpha>=0 ? '跑贏大盤，持續好的策略' : '跑輸大盤，可回顧配置';
-    el.innerHTML = `
-      <div class="perf-compare-grid">
-        <div class="perf-compare-row hdr">
-          <div class="perf-compare-hdr-val"></div>
-          <div class="perf-compare-hdr-val">報酬率</div>
-          <div class="perf-compare-hdr-val">起始值</div>
-          <div class="perf-compare-hdr-val">終止值</div>
-        </div>
-        <div class="perf-compare-row">
-          <div class="perf-compare-label">我的組合</div>
-          <div class="perf-compare-val"><span style="font-size:20px;font-weight:800;color:${pc}">${portRet>=0?'+':''}${portRet.toFixed(2)}%</span></div>
-          <div class="perf-compare-val">$${portStart.toLocaleString('en',{maximumFractionDigits:0})}</div>
-          <div class="perf-compare-val">$${portEnd.toLocaleString('en',{maximumFractionDigits:0})}</div>
-        </div>
-        <div class="perf-compare-row">
-          <div class="perf-compare-label">VOO 大盤</div>
-          <div class="perf-compare-val"><span style="font-size:20px;font-weight:800;color:${vc}">${vooRet>=0?'+':''}${vooRet.toFixed(2)}%</span></div>
-          <div class="perf-compare-val">$${vooStart.toFixed(2)}</div>
-          <div class="perf-compare-val">$${vooEnd.toFixed(2)}</div>
-        </div>
-        <div class="perf-compare-row" style="background:var(--accent)">
-          <div class="perf-compare-label">超越大盤 (Alpha)</div>
-          <div class="perf-compare-val"><span style="font-size:20px;font-weight:800;color:${ac}">${alpha>=0?'+':''}${alpha.toFixed(2)}%</span></div>
-          <div class="perf-compare-val" style="grid-column:span 2;text-align:left;font-size:11px;color:var(--mid)">${alphaMsg}</div>
-        </div>
-      </div>`;
+    const vh = await api(`/api/portfolio/value-history?period=${periodMap[period]||'1m'}`);
+    // 大盤在「組合序列的日期窗」內的報酬：取窗起點(含)後第一筆價、窗終點(含)前最後一筆價
+    const benchReturn = (bd, sd, ed) => {
+      const D = bd.dates_iso || bd.dates || [], P = bd.prices || [];
+      let sp=null, ep=null;
+      for (let i=0;i<D.length;i++){ if(P[i]==null) continue; if(D[i]>=sd && sp==null) sp=P[i]; if(D[i]<=ed) ep=P[i]; }
+      return (sp!=null && ep!=null && sp>0) ? (ep/sp-1)*100 : null;
+    };
+    const blocks = [];
+    if (vh.us && vh.us.dates.length > 1) {
+      const voo = await api(`/api/stocks/history/VOO?period=${period}`);
+      const br = benchReturn(voo, vh.us.dates[0], vh.us.dates[vh.us.dates.length-1]);
+      blocks.push(_perfBlock('美股組合', 'VOO 標普500', vh.us.twr, br, vh.us.dates));
+    }
+    if (vh.tw && vh.tw.dates.length > 1) {
+      const t50 = await api(`/api/stocks/history/0050.TW?period=${period}`);
+      const br = benchReturn(t50, vh.tw.dates[0], vh.tw.dates[vh.tw.dates.length-1]);
+      blocks.push(_perfBlock('台股組合', '0050 台灣50', vh.tw.twr, br, vh.tw.dates));
+    }
+    if (!blocks.length) {
+      el.innerHTML = '<div style="padding:16px;color:var(--mid);text-align:center">資料不足，請確認持倉設定正確</div>';
+      return;
+    }
+    el.innerHTML = blocks.join('<div style="height:14px"></div>') +
+      `<div style="font-size:11px;color:var(--mid);margin-top:10px;padding:0 4px;line-height:1.5">報酬率為「時間加權報酬」：已用交易記錄逐日重建持股、並排除加減碼時點影響，才能公平對比大盤。美股對 VOO、台股對 0050，各自原幣計算。</div>`;
   } catch(e) {
     el.innerHTML = `<div style="padding:16px;color:var(--red)">載入失敗：${e.message}</div>`;
   }
