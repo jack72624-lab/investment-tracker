@@ -2045,7 +2045,7 @@ async function loadTechnical(symbol, period) {
   document.getElementById('techTicker').textContent=symbol;
   document.getElementById('techName').textContent='Loading...';
 
-  let data;
+  let data, livePrice = null;
   if(DEMO_MODE){
     await new Promise(r=>setTimeout(r,400));
     const nMap={'1y':252,'6mo':126,'3mo':63};
@@ -2066,15 +2066,21 @@ async function loadTechnical(symbol, period) {
     try {
       data = await api(`/api/stocks/history/${symbol}?period=${period}`);
       const quote = await api(`/api/stocks/quote/${symbol}`);
+      livePrice = (quote && quote.price) ? quote.price : null;   // 即時價，接到圖最後一點
       document.getElementById('techName').textContent=quote.name||symbol;
       document.getElementById('techMeta').innerHTML=`<span><strong style="font-size:16px;font-weight:700">$${(quote.price||0).toFixed(2)}</strong></span><span style="color:${(quote.change_pct||0)>=0?'var(--green)':'var(--red)'};font-weight:600">${(quote.change_pct||0)>=0?'+':''}${(quote.change_pct||0).toFixed(2)}%</span><span>P/E ${quote.pe_ratio||'—'}</span><span>Beta ${quote.beta||'—'}</span><span>${quote.sector||''}</span>`;
     } catch(e){ console.error(e); document.getElementById('priceLoading').style.display='none'; return; }
   }
 
   const {dates,prices,sma20,sma50,rsi,volumes}=data;
+  // 把即時價接成最後一點，讓圖結尾對齊上方標頭（否則圖停在前一個完整交易日，今天的漲跌看不到、易誤判）
+  if (livePrice != null && prices.length && Math.abs(livePrice - prices[prices.length-1]) > 1e-6) {
+    dates.push('現價'); prices.push(livePrice);
+    sma20.push(null); sma50.push(null); rsi.push(null); volumes.push(0);
+  }
   const ctx=document.getElementById('priceChart').getContext('2d');
   if(pChart) pChart.destroy();
-  pChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'股價',data:prices,borderColor:'#006FFF',backgroundColor:'rgba(0,111,255,0.05)',fill:true,tension:0.3,pointRadius:0,borderWidth:2},{label:'20日均線',data:sma20,borderColor:'#D97706',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},{label:'50日均線',data:sma50,borderColor:'#DC2626',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#6B7280'}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: $${c.raw?.toFixed(2)??'—'}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>'$'+v.toFixed(0),font:{size:11},color:'#9CA3AF'}}}}});
+  pChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'股價',data:prices,borderColor:'#006FFF',backgroundColor:'rgba(0,111,255,0.05)',fill:true,tension:0.3,pointRadius:(c)=>c.dataIndex===prices.length-1?4:0,pointBackgroundColor:'#006FFF',pointBorderColor:'#fff',pointBorderWidth:1.5,borderWidth:2},{label:'20日均線',data:sma20,borderColor:'#D97706',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},{label:'50日均線',data:sma50,borderColor:'#DC2626',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#6B7280'}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: $${c.raw?.toFixed(2)??'—'}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>'$'+v.toFixed(0),font:{size:11},color:'#9CA3AF'}}}}});
 
   const ctx2=document.getElementById('rsiChart').getContext('2d');
   if(rChart) rChart.destroy();
