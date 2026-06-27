@@ -679,6 +679,54 @@ tr:hover td{background:var(--bg)}
   </div>
 </div>
 
+<!-- 現金事件 Modal -->
+<div class="modal-backdrop" id="cashModal" style="display:none" onclick="if(event.target===this)closeCashModal()">
+  <div class="modal">
+    <div class="modal-title">新增現金事件</div>
+    <div class="modal-sub">入金／出金／換匯；現金餘額會自動跟股票買賣連動</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button id="cfTabDEPOSIT"  class="btn btn-primary" style="flex:1;height:36px;background:var(--green)" onclick="setCashType('DEPOSIT')">入金</button>
+      <button id="cfTabWITHDRAW" class="btn btn-ghost"   style="flex:1;height:36px" onclick="setCashType('WITHDRAW')">出金</button>
+      <button id="cfTabCONVERT"  class="btn btn-ghost"   style="flex:1;height:36px" onclick="setCashType('CONVERT')">換匯</button>
+    </div>
+    <input type="hidden" id="cf-type" value="DEPOSIT">
+    <!-- 入金／出金 -->
+    <div id="cfSimpleFields">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="modal-field"><div class="modal-label">幣別</div>
+          <select class="modal-input" id="cf-currency"><option value="TWD">台幣 TWD</option><option value="USD">美金 USD</option></select>
+        </div>
+        <div class="modal-field"><div class="modal-label">金額</div>
+          <input class="modal-input" id="cf-amount" type="number" min="0" step="any" placeholder="例：100000">
+        </div>
+      </div>
+    </div>
+    <!-- 換匯 -->
+    <div id="cfConvertFields" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="modal-field"><div class="modal-label">換出</div>
+          <select class="modal-input" id="cf-from-cur" onchange="onConvertDirChange()"><option value="TWD">台幣 TWD</option><option value="USD">美金 USD</option></select>
+          <input class="modal-input" id="cf-from-amt" type="number" min="0" step="any" placeholder="換出金額" oninput="updateConvRate()" style="margin-top:8px">
+        </div>
+        <div class="modal-field"><div class="modal-label">換入</div>
+          <select class="modal-input" id="cf-to-cur" disabled><option value="USD">美金 USD</option></select>
+          <input class="modal-input" id="cf-to-amt" type="number" min="0" step="any" placeholder="換入金額" oninput="updateConvRate()" style="margin-top:8px">
+        </div>
+      </div>
+      <div id="cf-rate-box" style="display:none;background:var(--blue-lt);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--blue);font-weight:600;margin-top:4px"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+      <div class="modal-field"><div class="modal-label">日期</div><input class="modal-input" id="cf-date" type="date"></div>
+      <div class="modal-field"><div class="modal-label">備註（選填）</div><input class="modal-input" id="cf-notes" placeholder="例：永豐金換匯"></div>
+    </div>
+    <div id="cashModalError" style="display:none;color:var(--red);font-size:12px;margin-top:4px;padding:6px 10px;background:#FEF2F2;border-radius:4px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeCashModal()">取消</button>
+      <button class="btn btn-primary" id="cashModalSubmit" onclick="submitCashFlow()">儲存</button>
+    </div>
+  </div>
+</div>
+
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
@@ -731,6 +779,10 @@ tr:hover td{background:var(--bg)}
     <div class="nav-item" onclick="showPage('transactions')" data-label="交易記錄">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="8.5" x2="11" y2="8.5"/><line x1="5" y1="11" x2="8" y2="11"/></svg></span>
       <span class="nav-item-text">交易記錄</span>
+    </div>
+    <div class="nav-item" onclick="showPage('cash')" data-label="現金">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="4" width="13" height="9" rx="1.5"/><circle cx="8" cy="8.5" r="1.8"/><line x1="4" y1="4" x2="4" y2="13"/></svg></span>
+      <span class="nav-item-text">現金</span>
     </div>
     <div class="nav-item" onclick="showPage('calculator')" data-label="計算器">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="5.5" y1="5.5" x2="10.5" y2="5.5"/><line x1="5.5" y1="8" x2="7.5" y2="8"/><line x1="5.5" y1="10.5" x2="7.5" y2="10.5"/><line x1="9" y1="8" x2="11" y2="10.5"/><line x1="11" y1="8" x2="9" y2="10.5"/></svg></span>
@@ -1297,6 +1349,21 @@ tr:hover td{background:var(--bg)}
     </div>
   </div>
 
+  <!-- PAGE: 現金 -->
+  <div class="page" id="page-cash">
+    <div id="cashPools"></div>
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">現金事件</div><div class="card-sub" id="cashSub">入金 / 出金 / 換匯</div></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" id="cashSeedBtn" onclick="seedCashFromCost()" style="height:32px">以持股成本初始化</button>
+          <button class="btn btn-primary" onclick="openCashModal('DEPOSIT')" style="height:32px">+ 新增現金事件</button>
+        </div>
+      </div>
+      <div id="cashFlowList"></div>
+    </div>
+  </div>
+
   <!-- PAGE: DCA 計算器 -->
   <div class="page" id="page-calculator">
     <div class="card mb-20">
@@ -1442,6 +1509,7 @@ const PAGE_META = {
   signals:       ['訊號計分板','Signal Scoreboard'],
   watchlist:     ['觀察清單','Watchlist'],
   transactions:  ['交易記錄','Transactions'],
+  cash:          ['現金','Cash'],
   calculator:    ['DCA 計算器','Calculator'],
   rebalance:     ['再平衡建議','Rebalancing'],
 };
@@ -1455,6 +1523,7 @@ function showPage(id) {
   document.getElementById('page-breadcrumb').textContent = b;
   if (id === 'screener') loadScreenerWatchlist();
   if (id === 'transactions') loadTransactionsPage();
+  if (id === 'cash') loadCashPage();
   if (id === 'health') loadHealthPage();
   if (id === 'signals') loadSignalsPage();
   if (id === 'calculator') { runCalculator(); }
@@ -3714,6 +3783,183 @@ async function submitTransactionForm() {
   } finally {
     btn.textContent = '儲存'; btn.disabled = false;
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+// 現金（入金 / 出金 / 換匯）
+// ══════════════════════════════════════════════════════════════
+const DEMO_CASH = {cash_twd:8800, cash_usd:250, principal_twd:100000, usdtwd:31.5, flows:[
+  {id:'c1',flow_type:'DEPOSIT',currency:'TWD',amount:100000,flow_date:'2026-06-01'},
+  {id:'c2',flow_type:'CONVERT',from_currency:'TWD',from_amount:60000,to_currency:'USD',to_amount:1923,rate:31.2,flow_date:'2026-06-02'},
+]};
+
+async function loadCashPage() {
+  try {
+    const [cash, summary] = DEMO_MODE
+      ? [DEMO_CASH, (typeof DEMO_SUMMARY!=='undefined'?DEMO_SUMMARY:{})]
+      : await Promise.all([api('/api/portfolio/cash'), api('/api/portfolio/summary')]);
+    renderCash(cash, summary);
+  } catch(e) {
+    console.error(e);
+    document.getElementById('cashFlowList').innerHTML = '<div style="padding:24px;color:var(--mid)">現金資料載入失敗</div>';
+  }
+}
+
+function renderCash(d, s) {
+  const fx  = d.usdtwd || 0;
+  const twd = d.cash_twd || 0, usd = d.cash_usd || 0;
+  const ntd = v => 'NT$' + Math.round(v||0).toLocaleString('en');
+  const usc = v => '$'  + (v||0).toLocaleString('en', {maximumFractionDigits:2});
+  const principal = d.principal_twd || 0;
+  const totalTwd  = (s && s.total_twd) || 0;
+  const ret = (s && s.combined_return_twd);
+  const retStr = (ret==null) ? '—' : (ret>=0?'+':'') + ret.toFixed(2) + '%';
+  const retCol = (ret==null) ? 'var(--mid)' : (ret>=0?'var(--green)':'var(--red)');
+  const usdInTwd = fx ? usd*fx : 0, twdInUsd = fx ? twd/fx : 0;
+
+  document.getElementById('cashPools').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="stat-card" style="border-top:3px solid var(--red)">
+        <div class="stat-label">台幣帳戶</div>
+        <div class="stat-value">${ntd(twd)}</div>
+        <div class="stat-sub">≈ ${usc(twdInUsd)}（折美金）</div>
+      </div>
+      <div class="stat-card" style="border-top:3px solid var(--blue)">
+        <div class="stat-label">美金帳戶</div>
+        <div class="stat-value">${usc(usd)}</div>
+        <div class="stat-sub">≈ ${ntd(usdInTwd)}（折台幣）</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+      <div class="stat-card"><div class="stat-label">總資產 含現金</div><div class="stat-value">${ntd(totalTwd)}</div><div class="stat-sub">持股＋現金（折台幣）</div></div>
+      <div class="stat-card"><div class="stat-label">投入本金</div><div class="stat-value">${ntd(principal)}</div><div class="stat-sub">淨入金（折台幣）</div></div>
+      <div class="stat-card"><div class="stat-label">台幣總報酬</div><div class="stat-value" style="color:${retCol}">${retStr}</div><div class="stat-sub">含匯差</div></div>
+    </div>`;
+
+  renderCashFlows(d.flows || []);
+  const seedBtn = document.getElementById('cashSeedBtn');
+  if (seedBtn) seedBtn.style.display = (d.flows && d.flows.length) ? 'none' : '';
+}
+
+function renderCashFlows(flows) {
+  const el = document.getElementById('cashFlowList');
+  document.getElementById('cashSub').textContent = `${flows.length} 筆`;
+  if (!flows.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:28px"><div class="es-text">還沒有現金事件</div><div class="es-sub">點「以持股成本初始化」用持股成本當起點，或「+ 新增現金事件」記入金／換匯</div></div>';
+    return;
+  }
+  const ntd = v => 'NT$' + (+v||0).toLocaleString('en', {maximumFractionDigits:0});
+  const usc = v => '$'  + (+v||0).toLocaleString('en', {maximumFractionDigits:2});
+  const money = (cur, v) => cur==='TWD' ? ntd(v) : usc(v);
+  const ICON = {DEPOSIT:['入','var(--green-lt)','var(--green)'], WITHDRAW:['出','var(--red-lt)','var(--red)'], CONVERT:['換','var(--blue-lt)','var(--blue)']};
+  const rows = flows.map(f => {
+    const [ic, bg, fg] = ICON[f.flow_type] || ['?','var(--bg)','var(--mid)'];
+    let title, amt, amtCol = 'var(--dark)';
+    if (f.flow_type==='DEPOSIT') { title='入金 · '+(f.currency==='TWD'?'台幣':'美金'); amt='+'+money(f.currency,f.amount); amtCol='var(--green)'; }
+    else if (f.flow_type==='WITHDRAW') { title='出金 · '+(f.currency==='TWD'?'台幣':'美金'); amt='−'+money(f.currency,f.amount); amtCol='var(--red)'; }
+    else { const fc=f.from_currency==='TWD'?'台幣':'美金', tc=f.to_currency==='TWD'?'台幣':'美金'; title='換匯 · '+fc+' → '+tc; amt=money(f.from_currency,f.from_amount)+' → '+money(f.to_currency,f.to_amount); }
+    const sub = (f.flow_date||'') + (f.flow_type==='CONVERT'&&f.rate?` · 匯率 ${(+f.rate).toFixed(2)}`:'') + (f.notes?` · ${f.notes}`:'');
+    return `<div style="display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid var(--border)">
+      <div style="width:34px;height:34px;min-width:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;background:${bg};color:${fg}">${ic}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">${title}</div><div style="font-size:11px;color:var(--light);margin-top:2px">${sub}</div></div>
+      <div style="font-size:13px;font-weight:700;white-space:nowrap;color:${amtCol}">${amt}</div>
+      <span onclick="deleteCashFlow('${f.id}')" title="刪除" style="color:var(--light);cursor:pointer;padding:4px;font-size:16px;line-height:1">×</span>
+    </div>`;
+  }).join('');
+  el.innerHTML = rows + '<div style="font-size:11px;color:var(--light);padding:11px 16px;background:var(--bg);line-height:1.5">餘額已自動扣掉股票買賣（買進扣現金、賣出加現金），這裡只列入金／出金／換匯。</div>';
+}
+
+function setCashType(type) {
+  document.getElementById('cf-type').value = type;
+  ['DEPOSIT','WITHDRAW','CONVERT'].forEach(t => {
+    const b = document.getElementById('cfTab'+t);
+    if (t===type) { b.className='btn btn-primary'; b.style.background = (t==='WITHDRAW'?'var(--red)':(t==='CONVERT'?'var(--blue)':'var(--green)')); }
+    else { b.className='btn btn-ghost'; b.style.background=''; }
+  });
+  document.getElementById('cfSimpleFields').style.display  = type==='CONVERT' ? 'none' : 'block';
+  document.getElementById('cfConvertFields').style.display = type==='CONVERT' ? 'block' : 'none';
+}
+function onConvertDirChange() {
+  const from = document.getElementById('cf-from-cur').value;
+  const to = from==='TWD' ? 'USD' : 'TWD';
+  document.getElementById('cf-to-cur').innerHTML = to==='USD' ? '<option value="USD">美金 USD</option>' : '<option value="TWD">台幣 TWD</option>';
+  updateConvRate();
+}
+function updateConvRate() {
+  const fc = document.getElementById('cf-from-cur').value;
+  const fa = parseFloat(document.getElementById('cf-from-amt').value);
+  const ta = parseFloat(document.getElementById('cf-to-amt').value);
+  const box = document.getElementById('cf-rate-box');
+  if (fa>0 && ta>0) {
+    const twd = fc==='TWD'?fa:ta, usd = fc==='USD'?fa:ta;
+    box.style.display='block';
+    box.textContent = '成交匯率：1 USD = ' + (twd/usd).toFixed(2) + ' TWD';
+  } else box.style.display='none';
+}
+function openCashModal(type='DEPOSIT') {
+  document.getElementById('cf-amount').value='';
+  document.getElementById('cf-currency').value='TWD';
+  document.getElementById('cf-from-cur').value='TWD';
+  document.getElementById('cf-from-amt').value='';
+  document.getElementById('cf-to-amt').value='';
+  onConvertDirChange();
+  document.getElementById('cf-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('cf-notes').value='';
+  document.getElementById('cashModalError').style.display='none';
+  document.getElementById('cf-rate-box').style.display='none';
+  setCashType(type);
+  document.getElementById('cashModal').style.display='flex';
+}
+function closeCashModal() { document.getElementById('cashModal').style.display='none'; }
+
+async function submitCashFlow() {
+  const type  = document.getElementById('cf-type').value;
+  const date  = document.getElementById('cf-date').value;
+  const notes = document.getElementById('cf-notes').value.trim();
+  const err   = document.getElementById('cashModalError');
+  if (!date) { err.textContent='請選擇日期'; err.style.display='block'; return; }
+  let body = {flow_type:type, flow_date:date, notes};
+  if (type==='CONVERT') {
+    const fc = document.getElementById('cf-from-cur').value;
+    const tc = document.getElementById('cf-to-cur').value;
+    const fa = parseFloat(document.getElementById('cf-from-amt').value);
+    const ta = parseFloat(document.getElementById('cf-to-amt').value);
+    if (!fa || fa<=0 || !ta || ta<=0) { err.textContent='請輸入換出與換入金額'; err.style.display='block'; return; }
+    body = {...body, from_currency:fc, from_amount:fa, to_currency:tc, to_amount:ta};
+  } else {
+    const cur = document.getElementById('cf-currency').value;
+    const amt = parseFloat(document.getElementById('cf-amount').value);
+    if (!amt || amt<=0) { err.textContent='請輸入金額'; err.style.display='block'; return; }
+    body = {...body, currency:cur, amount:amt};
+  }
+  const btn = document.getElementById('cashModalSubmit'); btn.textContent='儲存中...'; btn.disabled=true;
+  try {
+    if (!DEMO_MODE) await api('/api/portfolio/cash-flows', 'POST', body);
+    showToast('現金事件已新增');
+    closeCashModal();
+    await loadCashPage();
+  } catch(e) {
+    err.textContent = e.message || '儲存失敗，請稍後再試'; err.style.display='block';
+  } finally {
+    btn.textContent='儲存'; btn.disabled=false;
+  }
+}
+async function deleteCashFlow(id) {
+  if (!id) return;
+  if (!confirm('刪除這筆現金事件？\n\n刪除後現金餘額會重新計算。')) return;
+  try {
+    if (!DEMO_MODE) await api('/api/portfolio/cash-flows/'+id, 'DELETE');
+    showToast('已刪除，餘額已重算');
+    await loadCashPage();
+  } catch(e) { alert('刪除失敗：' + (e.message||'未知錯誤')); }
+}
+async function seedCashFromCost() {
+  if (!confirm('以持股成本初始化\n\n依你目前的交易，每幣別建立一筆入金（＝該幣別買進成本），讓現金歸零、本金＝持股成本。\n適合一開始用；之後有閒置現金或實際換匯，再自己補／調整。\n\n要繼續嗎？')) return;
+  try {
+    const r = DEMO_MODE ? {count:2} : await api('/api/portfolio/cash/seed-from-cost', 'POST', {});
+    showToast('已用持股成本初始化（建立 ' + (r.count||0) + ' 筆入金）');
+    await loadCashPage();
+  } catch(e) { alert(e.message || '初始化失敗'); }
 }
 
 // ══════════════════════════════════════════════════════════════

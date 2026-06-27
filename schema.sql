@@ -15,9 +15,14 @@ CREATE TABLE IF NOT EXISTS holdings (
   avg_cost      NUMERIC NOT NULL,           -- 平均成本（同上，重算結果）
   opening_shares    NUMERIC,                -- 起始基準股數（交易記錄之前的部位）
   opening_avg_cost  NUMERIC,                -- 起始基準成本
+  cost_basis_date   DATE DEFAULT CURRENT_DATE,  -- 成本基準日：拆股調整基準（此日之後拆股才調整股數/成本），新列預設今天
   created_at    TIMESTAMPTZ DEFAULT NOW(),
   updated_at    TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- 既有資料庫補欄位用（新建可忽略）：補上 cost_basis_date，舊資料回填為建立日
+-- ALTER TABLE holdings ADD COLUMN IF NOT EXISTS cost_basis_date DATE DEFAULT CURRENT_DATE;
+-- UPDATE holdings SET cost_basis_date = created_at::date WHERE cost_basis_date IS NULL;
 
 -- ── 交易記錄表 ───────────────────────────────────────────────
 -- 每一筆買賣都記下來，是計算損益的原始資料
@@ -30,12 +35,34 @@ CREATE TABLE IF NOT EXISTS transactions (
   total_amount     NUMERIC NOT NULL,        -- shares × price
   transaction_date DATE    NOT NULL,
   notes            TEXT,
-  realized_pnl     NUMERIC,                 -- 已實現損益（僅 SELL 有值 =(賣價-均成本)×股數）
+  realized_pnl     NUMERIC,                 -- 已實現損益（僅 SELL 有值 =(賣價-均成本)×股數 − 費用）
+  fee              NUMERIC DEFAULT 0,       -- 手續費＋證交稅（BUY 計入成本、SELL 從已實現損益扣除）
   created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 既有資料庫補欄位用（新建可忽略，已含在上面 CREATE）：
 -- ALTER TABLE transactions ADD COLUMN IF NOT EXISTS realized_pnl NUMERIC;
+-- ALTER TABLE transactions ADD COLUMN IF NOT EXISTS fee NUMERIC DEFAULT 0;
+
+-- ── 投資現金事件表（2026-06-27 現金管理新增）─────────────────────
+-- 記入金 / 出金 / 換匯三種事件，現金餘額由「這張表 ＋ 交易買賣」自動推算，不手存餘額。
+--   入金 DEPOSIT / 出金 WITHDRAW → currency + amount（正數）
+--   換匯 CONVERT → from_currency/from_amount（換出）+ to_currency/to_amount（換入），rate=台幣額/美金額
+CREATE TABLE IF NOT EXISTS cash_flows (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  flow_type     TEXT NOT NULL CHECK (flow_type IN ('DEPOSIT','WITHDRAW','CONVERT')),
+  currency      TEXT CHECK (currency IN ('TWD','USD')),  -- 入金/出金用
+  amount        NUMERIC,                                  -- 入金/出金金額（正數）
+  from_currency TEXT,                                     -- 換匯：換出幣別
+  from_amount   NUMERIC,                                  -- 換匯：換出金額
+  to_currency   TEXT,                                     -- 換匯：換入幣別
+  to_amount     NUMERIC,                                  -- 換匯：換入金額
+  rate          NUMERIC,                                  -- 匯率（TWD per USD）：換匯實際成交、或USD入金折本金用
+  flow_date     DATE NOT NULL,
+  notes         TEXT,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE cash_flows ENABLE ROW LEVEL SECURITY;
 
 -- ── 觀察清單表 ───────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS watchlist (
