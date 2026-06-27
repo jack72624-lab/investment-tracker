@@ -1033,7 +1033,7 @@ tr:hover td{background:var(--bg)}
             </button>
             <button class="btn btn-ghost" onclick="resetDgmScreen()" style="height:32px">Reset</button>
           </div>
-          <div class="sym-hint">FREEBIRDS 企業品質（≥ 7/14 = 好公司）→ 買入時機（≥ 7/11 = 好買點）· 資料來源：yfinance</div>
+          <div class="sym-hint">FREEBIRDS 企業品質（≥ 7/12 = 好公司）→ 買入時機（≥ 7/10 = 好買點）· 資料來源：yfinance</div>
         </div>
       </div>
       <div class="card">
@@ -2810,12 +2810,12 @@ async function loadScreenerWatchlist() {
         extra = `<td><span style="color:${c};font-weight:700">${sc != null ? sc+'/10' : '—'}</span></td>
                  <td>${sig!=='—'?`<span class="tag ${eTag}" style="font-size:10px">${sig}</span>`:'—'}</td>`;
       } else if (wlTab === 'dgm') {
-        const fbC = d.freebirds_score != null ? _dgmScoreColor(d.freebirds_score, d.freebirds_max||14) : 'var(--mid)';
-        const tC  = d.timing_score   != null ? _dgmScoreColor(d.timing_score,   d.timing_max||11)    : 'var(--mid)';
+        const fbC = d.freebirds_score != null ? _dgmScoreColor(d.freebirds_score, d.freebirds_max||12) : 'var(--mid)';
+        const tC  = d.timing_score   != null ? _dgmScoreColor(d.timing_score,   d.timing_max||10)    : 'var(--mid)';
         const rec = d.recommendation || '—';
         const rTag = SIG_TAG[rec] || 'tag-gray';
-        extra = `<td style="color:${fbC};font-weight:600">${d.freebirds_score!=null?d.freebirds_score+'/'+(d.freebirds_max||14):'—'}</td>
-                 <td style="color:${tC};font-weight:600">${d.timing_score!=null?d.timing_score+'/'+(d.timing_max||11):'—'}</td>
+        extra = `<td style="color:${fbC};font-weight:600">${d.freebirds_score!=null?d.freebirds_score+'/'+(d.freebirds_max||12):'—'}</td>
+                 <td style="color:${tC};font-weight:600">${d.timing_score!=null?d.timing_score+'/'+(d.timing_max||10):'—'}</td>
                  <td>${rec!=='—'?`<span class="tag ${rTag}" style="font-size:10px">${rec}</span>`:'—'}</td>`;
       } else {
         const srcBadge = src === 'BOS' ? `<span class="tag tag-blue" style="font-size:9px">BOS</span>`
@@ -2823,7 +2823,7 @@ async function loadScreenerWatchlist() {
                        : `<span class="tag tag-gray" style="font-size:9px">AI</span>`;
         let sc = '—';
         if (src==='BOS' && d.bos_score!=null) sc = `${d.bos_score}/10`;
-        else if (src.includes('DGM') && d.freebirds_score!=null) sc = `${d.freebirds_score}/${d.freebirds_max||14}`;
+        else if (src.includes('DGM') && d.freebirds_score!=null) sc = `${d.freebirds_score}/${d.freebirds_max||12}`;
         const sig = d.entry_signal || d.recommendation || '—';
         const eTag = SIG_TAG[sig] || 'tag-blue';
         extra = `<td>${srcBadge}</td><td style="font-weight:600">${sc}</td>
@@ -2847,7 +2847,7 @@ async function loadScreenerWatchlist() {
     }).join('');
 
     const legend = wlTab === 'bos' ? '綠色 = 建議購買 · 橘色 = 等待更好進場點'
-                 : wlTab === 'dgm' ? '買入時機 ≥ 7/11 = 買入條件成立'
+                 : wlTab === 'dgm' ? '買入時機 ≥ 7/10 = 買入條件成立'
                  : '點重新整理取得最新報價';
 
     body.innerHTML = `
@@ -3148,10 +3148,10 @@ function _dgmScoreColor(s, max) {
 }
 
 function renderDgmRow(s, idx, opts = {}) {
-  const fbColor = _dgmScoreColor(s.freebirds_score, s.freebirds_max || 14);
-  const tColor  = _dgmScoreColor(s.timing_score, s.timing_max || 11);
-  const fbPct   = Math.round((s.freebirds_score / (s.freebirds_max || 14)) * 100);
-  const tPct    = Math.round((s.timing_score / (s.timing_max || 11)) * 100);
+  const fbColor = _dgmScoreColor(s.freebirds_score, s.freebirds_max || 12);
+  const tColor  = _dgmScoreColor(s.timing_score, s.timing_max || 10);
+  const fbPct   = Math.round((s.freebirds_score / (s.freebirds_max || 12)) * 100);
+  const tPct    = Math.round((s.timing_score / (s.timing_max || 10)) * 100);
 
   const recMap = { '建議購買':'tag-green', '潛力股':'tag-blue', '繼續觀察':'tag-gray' };
   const recTag = recMap[s.recommendation] || 'tag-gray';
@@ -3223,7 +3223,7 @@ function renderDgmRow(s, idx, opts = {}) {
       <div class="dgm-score-bar">
         <div class="dgm-score-fill" style="width:${fbPct}%;background:${fbColor}"></div>
       </div>
-      <span class="dgm-score-val" style="color:${fbColor}">${s.freebirds_score}/${s.freebirds_max||14}</span>
+      <span class="dgm-score-val" style="color:${fbColor}">${s.freebirds_score}/${s.freebirds_max||12}</span>
     </div>
     ${s.is_quality ? '<div style="font-size:10px;color:var(--green);margin-top:2px">品質達標</div>' : ''}
   </td>
@@ -3232,7 +3232,7 @@ function renderDgmRow(s, idx, opts = {}) {
       <div class="dgm-score-bar">
         <div class="dgm-score-fill" style="width:${tPct}%;background:${tColor}"></div>
       </div>
-      <span class="dgm-score-val" style="color:${tColor}">${s.timing_score}/${s.timing_max||11}</span>
+      <span class="dgm-score-val" style="color:${tColor}">${s.timing_score}/${s.timing_max||10}</span>
     </div>
     ${s.is_buy ? '<div style="font-size:10px;color:var(--green);margin-top:2px">進場時機佳</div>' : ''}
   </td>
@@ -4096,8 +4096,8 @@ function renderDgmSectorCards(sectors) {
   return `<div class="sector-discover-grid">${sectors.map(sec => {
     const color = SECTOR_COLORS_DGM[sec.sector_key] || 'var(--green)';
     const items = (sec.stocks || []).slice(0,5).map(s => {
-      const fb = s.freebirds_score != null ? `${s.freebirds_score}/${s.freebirds_max||14}` : '—';
-      const fbColor = (s.freebirds_score||0) >= (s.freebirds_max||14)*0.6 ? 'var(--green)' : (s.freebirds_score||0) >= (s.freebirds_max||14)*0.4 ? 'var(--amber)' : 'var(--light)';
+      const fb = s.freebirds_score != null ? `${s.freebirds_score}/${s.freebirds_max||12}` : '—';
+      const fbColor = (s.freebirds_score||0) >= (s.freebirds_max||12)*0.6 ? 'var(--green)' : (s.freebirds_score||0) >= (s.freebirds_max||12)*0.4 ? 'var(--amber)' : 'var(--light)';
       const consec = s.consecutive_years || 0;
       const div = s.dividend_yield != null ? s.dividend_yield.toFixed(2)+'%' : '—';
       const nameEsc = (s.name||s.symbol).replace(/'/g,"\\'").replace(/"/g,'\\"');
