@@ -634,7 +634,7 @@ tr:hover td{background:var(--bg)}
 <!-- 交易記錄 Modal -->
 <div class="modal-backdrop" id="transactionModal" style="display:none" onclick="if(event.target===this)closeTransactionModal()">
   <div class="modal">
-    <div class="modal-title">記錄交易</div>
+    <div class="modal-title" id="txModalTitle">記錄交易</div>
     <div class="modal-sub">買入或賣出記錄，系統自動更新持倉均成本</div>
     <div style="display:flex;gap:8px;margin-bottom:16px">
       <button id="txTypeBuy" class="btn btn-primary" style="flex:1;height:36px;background:var(--green)" onclick="setTxType('BUY')">買入 BUY</button>
@@ -1289,7 +1289,7 @@ tr:hover td{background:var(--bg)}
       </div>
       <div class="table-wrap">
         <table><thead><tr>
-          <th>日期</th><th>股票</th><th>類型</th><th>股數</th><th>價格</th><th>總金額</th><th>備注</th><th>操作</th>
+          <th>日期</th><th>股票</th><th>類型</th><th>股數</th><th>價格</th><th>總金額</th><th>手續費</th><th>備注</th><th>操作</th>
         </tr></thead>
         <tbody id="txTbody"></tbody>
         </table>
@@ -3556,21 +3556,24 @@ function renderTransactionsTable() {
   const tbody = document.getElementById('txTbody');
   document.getElementById('txSub').textContent = `${data.length} 筆記錄`;
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state" style="padding:28px"><div class="es-text">沒有交易記錄</div><div class="es-sub">點「+ 新增交易」或在持倉列表點「加倉」開始記錄</div></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state" style="padding:28px"><div class="es-text">沒有交易記錄</div><div class="es-sub">點「+ 新增交易」或在持倉列表點「加倉」開始記錄</div></div></td></tr>';
     return;
   }
   tbody.innerHTML = data.map(t => {
     const isBuy = t.transaction_type === 'BUY';
     const sharesStr = +t.shares % 1 === 0 ? +t.shares : (+t.shares).toFixed(4).replace(/\.?0+$/,'');
+    const cs = /(^\d{4,6}$)|\.TW/i.test(String(t.symbol)) ? 'NT$' : '$';   // 價格/手續費依市場原幣
+    const feeStr = (t.fee!=null && +t.fee>0) ? cs+(+t.fee).toFixed(2) : '—';
     return `<tr>
       <td style="color:var(--mid)">${t.transaction_date||'—'}</td>
       <td><span class="ticker">${t.symbol}</span></td>
       <td><span class="${isBuy?'tx-type-buy':'tx-type-sell'}">${isBuy?'買入':'賣出'}</span></td>
       <td>${sharesStr}</td>
-      <td>$${parseFloat(t.price||0).toFixed(2)}</td>
-      <td><strong>$${parseFloat(t.total_amount||0).toLocaleString('en',{maximumFractionDigits:2})}</strong></td>
+      <td>${cs}${parseFloat(t.price||0).toFixed(2)}</td>
+      <td><strong>${cs}${parseFloat(t.total_amount||0).toLocaleString('en',{maximumFractionDigits:2})}</strong></td>
+      <td style="color:var(--mid);font-size:12px">${feeStr}</td>
       <td style="color:var(--mid);font-size:12px">${t.notes||'—'}</td>
-      <td style="white-space:nowrap">${t.id ? `<button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px;color:var(--red)" onclick="deleteTransaction('${t.id}')">刪除</button>` : '<span style="color:var(--light);font-size:11px">—</span>'}</td>
+      <td style="white-space:nowrap">${t.id ? `<button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px" onclick="openEditTransaction('${t.id}')">編輯</button> <button class="btn btn-ghost" style="height:24px;padding:0 8px;font-size:11px;color:var(--red)" onclick="deleteTransaction('${t.id}')">刪除</button>` : '<span style="color:var(--light);font-size:11px">—</span>'}</td>
     </tr>`;
   }).join('');
 }
@@ -3610,7 +3613,32 @@ function onTxSymbolInput(val) {
   }
 }
 
+let _editTxId = null;   // 非 null = 編輯模式（submit 走 PUT）
+
+// 開啟「編輯交易」：用列表既有資料預填，代號鎖定不可改
+function openEditTransaction(id) {
+  const t = (_allTransactions || []).find(x => String(x.id) === String(id));
+  if (!t) { showToast('找不到該交易', 'warn'); return; }
+  _editTxId = id;
+  document.getElementById('tm-symbol').value = t.symbol;
+  document.getElementById('tm-symbol').disabled = true;
+  document.getElementById('tm-shares').value = t.shares;
+  document.getElementById('tm-price').value  = t.price;
+  document.getElementById('tm-fee').value     = (t.fee != null && +t.fee > 0) ? t.fee : '';
+  document.getElementById('tm-date').value    = t.transaction_date;
+  document.getElementById('tm-notes').value   = t.notes || '';
+  document.getElementById('txModalError').style.display = 'none';
+  document.getElementById('txModalTitle').textContent = '編輯交易';
+  setTxType(t.transaction_type);
+  onTxSymbolInput(t.symbol);
+  document.getElementById('transactionModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('tm-fee').focus(), 50);
+}
+
 function openTransactionModal(symbol, type='BUY') {
+  _editTxId = null;                                                   // 回到新增模式
+  document.getElementById('tm-symbol').disabled = false;
+  document.getElementById('txModalTitle').textContent = '記錄交易';
   document.getElementById('tm-symbol').value = symbol || '';
   document.getElementById('tm-shares').value = '';
   document.getElementById('tm-price').value = '';
@@ -3626,6 +3654,8 @@ function openTransactionModal(symbol, type='BUY') {
 }
 function closeTransactionModal() {
   document.getElementById('transactionModal').style.display = 'none';
+  _editTxId = null;
+  document.getElementById('tm-symbol').disabled = false;
 }
 function setTxType(type) {
   document.getElementById('tm-type').value = type;
@@ -3658,8 +3688,19 @@ async function submitTransactionForm() {
   btn.textContent = '儲存中...'; btn.disabled = true;
   try {
     if (DEMO_MODE) {
-      _allTransactions.unshift({id:'t'+Date.now(), symbol, transaction_type:type, shares, price, total_amount:+(shares*price).toFixed(2), transaction_date:date, notes, fee});
-      showToast(`已記錄 ${type==='BUY'?'買入':'賣出'} ${symbol} ${shares} 股`);
+      if (_editTxId) {
+        const t = _allTransactions.find(x => String(x.id) === String(_editTxId));
+        if (t) Object.assign(t, {transaction_type:type, shares, price, total_amount:+(shares*price).toFixed(2), transaction_date:date, notes, fee});
+        showToast('交易已更新');
+      } else {
+        _allTransactions.unshift({id:'t'+Date.now(), symbol, transaction_type:type, shares, price, total_amount:+(shares*price).toFixed(2), transaction_date:date, notes, fee});
+        showToast(`已記錄 ${type==='BUY'?'買入':'賣出'} ${symbol} ${shares} 股`);
+      }
+    } else if (_editTxId) {
+      // 編輯：代號不變，只更新其餘欄位，後端回放重算持倉
+      await api(`/api/portfolio/transactions/${_editTxId}`, 'PUT', {transaction_type:type, shares, price, transaction_date:date, notes, fee});
+      showToast('交易已更新，持倉已重算');
+      await refreshAll();
     } else {
       await api('/api/portfolio/transaction', 'POST', {symbol, transaction_type:type, shares, price, transaction_date:date, notes, fee});
       showToast(`已記錄 ${type==='BUY'?'買入':'賣出'} ${symbol} ${shares} 股`);
