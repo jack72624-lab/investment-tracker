@@ -775,15 +775,6 @@ tr:hover td{background:var(--bg)}
         <option value="revolut">Revolut（深色）</option>
         <option value="wise">Wise</option>
       </select>
-      <div class="twd-rate-wrap" id="twdRateWrap" style="display:none">
-        <span>1 USD =</span>
-        <input class="twd-rate-input" id="twdRateInput" type="number" value="32" min="1" step="0.1" onchange="updateTwdRate()">
-        <span>NTD</span>
-      </div>
-      <button class="twd-btn" id="twdToggleBtn" onclick="toggleTwd()">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="6.5"/><path d="M8 1.5 Q11.5 8 8 14.5 Q4.5 8 8 1.5"/><line x1="1.5" y1="8" x2="14.5" y2="8"/></svg>
-        USD
-      </button>
       <button class="btn btn-ghost" id="refreshBtn" onclick="refreshAll()">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8A6 6 0 1 1 8 2a6 6 0 0 1 4.24 1.76L14 2v4h-4"/></svg>
         Refresh
@@ -964,7 +955,7 @@ tr:hover td{background:var(--bg)}
           <div class="loading-overlay" id="screenerLoading" style="position:relative;min-height:80px;display:none"><div class="loading-spinner"></div> Fetching data...</div>
           <table id="screenerTable"><thead><tr>
             <th>Ticker</th><th>Company / Sector</th><th>Price</th><th>P/E</th>
-            <th>ROE</th><th>Div%</th><th>EPS Gr.</th><th>Beta</th><th>Mkt Cap</th>
+            <th>ROE</th><th>Div%</th><th>營收成長</th><th>Beta</th><th>Mkt Cap</th>
             <th>AI Score</th><th>Signal</th>
           </tr></thead>
           <tbody id="screenerTbody"></tbody>
@@ -3332,30 +3323,10 @@ function resetDgmScreen() {
 // ══════════════════════════════════════════════════════════════
 // TWD 換算
 // ══════════════════════════════════════════════════════════════
-let _twdMode = false;
-let _twdRate = 32;
-
-function toggleTwd() {
-  _twdMode = !_twdMode;
-  const btn = document.getElementById('twdToggleBtn');
-  const wrap = document.getElementById('twdRateWrap');
-  btn.textContent = _twdMode ? 'TWD' : 'USD';
-  btn.className = _twdMode ? 'twd-btn active' : 'twd-btn';
-  // rebuild icon
-  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="6.5"/><path d="M8 1.5 Q11.5 8 8 14.5 Q4.5 8 8 1.5"/><line x1="1.5" y1="8" x2="14.5" y2="8"/></svg>${_twdMode?'TWD':'USD'}`;
-  wrap.style.display = _twdMode ? 'flex' : 'none';
-  refreshAll();
-}
-function updateTwdRate() {
-  _twdRate = parseFloat(document.getElementById('twdRateInput').value) || 32;
-  refreshAll();
-}
+// 全域 USD/TWD 切換鈕已移除：全站改為「美股 $、台股 NT$」各自原幣顯示，總計一律折 USD（後端 total_value_usd）。
+// fmtMoney 用於以 USD 計的數字（股息合併總額、投資目標、試算），一律標 $。
 function fmtMoney(usd, decimals=0) {
-  if (_twdMode) {
-    const ntd = usd * _twdRate;
-    return 'NT$' + ntd.toLocaleString('en', {maximumFractionDigits: decimals});
-  }
-  return '$' + usd.toLocaleString('en', {maximumFractionDigits: decimals});
+  return '$' + (usd||0).toLocaleString('en', {maximumFractionDigits: decimals});
 }
 
 // ══════════════════════════════════════════════════════════════
