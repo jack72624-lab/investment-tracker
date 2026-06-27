@@ -2041,6 +2041,7 @@ function switchTab(el,tab){
 
 async function loadTechnical(symbol, period) {
   if(!symbol) return;                       // 清單清空時不觸發
+  const cs = /(^\d{4,6}$)|\.TW/i.test(String(symbol)) ? 'NT$' : '$';   // 台股顯示 NT$、美股 $
   document.getElementById('priceLoading').style.display='flex';
   document.getElementById('techTicker').textContent=symbol;
   document.getElementById('techName').textContent='Loading...';
@@ -2061,14 +2062,14 @@ async function loadTechnical(symbol, period) {
     const demoInfo={NVDA:{name:'NVIDIA Corp',price:875.50,change:2.3,pe:45.2,beta:1.72},AAPL:{name:'Apple Inc',price:189.20,change:-0.4,pe:29.4,beta:1.19},MSFT:{name:'Microsoft Corp',price:415.80,change:0.8,pe:35.1,beta:0.92},VOO:{name:'Vanguard S&P 500',price:498.20,change:0.6,pe:23.4,beta:1.00},META:{name:'Meta Platforms',price:510.60,change:1.4,pe:26.4,beta:1.28}};
     const info=demoInfo[symbol]||{name:symbol,price:200,change:0,pe:20,beta:1};
     document.getElementById('techName').textContent=info.name;
-    document.getElementById('techMeta').innerHTML=`<span><strong style="font-size:16px;font-weight:700">$${info.price.toFixed(2)}</strong></span><span style="color:${info.change>=0?'var(--green)':'var(--red)'};font-weight:600">${info.change>=0?'+':''}${info.change}%</span><span>P/E ${info.pe}</span><span>Beta ${info.beta}</span>`;
+    document.getElementById('techMeta').innerHTML=`<span><strong style="font-size:16px;font-weight:700">${cs}${info.price.toFixed(2)}</strong></span><span style="color:${info.change>=0?'var(--green)':'var(--red)'};font-weight:600">${info.change>=0?'+':''}${info.change}%</span><span>P/E ${info.pe}</span><span>Beta ${info.beta}</span>`;
   } else {
     try {
       data = await api(`/api/stocks/history/${symbol}?period=${period}`);
       const quote = await api(`/api/stocks/quote/${symbol}`);
       livePrice = (quote && quote.price) ? quote.price : null;   // 即時價，接到圖最後一點
       document.getElementById('techName').textContent=quote.name||symbol;
-      document.getElementById('techMeta').innerHTML=`<span><strong style="font-size:16px;font-weight:700">$${(quote.price||0).toFixed(2)}</strong></span><span style="color:${(quote.change_pct||0)>=0?'var(--green)':'var(--red)'};font-weight:600">${(quote.change_pct||0)>=0?'+':''}${(quote.change_pct||0).toFixed(2)}%</span><span>P/E ${quote.pe_ratio||'—'}</span><span>Beta ${quote.beta||'—'}</span><span>${quote.sector||''}</span>`;
+      document.getElementById('techMeta').innerHTML=`<span><strong style="font-size:16px;font-weight:700">${cs}${(quote.price||0).toFixed(2)}</strong></span><span style="color:${(quote.change_pct||0)>=0?'var(--green)':'var(--red)'};font-weight:600">${(quote.change_pct||0)>=0?'+':''}${(quote.change_pct||0).toFixed(2)}%</span><span>P/E ${quote.pe_ratio||'—'}</span><span>Beta ${quote.beta||'—'}</span><span>${quote.sector||''}</span>`;
     } catch(e){ console.error(e); document.getElementById('priceLoading').style.display='none'; return; }
   }
 
@@ -2080,7 +2081,7 @@ async function loadTechnical(symbol, period) {
   }
   const ctx=document.getElementById('priceChart').getContext('2d');
   if(pChart) pChart.destroy();
-  pChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'股價',data:prices,borderColor:'#006FFF',backgroundColor:'rgba(0,111,255,0.05)',fill:true,tension:0.3,pointRadius:(c)=>c.dataIndex===prices.length-1?4:0,pointBackgroundColor:'#006FFF',pointBorderColor:'#fff',pointBorderWidth:1.5,borderWidth:2},{label:'20日均線',data:sma20,borderColor:'#D97706',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},{label:'50日均線',data:sma50,borderColor:'#DC2626',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#6B7280'}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: $${c.raw?.toFixed(2)??'—'}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>'$'+v.toFixed(0),font:{size:11},color:'#9CA3AF'}}}}});
+  pChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'股價',data:prices,borderColor:'#006FFF',backgroundColor:'rgba(0,111,255,0.05)',fill:true,tension:0.3,pointRadius:(c)=>c.dataIndex===prices.length-1?4:0,pointBackgroundColor:'#006FFF',pointBorderColor:'#fff',pointBorderWidth:1.5,borderWidth:2},{label:'20日均線',data:sma20,borderColor:'#D97706',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},{label:'50日均線',data:sma50,borderColor:'#DC2626',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#6B7280'}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${cs}${c.raw?.toFixed(2)??'—'}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>cs+v.toFixed(0),font:{size:11},color:'#9CA3AF'}}}}});
 
   const ctx2=document.getElementById('rsiChart').getContext('2d');
   if(rChart) rChart.destroy();
@@ -2119,11 +2120,11 @@ async function loadTechnical(symbol, period) {
     </div>
     <div class="alloc-item">
       <div class="alloc-name">20日均線<div style="font-size:10px;color:var(--mid);font-weight:400">近20天平均買入價格</div></div>
-      <div style="font-weight:600;font-family:monospace">$${lastSMA20?.toFixed(2)??'—'}</div>
+      <div style="font-weight:600;font-family:monospace">${cs}${lastSMA20?.toFixed(2)??'—'}</div>
     </div>
     <div class="alloc-item">
       <div class="alloc-name">50日均線<div style="font-size:10px;color:var(--mid);font-weight:400">近50天平均買入價格，代表中期趨勢</div></div>
-      <div style="font-weight:600;font-family:monospace">$${lastSMA50?.toFixed(2)??'—'}</div>
+      <div style="font-weight:600;font-family:monospace">${cs}${lastSMA50?.toFixed(2)??'—'}</div>
     </div>
     <div class="alloc-item">
       <div class="alloc-name">現價 vs 均線<div style="font-size:10px;color:var(--mid);font-weight:400">在均線上方代表短期偏強</div></div>
@@ -2138,23 +2139,23 @@ async function loadTechnical(symbol, period) {
   document.getElementById('techLevels').innerHTML=`
     <div class="alloc-item">
       <div class="alloc-name">目前股價</div>
-      <div style="font-weight:700;font-family:monospace;font-size:15px">$${cur.toFixed(2)}</div>
+      <div style="font-weight:700;font-family:monospace;font-size:15px">${cs}${cur.toFixed(2)}</div>
     </div>
     <div class="alloc-item">
       <div class="alloc-name">${PTITLE}最高<div style="font-size:10px;color:var(--mid);font-weight:400">${PNAME}最貴，現在距離 ${distHi}%</div></div>
-      <div style="color:var(--red);font-weight:600;font-family:monospace">$${hi.toFixed(2)}</div>
+      <div style="color:var(--red);font-weight:600;font-family:monospace">${cs}${hi.toFixed(2)}</div>
     </div>
     <div class="alloc-item">
       <div class="alloc-name">${PTITLE}最低<div style="font-size:10px;color:var(--mid);font-weight:400">${PNAME}最便宜，現在距離 +${distLo}%</div></div>
-      <div style="color:var(--green);font-weight:600;font-family:monospace">$${lo.toFixed(2)}</div>
+      <div style="color:var(--green);font-weight:600;font-family:monospace">${cs}${lo.toFixed(2)}</div>
     </div>
     <div class="alloc-item">
       <div class="alloc-name">壓力位（上方阻力）<div style="font-size:10px;color:var(--mid);font-weight:400">${resistance?`近 6 週高點，約 ${resDist}% 處可能遇阻`:'已突破近期高點，上方暫無明顯壓力'}</div></div>
-      <div style="color:var(--red);font-weight:600;font-family:monospace">${resistance?'$'+resistance.toFixed(2):'—'}</div>
+      <div style="color:var(--red);font-weight:600;font-family:monospace">${resistance?cs+resistance.toFixed(2):'—'}</div>
     </div>
     <div class="alloc-item">
       <div class="alloc-name">支撐位（下方支撐）<div style="font-size:10px;color:var(--mid);font-weight:400">${support?`近 6 週低點，約 ${supDist}% 處可能止跌`:'已跌破近期低點，下方暫無明顯支撐'}</div></div>
-      <div style="color:var(--green);font-weight:600;font-family:monospace">${support?'$'+support.toFixed(2):'—'}</div>
+      <div style="color:var(--green);font-weight:600;font-family:monospace">${support?cs+support.toFixed(2):'—'}</div>
     </div>`;
   // 決定白話結論
   let sigColor, sigBg, sigTitle, sigText;
