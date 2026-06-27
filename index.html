@@ -656,9 +656,16 @@ tr:hover td{background:var(--bg)}
         <div id="tm-currency-hint" style="display:none;font-size:11px;color:var(--blue);margin-top:4px;padding:4px 8px;background:var(--blue-lt);border-radius:4px"></div>
       </div>
     </div>
-    <div class="modal-field">
-      <div class="modal-label">日期</div>
-      <input class="modal-input" id="tm-date" type="date">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="modal-field">
+        <div class="modal-label">日期</div>
+        <input class="modal-input" id="tm-date" type="date">
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">手續費＋稅（選填）</div>
+        <input class="modal-input" id="tm-fee" type="number" min="0" step="any" placeholder="例：4.5">
+        <div style="font-size:11px;color:var(--mid);margin-top:4px">買入計入成本、賣出從損益扣除</div>
+      </div>
     </div>
     <div class="modal-field">
       <div class="modal-label">備注（選填）</div>
@@ -3630,6 +3637,7 @@ function openTransactionModal(symbol, type='BUY') {
   document.getElementById('tm-symbol').value = symbol || '';
   document.getElementById('tm-shares').value = '';
   document.getElementById('tm-price').value = '';
+  document.getElementById('tm-fee').value = '';
   document.getElementById('tm-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('tm-notes').value = '';
   document.getElementById('txModalError').style.display = 'none';
@@ -3660,6 +3668,7 @@ async function submitTransactionForm() {
   const price  = parseFloat(document.getElementById('tm-price').value);
   const date   = document.getElementById('tm-date').value;
   const notes  = document.getElementById('tm-notes').value.trim();
+  const fee    = parseFloat(document.getElementById('tm-fee').value) || 0;
   const type   = document.getElementById('tm-type').value;
   const errEl  = document.getElementById('txModalError');
 
@@ -3672,10 +3681,10 @@ async function submitTransactionForm() {
   btn.textContent = '儲存中...'; btn.disabled = true;
   try {
     if (DEMO_MODE) {
-      _allTransactions.unshift({id:'t'+Date.now(), symbol, transaction_type:type, shares, price, total_amount:+(shares*price).toFixed(2), transaction_date:date, notes});
+      _allTransactions.unshift({id:'t'+Date.now(), symbol, transaction_type:type, shares, price, total_amount:+(shares*price).toFixed(2), transaction_date:date, notes, fee});
       showToast(`已記錄 ${type==='BUY'?'買入':'賣出'} ${symbol} ${shares} 股`);
     } else {
-      await api('/api/portfolio/transaction', 'POST', {symbol, transaction_type:type, shares, price, transaction_date:date, notes});
+      await api('/api/portfolio/transaction', 'POST', {symbol, transaction_type:type, shares, price, transaction_date:date, notes, fee});
       showToast(`已記錄 ${type==='BUY'?'買入':'賣出'} ${symbol} ${shares} 股`);
       await refreshAll();
     }
