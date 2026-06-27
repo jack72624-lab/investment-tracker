@@ -662,9 +662,9 @@ tr:hover td{background:var(--bg)}
         <input class="modal-input" id="tm-date" type="date">
       </div>
       <div class="modal-field">
-        <div class="modal-label">手續費＋稅（選填）</div>
+        <div class="modal-label" id="tm-fee-label">手續費＋稅（USD，選填）</div>
         <input class="modal-input" id="tm-fee" type="number" min="0" step="any" placeholder="例：4.5">
-        <div style="font-size:11px;color:var(--mid);margin-top:4px">買入計入成本、賣出從損益扣除</div>
+        <div style="font-size:11px;color:var(--mid);margin-top:4px">與成交價同幣別，買入計入成本、賣出從損益扣除</div>
       </div>
     </div>
     <div class="modal-field">
@@ -3615,15 +3615,18 @@ async function deleteTransaction(id) {
 function onTxSymbolInput(val) {
   const isTW = /^\d{4,6}$/.test(val.trim()) || val.trim().toUpperCase().endsWith('.TW');
   const label = document.getElementById('tm-price-label');
+  const feeLabel = document.getElementById('tm-fee-label');
   const hint  = document.getElementById('tm-currency-hint');
   const priceInput = document.getElementById('tm-price');
   if (isTW) {
     label.textContent = '成交價格（TWD）';
+    if (feeLabel) feeLabel.textContent = '手續費＋稅（TWD，選填）';
     hint.textContent  = '台股代號，系統自動儲存為 TWD';
     hint.style.display = 'block';
     priceInput.placeholder = '例：850.00';
   } else {
     label.textContent = '成交價格（USD）';
+    if (feeLabel) feeLabel.textContent = '手續費＋稅（USD，選填）';
     hint.style.display = 'none';
     priceInput.placeholder = '例：695.00';
   }
