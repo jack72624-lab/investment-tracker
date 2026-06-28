@@ -1635,6 +1635,7 @@ async function loadOverview() {
     // 「總資產 / 目標進度 / IRR」用台股折 USD 後的合併總值，不再只算美股（漏台股）
     const totalUsd = (summary.total_value_usd != null) ? summary.total_value_usd : (summary.total_market_value || 0);
     renderSummaryCards(summary);
+    if(window.polishCountUp){polishCountUp(document.getElementById('s-totalMv'));polishCountUp(document.getElementById('tw-s-totalMv'));}
     renderHoldings(holdings);
     renderSectorChart(summary.sector_allocation_combined || summary.sector_allocation);
     renderNetWorthChart('1y');
@@ -1813,7 +1814,10 @@ async function renderNetWorthChart(period) {
   }
 
   document.getElementById('trendSub').textContent=`${dates[0]} — ${dates[dates.length-1]}`;
-  nwChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'Portfolio',data:prices,borderColor:'#006FFF',backgroundColor:'rgba(0,111,255,0.07)',fill:true,tension:0.4,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+Math.round(c.raw).toLocaleString('en')}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:7,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'K':'$'+Math.round(v),font:{size:11},color:'#9CA3AF'}}}}});
+  const _grad=ctx.createLinearGradient(0,0,0,(ctx.canvas&&ctx.canvas.height)||260);
+  _grad.addColorStop(0,'rgba(0,111,255,0.30)'); _grad.addColorStop(1,'rgba(0,111,255,0)');
+  const _lastIdx=prices.length-1;
+  nwChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'Portfolio',data:prices,borderColor:'#006FFF',backgroundColor:_grad,fill:true,tension:0.4,borderWidth:2.4,pointRadius:prices.map((_,i)=>i===_lastIdx?4.5:0),pointHoverRadius:5,pointBackgroundColor:'#006FFF',pointBorderColor:'#fff',pointBorderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1100,easing:'easeOutQuart'},interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},crosshair:true,tooltip:{displayColors:false,callbacks:{label:c=>'$'+Math.round(c.raw).toLocaleString('en')}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:7,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'K':'$'+Math.round(v),font:{size:11},color:'#9CA3AF'}}}}});
   document.getElementById('trendLoading').style.display='none';
 }
 
@@ -2811,6 +2815,7 @@ async function refreshPortfolio() {
   try {
     const [holdings, summary] = await Promise.all([api('/api/portfolio'), api('/api/portfolio/summary')]);
     renderSummaryCards(summary);
+    if(window.polishCountUp){polishCountUp(document.getElementById('s-totalMv'));polishCountUp(document.getElementById('tw-s-totalMv'));}
     renderHoldings(holdings);
     renderSectorChart(summary.sector_allocation);
     await loadPortfolioPage(holdings, summary);
@@ -4501,5 +4506,49 @@ applyMobileTableLabels();
 </script>
 <!-- Toast 通知 -->
 <div class="toast" id="toast"></div>
+<style>
+/* polish：統計卡進場淡入上浮（純 CSS，一次性） */
+.stat-card{animation:polishRise .55s cubic-bezier(.22,1,.36,1) both}
+@keyframes polishRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.stat-value{transition:color .2s ease}
+</style>
+<script>
+/* ── polish 層（附加，不改原資料/計算邏輯）──────────────── */
+(function(){
+  document.querySelectorAll('.stat-card').forEach((c,i)=>{ c.style.animationDelay=((i%6)*0.06)+'s'; });
+
+  // 數字 count-up：保留前後綴（$ / NT$ / %），只滾動數字本體
+  window.polishCountUp=function(el){
+    if(!el) return; const txt=el.textContent||''; const m=txt.match(/-?[\d,]+(\.\d+)?/); if(!m) return;
+    const to=parseFloat(m[0].replace(/,/g,'')); if(!isFinite(to)) return;
+    const pre=txt.slice(0,m.index), suf=txt.slice(m.index+m[0].length);
+    const dec=m[1]?m[1].length-1:0, t0=performance.now(), dur=1000;
+    (function step(t){ const k=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-k,3), v=to*e;
+      el.textContent=pre+v.toLocaleString('en',{minimumFractionDigits:dec,maximumFractionDigits:dec})+suf;
+      if(k<1) requestAnimationFrame(step); else el.textContent=txt; })(t0);
+  };
+
+  // Chart.js 十字準星 + 末點光暈（只在 options.plugins.crosshair 開啟的圖生效）
+  if(window.Chart){
+    window.Chart.register({
+      id:'crosshair',
+      afterDatasetsDraw(chart){
+        if(!chart.options.plugins||!chart.options.plugins.crosshair) return;
+        const act=(chart.tooltip&&chart.tooltip.getActiveElements&&chart.tooltip.getActiveElements())||[];
+        if(!act.length) return;
+        const {ctx,chartArea}=chart, x=act[0].element.x, y=act[0].element.y;
+        ctx.save();
+        ctx.strokeStyle='rgba(0,111,255,0.35)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+        ctx.beginPath(); ctx.moveTo(x,chartArea.top); ctx.lineTo(x,chartArea.bottom); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='rgba(0,111,255,0.16)'; ctx.beginPath(); ctx.arc(x,y,9,0,6.2832); ctx.fill();
+        ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x,y,4.5,0,6.2832); ctx.fill();
+        ctx.fillStyle='#006FFF'; ctx.beginPath(); ctx.arc(x,y,3,0,6.2832); ctx.fill();
+        ctx.restore();
+      }
+    });
+  }
+})();
+</script>
 </body>
 </html>
