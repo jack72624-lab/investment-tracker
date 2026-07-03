@@ -1149,6 +1149,11 @@ tr:hover td{background:var(--bg)}
     .alloc-catsub button{padding:5px 11px;font-size:11px;border:1px solid var(--border);background:#fff;color:var(--mid);cursor:pointer;border-radius:6px;margin-right:6px;font-family:inherit}
     .alloc-catsub button.on{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:700}
     .alloc-lens-q{font-size:11px;color:var(--mid);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+    /* ETF 穿透 toggle（Part 3） */
+    .alloc-lt{margin:0 0 12px;display:none;align-items:center;gap:8px;flex-wrap:wrap}
+    .alloc-lt-btn{padding:5px 12px;font-size:11px;border:1px solid var(--border);background:#fff;color:var(--mid);cursor:pointer;border-radius:20px;font-family:inherit;font-weight:600}
+    .alloc-lt-btn.on{background:var(--dark);color:#fff;border-color:var(--dark)}
+    .alloc-lt-note{font-size:11px;color:var(--mid)}
   </style>
 
   <!-- PAGE: 組合 -->
@@ -1163,6 +1168,10 @@ tr:hover td{background:var(--bg)}
               <button onclick="setAllocLens('stock',this)">按個股</button>
               <button onclick="setAllocLens('cat',this)">按大類</button>
               <button onclick="setAllocLens('internal',this)">各市場內部</button>
+            </div>
+            <div class="alloc-lt" id="allocLtWrap">
+              <button class="alloc-lt-btn" id="allocLtBtn" onclick="toggleAllocLookthrough(this)">穿透 ETF：關</button>
+              <span class="alloc-lt-note">把 0050／VOO 拆成成分股，看台積電等的真實權重</span>
             </div>
             <div class="alloc-catsub" id="allocCatSub" style="display:none">
               <span class="alloc-catsub-label">分類：</span>
@@ -1902,7 +1911,63 @@ function renderAllocGroup(canvasId, listId, holdings, total, prevChart) {
 // ── 組合配置：多視圖切換（Part 1）─────────────────────────────
 // 4 視圖共用同一份持倉：按市場 / 按個股 / 按大類(A工具型態·B官方產業) / 各市場內部(原幣)
 // 前三個是「合併視圖」，一律換算成 TWD 再算比例；第四個沿用舊的雙甜甜圈（原幣、對得上券商帳戶）。
-let _allocHoldings=[], _allocSummary={}, _allocLens='market', _allocCatMode='A', allocCombinedChart;
+let _allocHoldings=[], _allocSummary={}, _allocLens='market', _allocCatMode='A', _allocLookthrough=false, allocCombinedChart;
+
+// ── ETF 穿透（look-through）成分表（Part 3）──────────────────────────
+// 靜態近似值：只列前十大成分，其餘歸「ETF 其餘成分」。資料日期見 _asof。
+// 更新方式（使用者選靜態、季度手動）：跟 Claude 說「更新 ETF 成分」→ 抓 MoneyDJ(0050)＋
+// stockanalysis(VOO) 改下方權重、更新 _asof。0050 台股 ETF 無 yfinance 成分故不自動抓。
+const ETF_LOOKTHROUGH = {
+  _asof: '2026-07',
+  '0050.TW': [
+    {sym:'2330.TW', name:'台積電',    sector:'Technology', w:0.5739},
+    {sym:'2454.TW', name:'聯發科',    sector:'Technology', w:0.0595},
+    {sym:'2308.TW', name:'台達電',    sector:'Technology', w:0.0385},
+    {sym:'2317.TW', name:'鴻海',      sector:'Technology', w:0.0282},
+    {sym:'3711.TW', name:'日月光投控', sector:'Technology', w:0.0218},
+    {sym:'2303.TW', name:'聯電',      sector:'Technology', w:0.0191},
+    {sym:'2383.TW', name:'台光電',    sector:'Technology', w:0.0170},
+    {sym:'2327.TW', name:'國巨',      sector:'Technology', w:0.0158},
+    {sym:'2345.TW', name:'智邦',      sector:'Technology', w:0.0131},
+    {sym:'3037.TW', name:'欣興',      sector:'Technology', w:0.0123},
+  ],
+  'VOO': [
+    {sym:'NVDA',  name:'NVIDIA',    sector:'Technology',             w:0.0789},
+    {sym:'AAPL',  name:'Apple',     sector:'Technology',             w:0.0704},
+    {sym:'GOOGL', name:'Alphabet',  sector:'Communication Services', w:0.0611},  // GOOGL+GOOG 合併
+    {sym:'MSFT',  name:'Microsoft', sector:'Technology',             w:0.0514},
+    {sym:'AMZN',  name:'Amazon',    sector:'Consumer Cyclical',      w:0.0406},
+    {sym:'AVGO',  name:'Broadcom',  sector:'Technology',             w:0.0326},
+    {sym:'META',  name:'Meta',      sector:'Communication Services', w:0.0213},
+    {sym:'TSLA',  name:'Tesla',     sector:'Consumer Cyclical',      w:0.0188},
+    {sym:'MU',    name:'Micron',    sector:'Technology',             w:0.0168},
+  ],
+};
+
+// 把持倉「穿透」成合成持倉（TWD 值）：ETF 依成分表拆開、其餘歸「ETF 其餘成分」，
+// 同代號（直接持有 + 各 ETF 穿透）合併。回傳 [{symbol,sector,val,isETF}]。
+function lookThroughSegments(holdings){
+  const flat=[];
+  holdings.forEach(h=>{
+    const v=twdValue(h);
+    const table=ETF_LOOKTHROUGH[String(h.symbol||'').toUpperCase()];
+    if(!table){ flat.push({symbol:h.symbol, sector:h.sector||'Other', val:v, isETF:isETF(h)}); return; }
+    let acc=0;
+    table.forEach(c=>{ flat.push({symbol:c.sym, sector:c.sector, val:v*c.w, isETF:false}); acc+=c.w; });
+    const rest=1-acc;
+    if(rest>0.001) flat.push({symbol:h.symbol+'（其餘成分）', sector:'ETF', val:v*rest, isETF:true});
+  });
+  const merged={};
+  flat.forEach(s=>{ if(!merged[s.symbol]) merged[s.symbol]={...s}; else merged[s.symbol].val+=s.val; });
+  return Object.values(merged).filter(s=>s.val>0);
+}
+
+function toggleAllocLookthrough(btn){
+  _allocLookthrough=!_allocLookthrough;
+  btn.classList.toggle('on',_allocLookthrough);
+  btn.textContent='穿透 ETF：'+(_allocLookthrough?'開':'關');
+  renderAllocLens();
+}
 
 // 已知 ETF 清單（後端多半已把 sector 標成 'ETF'，這裡再加一層保險）
 const KNOWN_ETF=new Set(['VOO','VTI','VT','SPY','QQQ','SCHD','VYM','VXUS','VEA','VWO','BND','BNDW','GLDM','IAU','GLD','0050.TW','0056.TW','006208.TW','00878.TW','00631L.TW','00646.TW','00757.TW']);
@@ -1950,6 +2015,8 @@ function renderAllocLens(){
   const combWrap=document.getElementById('allocCombinedWrap');
   const intWrap=document.getElementById('allocInternalWrap');
   document.getElementById('allocCatSub').style.display=(_allocLens==='cat')?'':'none';
+  // 穿透 toggle 只在「按個股 / 按大類」出現（在此統一設，涵蓋 internal 提早 return 的情形）
+  document.getElementById('allocLtWrap').style.display=(_allocLens==='stock'||_allocLens==='cat')?'flex':'none';
 
   // 視圖 4：各市場內部（原幣、雙甜甜圈）＝沿用舊邏輯
   if(_allocLens==='internal'){
@@ -1973,6 +2040,10 @@ function renderAllocLens(){
   // 視圖 1-3：合併（TWD）
   combWrap.style.display=''; intWrap.style.display='none';
   badge.textContent='幣別基準：TWD（合併）';
+  // ltOn 時用拆解後的合成持倉（顯隱已於函式頂端統一處理）
+  const ltOn=_allocLookthrough&&(_allocLens==='stock'||_allocLens==='cat');
+  const wk=ltOn?lookThroughSegments(holdings)
+              :holdings.map(h=>({symbol:h.symbol,sector:h.sector||'Other',val:twdValue(h),isETF:isETF(h)}));
   let segs=[], q='';
   if(_allocLens==='market'){
     let us=0,tw=0;
@@ -1980,14 +2051,15 @@ function renderAllocLens(){
     segs=[{label:'美股',val:us},{label:'台股',val:tw}].filter(s=>s.val>0);
     q='我的美元 / 匯率風險有多集中？';
   } else if(_allocLens==='stock'){
-    segs=holdings.map(h=>({label:h.symbol,val:twdValue(h)})).filter(s=>s.val>0).sort((a,b)=>b.val-a.val);
+    segs=wk.map(s=>({label:s.symbol,val:s.val})).filter(s=>s.val>0).sort((a,b)=>b.val-a.val);
     q='單一標的有沒有押太重？（這是設目標、按買賣的主力視圖）';
   } else { // cat：A 工具型態 / B 官方產業
     const map={};
-    holdings.forEach(h=>{ const key=_allocCatMode==='A'?(isETF(h)?'ETF（分散）':'個股（單壓）'):(isETF(h)?'大盤/指數':sectorZh(h.sector||'Other')); map[key]=(map[key]||0)+twdValue(h); });
+    wk.forEach(s=>{ const key=_allocCatMode==='A'?(s.isETF?'ETF（分散）':'個股（單壓）'):(s.isETF?'大盤/指數':sectorZh(s.sector||'Other')); map[key]=(map[key]||0)+s.val; });
     segs=Object.entries(map).map(([label,val])=>({label,val})).filter(s=>s.val>0).sort((a,b)=>b.val-a.val);
     q=_allocCatMode==='A'?'分散 vs 單壓：多少在一籃子、多少壓在單一公司？':'產業集中：同一種東西是不是重複押了？';
   }
+  if(ltOn) q+=` ｜ 已穿透 ETF（成分 ${ETF_LOOKTHROUGH._asof}，僅前十大，其餘歸「ETF 其餘成分」）`;
   const total=segs.reduce((a,s)=>a+s.val,0)||1;
   segs.forEach(s=>s.pct=s.val/total*100);
   qEl.textContent=q;
@@ -1997,15 +2069,48 @@ function renderAllocLens(){
 async function loadPortfolioPage(holdings, summary) {
   _allocHoldings=holdings; _allocSummary=summary;
   renderAllocLens();
+  loadTopPicks();   // 非同步載入，不擋組合圖
+}
 
-  // Top screener picks
-  const recDiv=document.getElementById('recCards'); recDiv.innerHTML='';
-  const topPicks=DEMO_MODE?[{symbol:'NVDA',name:'NVIDIA Corp',ai_score:92,price:875.50,target_price:1150,signal:'買入'},{symbol:'MSFT',name:'Microsoft Corp',ai_score:88,price:415.80,target_price:480,signal:'買入'},{symbol:'VOO',name:'Vanguard S&P 500',ai_score:90,price:498.20,target_price:560,signal:'買入'},{symbol:'META',name:'Meta Platforms',ai_score:86,price:510.60,target_price:600,signal:'買入'}]:[];
-  (topPicks.length?topPicks:[]).forEach(s=>{
-    const upside=s.target_price?((s.target_price/s.price-1)*100).toFixed(1):null;
-    recDiv.innerHTML+=`<div class="rec-card"><div class="rec-card-header"><div><div class="rec-ticker">${s.symbol}</div><div class="rec-name">${s.name}</div></div><div class="rec-action rec-buy">BUY</div></div><div style="display:flex;justify-content:space-between;align-items:flex-end"><div><div class="rec-price">$${(s.price||0).toFixed(2)}</div><div class="rec-target">${upside?`Target $${s.target_price} +${upside}%`:''}</div></div><div style="text-align:right"><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">AI Score</div><div style="font-size:22px;font-weight:800;color:var(--blue)">${s.ai_score}</div></div></div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-top:10px;margin-bottom:4px">Score</div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:${s.ai_score}%;background:var(--blue)"></div></div><span class="score-val" style="color:var(--blue)">${s.ai_score}</span></div></div>`;
+// ── Top Picks（選股篩選器 AI score ≥ 80 前幾名）───────────────────────
+// 原本正式模式寫死空陣列 → 永遠顯示「Run the screener」（從沒運作過）。
+// 改成實打 /api/stocks/screener?score_min=80（回傳已按分數排序），取前 6 名。
+async function loadTopPicks(){
+  const recDiv=document.getElementById('recCards');
+  if(!recDiv) return;
+  if(DEMO_MODE){
+    renderTopPicks(recDiv, [
+      {symbol:'NVDA',name:'NVIDIA Corp',ai_score:92,price:875.50,target_price:1150,signal:'買入',currency:'USD'},
+      {symbol:'MSFT',name:'Microsoft Corp',ai_score:88,price:415.80,target_price:480,signal:'買入',currency:'USD'},
+      {symbol:'2330.TW',name:'台積電',ai_score:87,price:1050,target_price:1300,signal:'買入',currency:'TWD'},
+      {symbol:'META',name:'Meta Platforms',ai_score:86,price:510.60,target_price:600,signal:'買入',currency:'USD'},
+    ]);
+    return;
+  }
+  recDiv.innerHTML='<div class="loading-spinner"></div>';
+  try{
+    const data=await api('/api/stocks/screener?score_min=80&market=all');
+    renderTopPicks(recDiv, (data.results||[]).slice(0,6));
+  }catch(e){
+    console.error('top picks', e);
+    recDiv.innerHTML='<div class="empty-state"><div class="es-text">選股資料暫時載入失敗（即時來源可能限流），稍後再進來看</div></div>';
+  }
+}
+
+function renderTopPicks(recDiv, picks){
+  recDiv.innerHTML='';
+  if(!picks.length){
+    recDiv.innerHTML='<div class="empty-state"><div class="es-text">目前沒有 AI score ≥ 80 的標的（估值／利率環境偏貴時本來就會較少）</div></div>';
+    return;
+  }
+  const ACT={'買入':['BUY','rec-buy'],'持有':['HOLD','rec-hold'],'觀察':['WATCH','rec-hold']};
+  picks.forEach(s=>{
+    const cur=s.currency||'USD';
+    const upNum=(s.target_price&&s.price)?(s.target_price/s.price-1)*100:null;   // 目標價可能低於現價 → 負值
+    const upStr=upNum!=null?`${upNum>=0?'+':''}${upNum.toFixed(1)}%`:'';
+    const [actLabel,actCls]=ACT[s.signal]||['BUY','rec-buy'];
+    recDiv.innerHTML+=`<div class="rec-card"><div class="rec-card-header"><div><div class="rec-ticker">${s.symbol}</div><div class="rec-name">${s.name||s.symbol}</div></div><div class="rec-action ${actCls}">${actLabel}</div></div><div style="display:flex;justify-content:space-between;align-items:flex-end"><div><div class="rec-price">${formatMoneyDec(s.price||0,cur)}</div><div class="rec-target">${upNum!=null?`Target ${formatMoneyDec(s.target_price,cur)} ${upStr}`:''}</div></div><div style="text-align:right"><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">AI Score</div><div style="font-size:22px;font-weight:800;color:var(--blue)">${s.ai_score}</div></div></div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-top:10px;margin-bottom:4px">Score</div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:${s.ai_score}%;background:var(--blue)"></div></div><span class="score-val" style="color:var(--blue)">${s.ai_score}</span></div></div>`;
   });
-  if(!topPicks.length) recDiv.innerHTML='<div class="empty-state"><div class="es-text">Run the screener to see top picks</div></div>';
 }
 
 // ── RISK PAGE ─────────────────────────────────────────────────
@@ -3737,7 +3842,13 @@ function renderHealth(data) {
 }
 
 // ── 訊號計分板（B）──────────────────────────────────────────────
-let _signalData = null, _sbFilter = 0;   // 0=全部；7/30/90/180 = 滿 N 天
+let _signalData = null, _sbFilter = 0, _sbGroup = true;   // _sbFilter:0=全部/N=滿N天；_sbGroup:預設每檔一列
+// 每檔一列：同一檔只留「最早訊號日」那筆（從第一次入選起算報酬），消除每週快照的重複
+function groupByFirst(list){
+  const m={};
+  list.forEach(s=>{ const k=s.symbol; if(!m[k] || (s.signal_date||'')<(m[k].signal_date||'')) m[k]=s; });
+  return Object.values(m);
+}
 const DEMO_SIGNALS = { summary:{}, signals:[
   {symbol:'NVDA',name:'NVIDIA',signal_date:'2026-04-01',ai_score:92,market:'us',price_at_signal:850,current_price:875.5,return_pct:3.0,benchmark_return_pct:1.5,excess_pct:1.5,days:86},
   {symbol:'JPM',name:'JPMorgan',signal_date:'2026-04-01',ai_score:81,market:'us',price_at_signal:178,current_price:198.4,return_pct:11.5,benchmark_return_pct:1.5,excess_pct:10.0,days:86},
@@ -3746,6 +3857,7 @@ const DEMO_SIGNALS = { summary:{}, signals:[
   {symbol:'UNH',name:'UnitedHealth',signal_date:'2026-05-01',ai_score:80,market:'us',price_at_signal:520,current_price:492.6,return_pct:-5.3,benchmark_return_pct:0.8,excess_pct:-6.1,days:56},
   {symbol:'AVGO',name:'Broadcom',signal_date:'2026-05-20',ai_score:90,market:'us',price_at_signal:1320,current_price:1455,return_pct:10.2,benchmark_return_pct:3.1,excess_pct:7.1,days:37},
   {symbol:'0050.TW',name:'元大台灣50',signal_date:'2026-05-20',ai_score:83,market:'tw',price_at_signal:185,current_price:192,return_pct:3.8,benchmark_return_pct:3.8,excess_pct:0.0,days:37},
+  {symbol:'NVDA',name:'NVIDIA',signal_date:'2026-05-20',ai_score:90,market:'us',price_at_signal:860,current_price:875.5,return_pct:1.8,benchmark_return_pct:3.1,excess_pct:-1.3,days:37},
 ]};
 
 async function loadSignalsPage() {
@@ -3756,15 +3868,19 @@ async function loadSignalsPage() {
   } catch(e){ console.error(e); body.innerHTML='<div class="sb-empty">計分板載入失敗</div>'; }
 }
 function setSbFilter(days, btn){ _sbFilter=days; renderSignals(); }
+function setSbGroup(g){ _sbGroup=g; renderSignals(); }
 
 function renderSignals() {
   const body = document.getElementById('signalsBody');
   const all = (_signalData && _signalData.signals) || [];
   if (!all.length) {
-    body.innerHTML = `<div class="sb-empty">還沒有訊號紀錄。<br><span style="font-size:11px">每週自動記錄篩選器評分 ≥80 的標的；累積一陣子後就能看後續報酬與是否打敗大盤。</span></div>`;
+    body.innerHTML = `<div class="sb-empty">還沒有訊號紀錄。<br><span style="font-size:11px">每週自動記錄篩選器評分 ≥70 的標的；累積一陣子後就能看後續報酬與是否打敗大盤。</span></div>`;
     return;
   }
-  const rows = _sbFilter ? all.filter(s=>(s.days||0) >= _sbFilter) : all;
+  // 預設「每檔一列」：同一檔只留最早訊號日那筆，從第一次入選起算；「全部快照」才逐日列出
+  const base = _sbGroup ? groupByFirst(all) : all;
+  let rows = _sbFilter ? base.filter(s=>(s.days||0) >= _sbFilter) : base.slice();
+  if (_sbGroup) rows.sort((a,b)=>(b.ai_score||0)-(a.ai_score||0));   // 每檔一列時依分數高→低
   const valid = rows.filter(s=>s.excess_pct!=null);
   const n = valid.length;
   const avgRet = n ? valid.reduce((a,s)=>a+s.return_pct,0)/n : null;
@@ -3775,12 +3891,13 @@ function renderSignals() {
   const sgn = v => v==null?'—':((v>=0?'+':'')+(+v).toFixed(1)+'%');
 
   const stats = `<div class="sb-stats">
-    <div class="sb-stat"><div class="sb-sl">追蹤訊號數</div><div class="sb-sv">${rows.length}</div><div class="sb-ss">${_sbFilter?('滿'+_sbFilter+'天'):'全部'}</div></div>
+    <div class="sb-stat"><div class="sb-sl">追蹤${_sbGroup?'檔數':'訊號數'}</div><div class="sb-sv">${rows.length}</div><div class="sb-ss">${_sbFilter?('滿'+_sbFilter+'天'):(_sbGroup?'每檔一列':'全部快照')}</div></div>
     <div class="sb-stat"><div class="sb-sl">平均報酬</div><div class="sb-sv ${pn(avgRet)}">${sgn(avgRet)}</div><div class="sb-ss">訊號後至今</div></div>
     <div class="sb-stat"><div class="sb-sl">平均超額報酬</div><div class="sb-sv ${pn(avgEx)}">${sgn(avgEx)}</div><div class="sb-ss">扣同期大盤後</div></div>
     <div class="sb-stat"><div class="sb-sl">打敗大盤比例</div><div class="sb-sv">${beatRate==null?'—':beatRate+'%'}</div><div class="sb-ss">${n?beat+' / '+n+' 筆贏大盤':'尚無'}</div></div>
   </div>`;
-  const seg = `<div class="sb-seg">${[['全部',0],['滿1週',7],['滿1月',30],['滿3月',90],['滿6月',180]].map(([l,d])=>`<button class="${_sbFilter===d?'on':''}" onclick="setSbFilter(${d},this)">${l}</button>`).join('')}</div>`;
+  const grpSeg = `<div class="sb-seg"><button class="${_sbGroup?'on':''}" onclick="setSbGroup(true)">每檔一列</button><button class="${!_sbGroup?'on':''}" onclick="setSbGroup(false)">全部快照</button></div>`;
+  const perSeg = `<div class="sb-seg">${[['全部',0],['滿1週',7],['滿1月',30],['滿3月',90],['滿6月',180]].map(([l,d])=>`<button class="${_sbFilter===d?'on':''}" onclick="setSbFilter(${d},this)">${l}</button>`).join('')}</div>`;
   const trs = rows.map(s=>`<tr>
     <td class="sb-mut">${(s.signal_date||'').slice(5)}</td>
     <td><span class="sb-sym">${s.symbol}</span></td>
@@ -3792,9 +3909,10 @@ function renderSignals() {
     <td class="${pn(s.excess_pct)}">${sgn(s.excess_pct)}</td>
     <td class="sb-mut">${s.days??'—'}</td></tr>`).join('');
 
-  body.innerHTML = stats + seg +
-    `<div class="sb-twrap"><table class="sb-tbl"><thead><tr><th>訊號日</th><th>股票</th><th>分數</th><th>訊號價</th><th>現價</th><th>報酬</th><th>大盤同期</th><th>超額</th><th>天數</th></tr></thead><tbody>${trs}</tbody></table></div>` +
-    `<div class="sb-foot"><b>每週自動記錄</b>評分 ≥80 的標的（訊號日 + 當下價 + 同期大盤價）。<b>報酬</b> = 現價 ÷ 訊號價 − 1；<b>超額</b> = 報酬 − 同期大盤（美股比 VOO、台股比 0050）。<br><b>只呈現證據、不自動調權重</b>——累積夠多再判斷要不要調評分。樣本少時別過度解讀。</div>`;
+  body.innerHTML = stats +
+    `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:6px">${grpSeg}${perSeg}</div>` +
+    `<div class="sb-twrap"><table class="sb-tbl"><thead><tr><th>${_sbGroup?'首次訊號':'訊號日'}</th><th>股票</th><th>分數</th><th>訊號價</th><th>現價</th><th>報酬</th><th>大盤同期</th><th>超額</th><th>天數</th></tr></thead><tbody>${trs}</tbody></table></div>` +
+    `<div class="sb-foot"><b>${_sbGroup?'每檔顯示第一次入選那天起算的表現（同一檔只一列）':'每次快照各記一筆（同一檔會有多個進場日）'}</b>。每週自動記錄評分 ≥70 的標的（訊號日 + 當下價 + 同期大盤價）。<b>報酬</b> = 現價 ÷ 訊號價 − 1；<b>超額</b> = 報酬 − 同期大盤（美股比 VOO、台股比 0050）。<br><b>只呈現證據、不自動調權重</b>——樣本少時別過度解讀。</div>`;
 }
 
 async function loadTransactionsPage() {
