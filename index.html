@@ -1138,19 +1138,47 @@ tr:hover td{background:var(--bg)}
 
   </div>
 
+  <style>
+    /* 組合配置多視圖切換（Part 1） */
+    .alloc-lens-seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px}
+    .alloc-lens-seg button{padding:7px 13px;font-size:12px;border:none;border-right:1px solid var(--border);background:#fff;color:var(--mid);cursor:pointer;font-family:inherit}
+    .alloc-lens-seg button:last-child{border-right:none}
+    .alloc-lens-seg button.on{background:var(--dark);color:#fff;font-weight:700}
+    .alloc-catsub{margin:0 0 12px}
+    .alloc-catsub-label{font-size:11px;color:var(--mid);margin-right:6px}
+    .alloc-catsub button{padding:5px 11px;font-size:11px;border:1px solid var(--border);background:#fff;color:var(--mid);cursor:pointer;border-radius:6px;margin-right:6px;font-family:inherit}
+    .alloc-catsub button.on{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:700}
+    .alloc-lens-q{font-size:11px;color:var(--mid);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+  </style>
+
   <!-- PAGE: 組合 -->
   <div class="page" id="page-portfolio">
     <div class="grid-7030 mb-20">
       <div>
         <div class="card mb-16">
-          <div class="card-header"><div class="card-title">Portfolio Allocation</div><div class="card-sub">By market value</div></div>
+          <div class="card-header"><div class="card-title">組合配置</div><div class="card-sub" id="allocCurBadge">幣別基準：TWD（合併）</div></div>
           <div class="card-body">
-            <div style="font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">美股 USD</div>
-            <div class="chart-wrap"><canvas id="allocChart"></canvas></div>
-            <div id="alloc-tw-block" style="display:none">
-              <div style="font-size:10px;font-weight:700;color:#DC2626;text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:16px">台股 TWD</div>
-              <div class="chart-wrap"><canvas id="allocChartTW"></canvas></div>
+            <div class="alloc-lens-seg" id="allocLensSeg">
+              <button class="on" onclick="setAllocLens('market',this)">按市場</button>
+              <button onclick="setAllocLens('stock',this)">按個股</button>
+              <button onclick="setAllocLens('cat',this)">按大類</button>
+              <button onclick="setAllocLens('internal',this)">各市場內部</button>
             </div>
+            <div class="alloc-catsub" id="allocCatSub" style="display:none">
+              <span class="alloc-catsub-label">分類：</span>
+              <button class="on" onclick="setAllocCat('A',this)">工具型態（ETF/個股）</button>
+              <button onclick="setAllocCat('B',this)">官方產業（大盤/科技/金融…）</button>
+            </div>
+            <div id="allocCombinedWrap"><div class="chart-wrap"><canvas id="allocCombinedChart"></canvas></div></div>
+            <div id="allocInternalWrap" style="display:none">
+              <div style="font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">美股 USD</div>
+              <div class="chart-wrap"><canvas id="allocChart"></canvas></div>
+              <div id="alloc-tw-block" style="display:none">
+                <div style="font-size:10px;font-weight:700;color:#DC2626;text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:16px">台股 TWD</div>
+                <div class="chart-wrap"><canvas id="allocChartTW"></canvas></div>
+              </div>
+            </div>
+            <div class="alloc-lens-q" id="allocLensQ"></div>
           </div>
         </div>
         <div class="card">
@@ -1422,13 +1450,18 @@ tr:hover td{background:var(--bg)}
       .rebal-mkt-section-hd{font-size:16px;font-weight:800;margin:4px 0 14px;color:var(--text)}
       .rebal-cur{font-size:11px;font-weight:500;color:var(--mid);border:1px solid var(--border);border-radius:4px;padding:1px 8px;margin-left:8px}
     </style>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+    <!-- 合併個股目標（永遠列全部持股、TWD 基準，不受市場切換影響）-->
+    <div id="rebalCombined">
+      <div style="text-align:center;padding:24px;color:var(--mid)">載入中...</div>
+    </div>
+    <!-- 市場切換：只影響下方「估值燈號 / 股息再投資」 -->
+    <div style="display:flex;align-items:center;gap:10px;margin:24px 0 20px">
       <div style="display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden">
         <button class="rebal-mkt-btn" data-m="all" onclick="setRebalMarket('all')">全部</button>
         <button class="rebal-mkt-btn active" data-m="us" onclick="setRebalMarket('us')">美股</button>
         <button class="rebal-mkt-btn" data-m="tw" onclick="setRebalMarket('tw')">台股</button>
       </div>
-      <span style="font-size:11px;color:var(--mid)">各市場以自身幣別與估值基準獨立計算</span>
+      <span style="font-size:11px;color:var(--mid)">切換只影響下方「估值燈號 / 股息再投資」（各市場以自身幣別基準）</span>
     </div>
     <div id="rebalContent">
       <div style="text-align:center;padding:24px;color:var(--mid)">載入中...</div>
@@ -1447,6 +1480,13 @@ let DEMO_MODE = false;
 
 // ── INIT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // ?demo：免登入預覽（走 DEMO_HOLDINGS 假資料、不打後端），方便本機 open 檔案看畫面
+  if (new URLSearchParams(location.search).has('demo')) {
+    DEMO_MODE = true;
+    document.getElementById('loginScreen').style.display = 'none';
+    initApp();
+    return;
+  }
   if (!API_KEY) {
     document.getElementById('loginScreen').style.display = 'flex';
   } else {
@@ -1596,6 +1636,8 @@ const DEMO_HOLDINGS = [
   {symbol:'MSFT',name:'Microsoft Corp',sector:'Technology',shares:20,avg_cost:370,current_price:415.80,change_pct:0.8,market_value:8316,unrealized_pnl:916,unrealized_pnl_pct:12.4,pe_ratio:35.1,forward_pe:30,earnings_growth:14,beta:0.92},
   {symbol:'VOO',name:'Vanguard S&P 500',sector:'ETF',shares:30,avg_cost:430,current_price:498.20,change_pct:0.6,market_value:14946,unrealized_pnl:2046,unrealized_pnl_pct:15.9,pe_ratio:23.4,forward_pe:21,earnings_growth:null,beta:1.00},
   {symbol:'JPM',name:'JPMorgan Chase',sector:'Financials',shares:25,avg_cost:178,current_price:198.40,change_pct:1.1,market_value:4960,unrealized_pnl:510,unrealized_pnl_pct:11.5,pe_ratio:12.1,forward_pe:11,earnings_growth:6,beta:1.18},
+  {symbol:'0050.TW',name:'元大台灣50',currency:'TWD',sector:'ETF',shares:1200,avg_cost:170,current_price:185,change_pct:0.5,market_value:222000,unrealized_pnl:18000,unrealized_pnl_pct:8.8,pe_ratio:null,forward_pe:null,earnings_growth:null,beta:1.00},
+  {symbol:'2330.TW',name:'台積電',currency:'TWD',sector:'Technology',shares:120,avg_cost:950,current_price:1050,change_pct:1.2,market_value:126000,unrealized_pnl:12000,unrealized_pnl_pct:10.5,pe_ratio:28,forward_pe:22,earnings_growth:25,beta:1.05},
 ];
 const DEMO_SUMMARY = {total_market_value:84327,total_cost:77485,total_unrealized_pnl:6842,total_unrealized_pnl_pct:8.8,day_change:412,day_change_pct:0.49,holdings_count:5,sector_allocation:{Technology:34.5,ETF:28.6,Financials:18.2,Healthcare:12.4,Other:6.3}};
 const DEMO_RISK = {
@@ -1857,27 +1899,104 @@ function renderAllocGroup(canvasId, listId, holdings, total, prevChart) {
   return chart;
 }
 
-async function loadPortfolioPage(holdings, summary) {
-  const usH=holdings.filter(h=>(h.currency||'USD')==='USD');
-  const twH=holdings.filter(h=>(h.currency||'USD')==='TWD');
+// ── 組合配置：多視圖切換（Part 1）─────────────────────────────
+// 4 視圖共用同一份持倉：按市場 / 按個股 / 按大類(A工具型態·B官方產業) / 各市場內部(原幣)
+// 前三個是「合併視圖」，一律換算成 TWD 再算比例；第四個沿用舊的雙甜甜圈（原幣、對得上券商帳戶）。
+let _allocHoldings=[], _allocSummary={}, _allocLens='market', _allocCatMode='A', allocCombinedChart;
 
-  // 美股配置：分母用美股總市值，避免跟台股原始數字混算造成佔比錯誤
-  const usTotal=(summary.us&&summary.us.total_market_value)||summary.total_market_value||usH.reduce((a,h)=>a+(h.market_value||0),0)||1;
-  allocChart=renderAllocGroup('allocChart','allocList',usH,usTotal,allocChart);
+// 已知 ETF 清單（後端多半已把 sector 標成 'ETF'，這裡再加一層保險）
+const KNOWN_ETF=new Set(['VOO','VTI','VT','SPY','QQQ','SCHD','VYM','VXUS','VEA','VWO','BND','BNDW','GLDM','IAU','GLD','0050.TW','0056.TW','006208.TW','00878.TW','00631L.TW','00646.TW','00757.TW']);
+function isETF(h){ return (h.sector||'')==='ETF' || KNOWN_ETF.has(String(h.symbol||'').toUpperCase()); }
 
-  // 台股配置（有台股持倉時才顯示），分母用台股總市值
-  const twBlock=document.getElementById('alloc-tw-block');
-  const twList=document.getElementById('allocListTW');
-  if(twH.length){
-    twBlock.style.display='';
-    twList.style.display='';
-    const twTotal=(summary.tw&&summary.tw.total_market_value)||twH.reduce((a,h)=>a+(h.market_value||0),0)||1;
-    allocChartTW=renderAllocGroup('allocChartTW','allocListTW',twH,twTotal,allocChartTW);
-  } else {
-    twBlock.style.display='none';
-    twList.style.display='none';
-    if(allocChartTW){allocChartTW.destroy();allocChartTW=null;}
+// GICS 產業英→中（官方分類；ETF 另歸「大盤/指數」桶）
+const SECTOR_ZH={Technology:'科技','Financial Services':'金融',Financials:'金融',Healthcare:'醫療','Consumer Cyclical':'非必需消費','Consumer Defensive':'必需消費','Communication Services':'通訊',Industrials:'工業',Energy:'能源','Basic Materials':'原物料',Utilities:'公用','Real Estate':'房地產',ETF:'大盤/指數',Other:'其他'};
+function sectorZh(s){ return SECTOR_ZH[s]||s||'其他'; }
+
+// 單一持倉換算成台幣市值（USD→×匯率；TWD 原值）。匯率抓不到用 32 保底（實機由後端 usdtwd 提供）
+function twdValue(h){
+  const fx=window._usdtwd||32;
+  const cur=h.currency||(String(h.symbol||'').includes('.TW')?'TWD':'USD');
+  return cur==='TWD'?(h.market_value||0):(h.market_value||0)*fx;
+}
+
+// 切視圖 / 切大類分法（inline onclick 綁定，沿用本專案風格）
+function setAllocLens(lens,btn){
+  _allocLens=lens;
+  document.querySelectorAll('#allocLensSeg button').forEach(b=>b.classList.toggle('on',b===btn));
+  renderAllocLens();
+}
+function setAllocCat(mode,btn){
+  _allocCatMode=mode;
+  document.querySelectorAll('#allocCatSub button').forEach(b=>b.classList.toggle('on',b===btn));
+  renderAllocLens();
+}
+
+// 合併視圖：segments → 一個甜甜圈 + 右側 Position Breakdown 列表
+function renderCombinedDonut(segs){
+  const ctx=document.getElementById('allocCombinedChart').getContext('2d');
+  if(allocCombinedChart) allocCombinedChart.destroy();
+  const labels=segs.map(s=>`${s.label} ${s.pct.toFixed(0)}%`);
+  allocCombinedChart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:segs.map(s=>s.pct),backgroundColor:ALLOC_COLORS,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:8,color:'#6B7280'}}}}});
+  const list=document.getElementById('allocList'); list.innerHTML='';
+  document.getElementById('allocListTW').style.display='none';
+  const max=Math.max(...segs.map(s=>s.pct),1);
+  segs.forEach((s,i)=>{ list.innerHTML+=`<div class="alloc-item"><div class="alloc-dot" style="background:${ALLOC_COLORS[i%ALLOC_COLORS.length]}"></div><div><div class="alloc-name">${s.label}</div><div class="alloc-sub"></div></div><div class="alloc-bar-wrap"><div class="alloc-bar"><div class="alloc-bar-fill" style="width:${Math.min(s.pct/max*100,100)}%;background:${ALLOC_COLORS[i%ALLOC_COLORS.length]}"></div></div></div><div class="alloc-pct">${s.pct.toFixed(1)}%</div></div>`; });
+}
+
+function renderAllocLens(){
+  const holdings=_allocHoldings, summary=_allocSummary;
+  const badge=document.getElementById('allocCurBadge');
+  const qEl=document.getElementById('allocLensQ');
+  const combWrap=document.getElementById('allocCombinedWrap');
+  const intWrap=document.getElementById('allocInternalWrap');
+  document.getElementById('allocCatSub').style.display=(_allocLens==='cat')?'':'none';
+
+  // 視圖 4：各市場內部（原幣、雙甜甜圈）＝沿用舊邏輯
+  if(_allocLens==='internal'){
+    combWrap.style.display='none'; intWrap.style.display='';
+    badge.textContent='幣別基準：原幣（美股 $、台股 NT$）';
+    qEl.textContent='各自券商帳戶內，每個市場內部怎麼分？（對得上下單）';
+    const usH=holdings.filter(h=>(h.currency||'USD')==='USD');
+    const twH=holdings.filter(h=>(h.currency||'USD')==='TWD');
+    const usTotal=(summary.us&&summary.us.total_market_value)||summary.total_market_value||usH.reduce((a,h)=>a+(h.market_value||0),0)||1;
+    allocChart=renderAllocGroup('allocChart','allocList',usH,usTotal,allocChart);
+    const twBlock=document.getElementById('alloc-tw-block');
+    const twList=document.getElementById('allocListTW');
+    if(twH.length){
+      twBlock.style.display=''; twList.style.display='';
+      const twTotal=(summary.tw&&summary.tw.total_market_value)||twH.reduce((a,h)=>a+(h.market_value||0),0)||1;
+      allocChartTW=renderAllocGroup('allocChartTW','allocListTW',twH,twTotal,allocChartTW);
+    } else { twBlock.style.display='none'; twList.style.display='none'; if(allocChartTW){allocChartTW.destroy();allocChartTW=null;} }
+    return;
   }
+
+  // 視圖 1-3：合併（TWD）
+  combWrap.style.display=''; intWrap.style.display='none';
+  badge.textContent='幣別基準：TWD（合併）';
+  let segs=[], q='';
+  if(_allocLens==='market'){
+    let us=0,tw=0;
+    holdings.forEach(h=>{ const cur=h.currency||(String(h.symbol||'').includes('.TW')?'TWD':'USD'); if(cur==='TWD') tw+=twdValue(h); else us+=twdValue(h); });
+    segs=[{label:'美股',val:us},{label:'台股',val:tw}].filter(s=>s.val>0);
+    q='我的美元 / 匯率風險有多集中？';
+  } else if(_allocLens==='stock'){
+    segs=holdings.map(h=>({label:h.symbol,val:twdValue(h)})).filter(s=>s.val>0).sort((a,b)=>b.val-a.val);
+    q='單一標的有沒有押太重？（這是設目標、按買賣的主力視圖）';
+  } else { // cat：A 工具型態 / B 官方產業
+    const map={};
+    holdings.forEach(h=>{ const key=_allocCatMode==='A'?(isETF(h)?'ETF（分散）':'個股（單壓）'):(isETF(h)?'大盤/指數':sectorZh(h.sector||'Other')); map[key]=(map[key]||0)+twdValue(h); });
+    segs=Object.entries(map).map(([label,val])=>({label,val})).filter(s=>s.val>0).sort((a,b)=>b.val-a.val);
+    q=_allocCatMode==='A'?'分散 vs 單壓：多少在一籃子、多少壓在單一公司？':'產業集中：同一種東西是不是重複押了？';
+  }
+  const total=segs.reduce((a,s)=>a+s.val,0)||1;
+  segs.forEach(s=>s.pct=s.val/total*100);
+  qEl.textContent=q;
+  renderCombinedDonut(segs);
+}
+
+async function loadPortfolioPage(holdings, summary) {
+  _allocHoldings=holdings; _allocSummary=summary;
+  renderAllocLens();
 
   // Top screener picks
   const recDiv=document.getElementById('recCards'); recDiv.innerHTML='';
@@ -2486,7 +2605,9 @@ function filterDivByMarket(divData, market) {
 function setRebalMarket(m) {
   _rebalMarket = m;
   document.querySelectorAll('.rebal-mkt-btn').forEach(b => b.classList.toggle('active', b.dataset.m === m));
-  loadRebalancePage();
+  // 只影響下方估值/股息；用快取重繪，不重打 API、也不動上方合併個股卡
+  if (_rebalHoldings.length) renderRebalMarkets();
+  else loadRebalancePage();
 }
 
 // 單一市場區塊的 HTML 骨架（全部模式時加市場標題；元素 id 帶 _市場 後綴）
@@ -2498,24 +2619,6 @@ function rebalMarketBlockHtml(m) {
     <div class="card-header"><div><div class="card-title">估值燈號</div><div class="card-sub">水位 × 利率 × 成長 三維綜合（${MKT_NAME[m]}）</div></div></div>
     <div class="card-body" id="rebalValuation_${m}"><div style="text-align:center;padding:24px;color:var(--mid)">載入中...</div></div>
   </div>
-  <div class="grid-2 mb-20">
-    <div class="card">
-      <div class="card-header">
-        <div><div class="card-title">目標配置設定</div><div class="card-sub">輸入各板塊目標佔比（%），系統計算偏差</div></div>
-        <button class="btn btn-primary" style="height:30px;font-size:11px" onclick="saveTargetAllocation('${m}')">儲存設定</button>
-      </div>
-      <div class="card-body" style="padding:0">
-        <table class="rebal-table">
-          <thead><tr><th>板塊</th><th>現況 %</th><th>目標 %</th><th>偏差</th><th>操作方向</th></tr></thead>
-          <tbody id="rebalAllocBody_${m}"></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">再平衡建議</div><div class="card-sub">依配置偏差 + 估值產生操作方向</div></div>
-      <div class="card-body" id="rebalAdvice_${m}"></div>
-    </div>
-  </div>
   <div class="card${showHd ? ' mb-20' : ''}">
     <div class="card-header"><div class="card-title">股息再投資建議</div><div class="card-sub">將本月預估股息投入至低配板塊，加速複利</div></div>
     <div class="card-body" id="rebalDividendReinvest_${m}"></div>
@@ -2524,33 +2627,184 @@ function rebalMarketBlockHtml(m) {
 
 async function loadRebalancePage() {
   try {
-    const [holdings, divData, tnxRes] = DEMO_MODE
-      ? [DEMO_HOLDINGS, {total_annual_dividend:162, holdings:[]}, {value:4.30}]
+    const [holdings, divData, tnxRes, summary] = DEMO_MODE
+      ? [DEMO_HOLDINGS, {total_annual_dividend:162, holdings:[]}, {value:4.30}, {usdtwd:31.5}]
       : await Promise.all([
           api('/api/portfolio'),
           api('/api/portfolio/dividends').catch(()=>({total_annual_dividend:0, holdings:[]})),
           api('/api/stocks/treasury10y').catch(()=>({value:null})),
+          api('/api/portfolio/summary').catch(()=>null),
         ]);
-    const tnx = (tnxRes && tnxRes.value != null) ? tnxRes.value : null;
+    // 合併 TWD 換算要用匯率；直接進再平衡頁（沒先開總覽）也拿得到
+    if (summary && summary.usdtwd) window._usdtwd = summary.usdtwd;
+    _rebalHoldings = holdings;
+    _rebalDiv = divData;
+    _rebalTnx = (tnxRes && tnxRes.value != null) ? tnxRes.value : null;
 
-    const markets = _rebalMarket === 'all' ? ['us','tw'] : [_rebalMarket];
-    const container = document.getElementById('rebalContent');
-    container.innerHTML = markets.map(rebalMarketBlockHtml).join('');
-
-    markets.forEach(m => {
-      const h     = holdings.filter(x => marketOf(x) === m);
-      const alloc = sectorAllocFromHoldings(h);
-      const div   = filterDivByMarket(divData, m);
-      renderValuationAlerts(m, h, tnx);
-      renderTargetAllocationTable(m, alloc);
-      renderRebalanceAdvice(m, alloc, h);
-      renderDividendReinvest(m, div, alloc, h);
-      pushTargetToBackend(m);   // 把既有 localStorage 目標同步到後端（給晨報用，自動遷移）
-    });
+    // 上方：跨市場「按個股」合併目標卡（單一目標來源，不受市場 tab 影響）
+    document.getElementById('rebalCombined').innerHTML = `<div id="perStockRebal"></div>`;
+    renderPerStockRebalance(holdings);
+    // 下方：各市場估值燈號 + 股息再投資（受市場 tab 控制）
+    renderRebalMarkets();
   } catch(e) {
     console.error('rebalance error', e);
     showToast(e.message || '再平衡資料載入失敗', 'error');
   }
+}
+
+// 只重繪下方「估值燈號 / 股息再投資」（受市場 tab 控制），用快取資料、不重打 API
+function renderRebalMarkets() {
+  const markets = _rebalMarket === 'all' ? ['us','tw'] : [_rebalMarket];
+  document.getElementById('rebalContent').innerHTML = markets.map(rebalMarketBlockHtml).join('');
+  markets.forEach(m => {
+    const h     = _rebalHoldings.filter(x => marketOf(x) === m);
+    const alloc = sectorAllocFromHoldings(h);   // 股息再投資用板塊配置當參考
+    const div   = filterDivByMarket(_rebalDiv, m);
+    renderValuationAlerts(m, h, _rebalTnx);
+    renderDividendReinvest(m, div, alloc, h);
+  });
+}
+
+// ── Part 2A：按個股・跨市場 目標配置（單一目標來源）──────────────────
+// 個股目標存新 key 'targetAllocSymbols'（跨市場 combined）。存檔時「反推」出各市場板塊目標，
+// 同步進 targetAlloc_us/tw（股息再投資頁用）＋後端 app_settings（晨報再平衡偏移警示用）。
+let _rebalHoldings = [], _rebalCatMode = 'A', _rebalDiv = null, _rebalTnx = null;
+function getSymbolTargets(){ try { return JSON.parse(localStorage.getItem('targetAllocSymbols')||'{}'); } catch(e){ return {}; } }
+
+// 由個股目標反推「各市場板塊目標」（市場內正規化成 100%）→ 本機 localStorage + 後端。
+// 讓晨報 _rebalance_drift（比對 target_alloc_us/tw 板塊 vs 現況板塊）續用；個股才是真正來源。
+function pushDerivedSectorTargets(holdings, symTargets){
+  ['us','tw'].forEach(m=>{
+    const hs = holdings.filter(h=>marketOf(h)===m);
+    const secSum = {}; let mTotal = 0;
+    hs.forEach(h=>{ const t=symTargets[h.symbol]; if(t==null) return; const s=h.sector||'Other'; secSum[s]=(secSum[s]||0)+t; mTotal+=t; });
+    if(mTotal<=0) return;   // 該市場沒設任何目標就不動它的板塊設定
+    const alloc = {};
+    Object.entries(secSum).forEach(([s,v])=> alloc[s]=Math.round(v/mTotal*1000)/10);
+    localStorage.setItem('targetAlloc_'+m, JSON.stringify(alloc));
+    if(!DEMO_MODE){ api('/api/settings/target-allocation','PUT',{market:m,allocation:alloc}).catch(()=>{}); }
+  });
+}
+
+// 讀畫面上目前的輸入值（切 A/B、重繪時用，避免把還沒按儲存的輸入清掉）。畫面上沒有輸入框時回 null。
+function currentInputTargets(){
+  const inps = document.querySelectorAll('.sym-target-input');
+  if(!inps.length) return null;
+  const t = {};
+  inps.forEach(inp=>{ if(inp.value!=='') t[inp.dataset.sym]=parseFloat(inp.value); });
+  return t;
+}
+function saveSymbolTargets(){
+  const t = currentInputTargets() || {};
+  localStorage.setItem('targetAllocSymbols', JSON.stringify(t));
+  pushDerivedSectorTargets(_rebalHoldings, t);   // 反推板塊目標→本機+後端（晨報偏移續用）
+  showToast('個股目標已儲存');
+  renderPerStockRebalance(_rebalHoldings);
+  renderRebalMarkets();   // 下方股息再投資會用到反推後的板塊目標，一併刷新
+}
+function setRebalCat(mode, btn){
+  _rebalCatMode = mode;
+  document.querySelectorAll('#psCatSeg button').forEach(b=>b.classList.toggle('on', b===btn));
+  renderPerStockRebalance(_rebalHoldings);
+}
+
+function renderPerStockRebalance(holdings){
+  const el = document.getElementById('perStockRebal');
+  if(!el) return;
+  const fx = window._usdtwd || 32;
+  // 重繪時優先沿用畫面上現有輸入值（切 A/B 不會清掉未儲存的目標）；首次載入才讀 localStorage
+  const saved = currentInputTargets() || getSymbolTargets();
+  const totalTWD = holdings.reduce((a,h)=>a+twdValue(h),0) || 1;
+
+  // 逐檔：現況%（合併 TWD）/ 目標% / 差 / 原幣建議金額
+  const rows = holdings.map(h=>{
+    const sym = h.symbol;
+    const cur = h.currency || (String(sym).includes('.TW')?'TWD':'USD');
+    const mkt = cur==='TWD'?'tw':'us';
+    const curTWD = twdValue(h);
+    const curPct = curTWD/totalTWD*100;
+    const tgt = saved[sym];
+    let devHtml='—', actHtml='<span style="color:var(--mid)">—</span>';
+    if(tgt!=null){
+      const dev = curPct - tgt;                        // + 超配 / − 低配
+      const c = Math.abs(dev)>10 ? (dev>0?'var(--red)':'var(--blue)') : 'var(--mid)';
+      devHtml = `<strong style="color:${c}">${dev>0?'+':''}${dev.toFixed(1)}%</strong>`;
+      const deltaNative = (tgt/100*totalTWD - curTWD) / (mkt==='tw'?1:fx);  // + 要買進
+      if(Math.abs(dev)>=3){
+        actHtml = deltaNative>0
+          ? `<span class="tag tag-blue" style="font-size:10px">加碼 ~ ${mktMoney(mkt, Math.abs(deltaNative), 0)}</span>`
+          : `<span class="tag tag-red" style="font-size:10px">減碼 ~ ${mktMoney(mkt, Math.abs(deltaNative), 0)}</span>`;
+      } else actHtml = `<span style="color:var(--mid);font-size:11px">均衡</span>`;
+    }
+    return `<tr>
+      <td><strong>${sym}</strong><div style="font-size:10px;color:var(--mid)">${h.name||''}</div></td>
+      <td>${curPct.toFixed(1)}%</td>
+      <td><input class="sym-target-input" data-sym="${sym}" type="number" placeholder="%" min="0" max="100" step="1" value="${tgt??''}" style="width:56px"></td>
+      <td>${devHtml}</td>
+      <td>${actHtml}</td>
+    </tr>`;
+  }).join('');
+
+  // 由個股目標自動換算（唯讀）：市場 + 大類
+  let usT=0, twT=0, tgtSum=0;
+  holdings.forEach(h=>{ const t=saved[h.symbol]; if(t==null) return; tgtSum+=t; const cur=h.currency||(String(h.symbol).includes('.TW')?'TWD':'USD'); if(cur==='TWD') twT+=t; else usT+=t; });
+  const catMap={};
+  holdings.forEach(h=>{ const t=saved[h.symbol]; if(t==null) return; const key=_rebalCatMode==='A'?(isETF(h)?'ETF':'個股'):(isETF(h)?'大盤/指數':sectorZh(h.sector||'Other')); catMap[key]=(catMap[key]||0)+t; });
+  const catStr = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k} ${v.toFixed(0)}%`).join(' ｜ ') || '（尚未設定目標）';
+  const mktStr = tgtSum>0 ? `美股 ${usT.toFixed(0)}% ｜ 台股 ${twT.toFixed(0)}%` : '（尚未設定目標）';
+  const sumNote = (tgtSum>0 && Math.abs(tgtSum-100)>1)
+    ? `<span style="color:var(--amber,#D97706)">目標加總 ${tgtSum.toFixed(0)}%（非 100%），建議金額為近似值</span>`
+    : `目標加總 ${tgtSum.toFixed(0)}%`;
+
+  // 建議清單：偏離 ≥3% 者，依偏離大小排序
+  const advice = holdings.map(h=>{
+    const t=saved[h.symbol]; if(t==null) return null;
+    const cur=h.currency||(String(h.symbol).includes('.TW')?'TWD':'USD'); const mkt=cur==='TWD'?'tw':'us';
+    const curTWD=twdValue(h); const dev=curTWD/totalTWD*100 - t;
+    if(Math.abs(dev)<3) return null;
+    const deltaNative=(t/100*totalTWD - curTWD)/(mkt==='tw'?1:fx);
+    return {sym:h.symbol, dev, buy:deltaNative>0, amt:mktMoney(mkt, Math.abs(deltaNative),0)};
+  }).filter(Boolean).sort((a,b)=>Math.abs(b.dev)-Math.abs(a.dev));
+  const adviceHtml = advice.length ? advice.map(a=>`
+    <div style="margin-bottom:8px;padding:9px 12px;background:${a.buy?'#EFF6FF':'#FEF2F2'};border-radius:6px;border-left:3px solid ${a.buy?'var(--blue)':'var(--red)'}">
+      <span style="font-size:12px;color:var(--dark)"><strong>${a.sym}</strong> ${a.buy?'低配':'超配'} ${a.dev>0?'+':''}${a.dev.toFixed(1)}% → ${a.buy?'加碼':'減碼'} ~ ${a.amt}</span>
+    </div>`).join('')
+    : `<div style="padding:12px;background:#F0FDF4;border-radius:6px;border-left:3px solid var(--green);font-size:12px;color:var(--dark)">${tgtSum>0?'各標的都在目標附近（偏離 <3%），續按計畫投入即可。':'請在上表填入各標的目標 %，再按「儲存目標」。'}</div>`;
+
+  el.innerHTML = `
+  <div class="card mb-20">
+    <div class="card-header">
+      <div><div class="card-title">目標配置（按個股・跨市場合併）</div><div class="card-sub">單一目標來源；市場 / 大類由此自動換算。基準 TWD，建議金額用原幣</div></div>
+      <button class="btn btn-primary" style="height:30px;font-size:11px" onclick="saveSymbolTargets()">儲存目標</button>
+    </div>
+    <div class="card-body" style="padding:0">
+      <table class="rebal-table">
+        <thead><tr><th>標的</th><th>現況 %</th><th>目標 %</th><th>差</th><th>建議動作（原幣）</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="grid-2 mb-20">
+    <div class="card">
+      <div class="card-header"><div><div class="card-title">自動換算（唯讀）</div><div class="card-sub">由上方個股目標算出，不可編輯，避免多處目標打架</div></div></div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--dark);margin-bottom:12px"><strong>市場目標：</strong>${mktStr}</div>
+        <div class="alloc-catsub" style="margin-bottom:8px">
+          <span class="alloc-catsub-label">大類分法：</span>
+          <span id="psCatSeg">
+            <button class="${_rebalCatMode==='A'?'on':''}" onclick="setRebalCat('A',this)">工具型態</button>
+            <button class="${_rebalCatMode==='B'?'on':''}" onclick="setRebalCat('B',this)">官方產業</button>
+          </span>
+        </div>
+        <div style="font-size:12px;color:var(--dark)"><strong>大類目標：</strong>${catStr}</div>
+        <div style="font-size:11px;color:var(--mid);margin-top:12px;border-top:1px solid var(--border);padding-top:10px">${sumNote}</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">再平衡建議</div><div class="card-sub">偏離目標 ≥3% 的標的，以原幣別給加減碼</div></div>
+      <div class="card-body">${adviceHtml}</div>
+    </div>
+  </div>`;
 }
 
 function renderValuationAlerts(market, holdings, tnx) {
@@ -2580,87 +2834,6 @@ function renderValuationAlerts(market, holdings, tnx) {
   const foot = `<div class="vc-foot"><b>股債利差</b> = 盈餘殖利率（1÷forward P/E）− 10年美債殖利率；為正越大＝盈餘回報越勝過無風險債券（相對便宜），轉負＝相對貴。<b>PEG</b> = P/E ÷ 盈餘成長率，~1 合理、&lt;1 便宜、&gt;2 偏貴。${market==='tw'?'<br>* 台股利率以美債 10yr 當全球代理，非台灣公債殖利率，僅供相對參考。':''}<br>資料來源 yfinance，個別標的可能缺值；trailing 被扭曲時自動改用 forward。</div>`;
 
   el.innerHTML = anchor + legend + rows + foot;
-}
-
-function renderTargetAllocationTable(market, sectorAlloc) {
-  const el = document.getElementById('rebalAllocBody_' + market);
-  if (!el) return;
-  const saved = getSavedAlloc(market);
-  const entries = Object.entries(sectorAlloc);
-  if (!entries.length) { el.innerHTML = `<tr><td colspan="5" style="color:var(--mid);padding:14px;text-align:center">尚無${MKT_NAME[market]}持倉</td></tr>`; return; }
-  el.innerHTML = entries.map(([sec,pct]) => {
-    const target = saved[sec] ?? '';
-    const dev = target!=='' ? (pct - parseFloat(target)) : null;
-    let devHtml='—', dirHtml='—';
-    if (dev !== null) {
-      const c = Math.abs(dev)>10 ? (dev>0?'var(--red)':'var(--blue)') : 'var(--mid)';
-      devHtml = `<strong style="color:${c}">${dev>0?'+':''}${dev.toFixed(1)}%</strong>`;
-      if (Math.abs(dev)>=3) dirHtml = dev>0
-        ? `<span class="tag tag-red" style="font-size:10px">超配，考慮減倉</span>`
-        : `<span class="tag tag-blue" style="font-size:10px">低配，可加倉</span>`;
-      else dirHtml = `<span style="color:var(--mid);font-size:11px">均衡</span>`;
-    }
-    return `<tr>
-      <td><strong>${sec}</strong></td>
-      <td>${pct.toFixed(1)}%</td>
-      <td><input class="target-input" data-market="${market}" data-sector="${sec}" type="number" placeholder="%" min="0" max="100" step="1" value="${target}"></td>
-      <td>${devHtml}</td>
-      <td>${dirHtml}</td>
-    </tr>`;
-  }).join('');
-}
-
-function saveTargetAllocation(market) {
-  const alloc={};
-  document.querySelectorAll(`.target-input[data-market="${market}"]`).forEach(inp=>{
-    if(inp.value) alloc[inp.dataset.sector]=parseFloat(inp.value);
-  });
-  localStorage.setItem('targetAlloc_' + market, JSON.stringify(alloc));
-  pushTargetToBackend(market);          // write-through：晨報排程才算得到再平衡偏移
-  showToast(`${MKT_NAME[market]}目標配置已儲存`);
-  loadRebalancePage();
-}
-
-// 把單一市場的目標配置上傳後端（給晨報排程讀）。fire-and-forget，失敗不擋 UI。
-// 只在有設定值時上傳，避免用空 {} 覆蓋後端。
-async function pushTargetToBackend(market) {
-  if (DEMO_MODE) return;
-  const alloc = getSavedAlloc(market);
-  if (!alloc || !Object.keys(alloc).length) return;
-  try { await api('/api/settings/target-allocation', 'PUT', { market, allocation: alloc }); }
-  catch(e) { /* 後端暫時不可用時略過，不影響本地操作 */ }
-}
-
-function renderRebalanceAdvice(market, sectorAlloc, holdings) {
-  const el = document.getElementById('rebalAdvice_' + market);
-  if (!el) return;
-  const saved = getSavedAlloc(market);
-  const redPe = (PE_THRESHOLDS[market] || PE_THRESHOLDS.us).red;
-  const advice = [];
-  // 配置偏差建議
-  Object.entries(sectorAlloc).forEach(([sec,pct]) => {
-    const target = saved[sec]; if(target==null) return;
-    const dev = pct - target;
-    if (dev > 5)  advice.push({type:'sell',msg:`「${sec}」超配 +${dev.toFixed(1)}%（目標 ${target}%），考慮減持部分換至低配板塊`});
-    if (dev < -5) advice.push({type:'buy', msg:`「${sec}」低配 ${dev.toFixed(1)}%（目標 ${target}%），可逢低加碼補足`});
-  });
-  // 高估值警示（用本市場的 PE 紅燈門檻）
-  holdings.filter(h=>h.pe_ratio&&h.pe_ratio>redPe).forEach(h=>{
-    advice.push({type:'sell',msg:`${h.symbol}（P/E ${h.pe_ratio.toFixed(0)}）估值偏高，可考慮減倉 20-30%，落袋部分獲利`});
-  });
-  if (!advice.length) {
-    if (!Object.keys(saved).length) {
-      el.innerHTML='<div style="padding:14px;color:var(--mid);font-size:12px;text-align:center">請先在左側輸入各板塊目標 %，再點「儲存設定」</div>';
-    } else {
-      el.innerHTML='<div style="padding:12px;background:var(--green-lt,#F0FDF4);border-radius:6px;border-left:3px solid var(--green);font-size:12px;color:var(--dark)">目前配置均衡，估值也無明顯偏高。繼續按計畫定期投入即可。</div>';
-    }
-    return;
-  }
-  el.innerHTML = advice.map(a=>`
-    <div style="margin-bottom:10px;padding:10px 13px;background:${a.type==='sell'?'#FEF2F2':'#EFF6FF'};border-radius:6px;border-left:3px solid ${a.type==='sell'?'var(--red)':'var(--blue)'}">
-      <div style="font-size:10px;font-weight:700;color:${a.type==='sell'?'var(--red)':'var(--blue)'};margin-bottom:3px">${a.type==='sell'?'考慮減倉 / 獲利了結':'建議加倉 / 補足低配'}</div>
-      <div style="font-size:12px;color:var(--dark);line-height:1.55">${a.msg}</div>
-    </div>`).join('');
 }
 
 function renderDividendReinvest(market, divData, sectorAlloc, holdings) {
