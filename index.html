@@ -1650,14 +1650,58 @@ function setTheme(name) {
 })();
 
 // ── API HELPERS ───────────────────────────────────────────────
+// GET 快取三層：①記憶體 TTL（切分頁/短時間重載 0 round-trip）②in-flight 去重（同一 URL 同時被打只發一次，
+// 例如 value-history 被淨值圖＋績效卡各叫一次）③sessionStorage 暖啟動（開頁先用上次快照秒畫、背景再刷）。
+// 任何寫入(POST/PUT/DELETE)後呼叫 _apiBust() 清記憶體，避免顯示改動前的舊值。
+const _apiMem = new Map();        // url -> {ts, data}
+const _apiInflight = new Map();   // url -> Promise
+const API_MEM_TTL = 90 * 1000;    // 記憶體快取 90 秒
+let _apiGen = 0;                  // 世代計數器：bust 後遞增，讓 bust 前發出、之後才回來的舊 GET 不要把過期資料寫回快取
+function _apiBust() { _apiGen++; _apiMem.clear(); _apiInflight.clear(); }
+function _apiPeek(path) {          // 讀 sessionStorage 上次快照（不管新舊，純拿來暖啟動秒畫）
+  try { const s = sessionStorage.getItem('apicache:' + API_BASE + path); return s ? JSON.parse(s).data : null; }
+  catch { return null; }
+}
+
 async function api(path, method = 'GET', body = null) {
   if (DEMO_MODE && method === 'GET') return null;
+  const url = `${API_BASE}${path}`;
+
+  if (method === 'GET') {
+    const m = _apiMem.get(url);
+    if (m && (Date.now() - m.ts) < API_MEM_TTL) return m.data;   // ① 記憶體命中
+    if (_apiInflight.has(url)) return _apiInflight.get(url);      // ② 同 URL 已在飛，共用
+    const gen = _apiGen;   // 記下發出當下的世代
+    const p = (async () => {
+      const headers = {};
+      if (API_KEY) headers['X-API-Key'] = API_KEY;
+      const r = await fetch(url, { method: 'GET', headers });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.detail || `API error ${r.status}`);
+      }
+      if (r.status === 204) return null;
+      const data = await r.json();
+      // 只有中途沒發生過 _apiBust() 才寫回快取；否則這是「改動前」的舊資料，寫回會蓋掉新狀態
+      if (gen === _apiGen) {
+        _apiMem.set(url, { ts: Date.now(), data });
+        try { sessionStorage.setItem('apicache:' + url, JSON.stringify({ ts: Date.now(), data })); } catch {}
+      }
+      return data;
+    })();
+    _apiInflight.set(url, p);
+    try { return await p; }
+    finally { _apiInflight.delete(url); }
+  }
+
+  // 寫入：先清快取（避免之後讀到改動前的舊值），再照舊發送
+  _apiBust();
   const headers = {};
   if (API_KEY) headers['X-API-Key'] = API_KEY;
   if (body) headers['Content-Type'] = 'application/json';
   const opts = { method, headers };
   if (body) opts.body = JSON.stringify(body);
-  const r = await fetch(`${API_BASE}${path}`, opts);
+  const r = await fetch(url, opts);
   if (!r.ok) {
     const err = await r.json().catch(() => ({}));
     throw new Error(err.detail || `API error ${r.status}`);
@@ -1697,6 +1741,7 @@ async function refreshAll() {
   const btn=document.getElementById('refreshBtn');
   btn.disabled=true;
   btn.innerHTML='<div class="loading-spinner"></div> Refreshing';
+  _apiBust();   // 使用者按重新整理＝要最新資料，清掉 90 秒記憶體快取強制重打
   await loadOverview();
   btn.disabled=false;
   btn.innerHTML='<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8A6 6 0 1 1 8 2a6 6 0 0 1 4.24 1.76L14 2v4h-4"/></svg> Refresh';
@@ -1704,8 +1749,44 @@ async function refreshAll() {
 
 // ── OVERVIEW ──────────────────────────────────────────────────
 let nwChart, secChart;
+
+// 暖啟動：開頁先用上次快照秒畫核心卡片（總資產/持倉/板塊），隨後 live 資料覆蓋——開頁不再空白等 API
+function _warmStartOverview() {
+  const cs = _apiPeek('/api/portfolio/summary');
+  const ch = _apiPeek('/api/portfolio');
+  if (!cs || !ch) return false;
+  try {
+    window._usdtwd = cs.usdtwd || window._usdtwd || null;
+    renderSummaryCards(cs);
+    renderHoldings(ch);
+    renderSectorChart(cs.sector_allocation_combined || cs.sector_allocation);
+    renderAiInsight(cs);
+    _setRevalidating(true);
+    return true;
+  } catch (e) { return false; }   // 快照壞掉不影響後面 live 載入
+}
+
+// 右下角「更新中…」小膠囊（暖啟動秒畫後，背景刷新期間顯示，讓使用者知道數字仍在校正）
+function _setRevalidating(on) {
+  let pill = document.getElementById('revalidatePill');
+  if (on) {
+    if (!pill) {
+      pill = document.createElement('div');
+      pill.id = 'revalidatePill';
+      pill.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:9999;background:var(--card,#fff);color:var(--mid,#6b7280);border:1px solid var(--border,#e5e7eb);border-radius:999px;padding:6px 12px;font-size:12px;box-shadow:0 4px 12px rgba(0,0,0,.08);display:inline-flex;align-items:center;gap:7px';
+      pill.innerHTML = '<div class="loading-spinner" style="width:12px;height:12px;margin:0"></div>更新中…';
+      document.body.appendChild(pill);
+    }
+    pill.style.display = 'inline-flex';
+  } else if (pill) {
+    pill.style.display = 'none';
+  }
+}
+
 async function loadOverview() {
   try {
+    const warm = !DEMO_MODE && _warmStartOverview();   // 先秒畫上次快照
+
     const [holdings, summary] = DEMO_MODE
       ? [DEMO_HOLDINGS, DEMO_SUMMARY]
       : await Promise.all([api('/api/portfolio'), api('/api/portfolio/summary')]);
@@ -1714,23 +1795,30 @@ async function loadOverview() {
     // 「總資產 / 目標進度 / IRR」用台股折 USD 後的合併總值，不再只算美股（漏台股）
     const totalUsd = (summary.total_value_usd != null) ? summary.total_value_usd : (summary.total_market_value || 0);
     renderSummaryCards(summary);
-    if(window.polishCountUp){polishCountUp(document.getElementById('s-totalMv'));polishCountUp(document.getElementById('tw-s-totalMv'));}
+    // 暖啟動已秒畫過數字時就不再跑 count-up（否則會從 0 重跑一次，看起來像閃了一下）
+    if(window.polishCountUp && !warm){polishCountUp(document.getElementById('s-totalMv'));polishCountUp(document.getElementById('tw-s-totalMv'));}
     renderHoldings(holdings);
     renderSectorChart(summary.sector_allocation_combined || summary.sector_allocation);
-    renderNetWorthChart('1y');
     renderAiInsight(summary);
-    await loadPortfolioPage(holdings, summary);
-    await loadRiskPage(summary);
-    await loadWatchlistPage();
-    await loadDividends();
     loadGoal(totalUsd);
-    // 新功能
+
+    // 其餘區塊全部並行載入：原本 loadPortfolioPage→risk→watchlist→dividends 是一個接一個 await（時間累加），
+    // 改成同時發、只等最慢那個。淨值圖/績效/IRR 各自 fire-and-forget，畫好各自區塊即可。
+    renderNetWorthChart('1y');
     loadPerformanceVsBenchmark('1y');
     calcPortfolioIRR(summary);
+    await Promise.all([
+      loadPortfolioPage(holdings, summary),
+      loadRiskPage(summary),
+      loadWatchlistPage(),
+      loadDividends(),
+    ]);
   } catch(e) {
     console.error(e);
     // 不要靜默吞錯：總覽載入失敗時明確提示，避免看起來像成功
     showToast(e.message || '載入失敗，請檢查連線或重新登入', 'error');
+  } finally {
+    _setRevalidating(false);
   }
 }
 
@@ -3129,26 +3217,34 @@ function _wlToggle(w, view){
   return seg + tgt;
 }
 
+// 兩個 view（觀察清單頁 / 選股頁的觀察卡）各有自己的快取陣列，但指向同一張 watchlist 表。
+// toggle 後只更新本地快取＋就地重繪，不重打 API——這是「切換卡頓」的修正點。兩邊快取都同步，切頁不會看到舊狀態。
+function _wlSyncLocal(id, patch){
+  for (const list of [_watchlistItems, _screenerRaw]){
+    const it = list && list.find(w=>String(w.id)===String(id));
+    if (it) Object.assign(it, patch);
+  }
+}
+function _wlRerender(view){ if(view==='screener') renderScreenerWatchlist(); else renderWatchlist(); }
+
 async function setWantBuy(id, val, view){
-  const it=_watchlistItems.find(w=>String(w.id)===String(id));
-  const rerender=()=>{ if(view==='screener') loadScreenerWatchlist(); else renderWatchlist(); };
-  if(it && !!it.want_buy===val) return;   // 已是該狀態，不重打
-  if (DEMO_MODE){ if(it) it.want_buy=val; rerender(); return; }
+  const cur = (view==='screener' ? _screenerRaw : _watchlistItems).find(w=>String(w.id)===String(id));
+  if(cur && !!cur.want_buy===val) return;   // 已是該狀態，不重打
+  if (DEMO_MODE){ _wlSyncLocal(id,{want_buy:val}); _wlRerender(view); return; }
   try{
     await api(`/api/watchlist/${id}`, 'PUT', { want_buy: val });
-    if(it) it.want_buy=val;   // 就地更新 view A 快取；view B 由 loadScreenerWatchlist 重抓反映
-    rerender();
+    _wlSyncLocal(id, {want_buy: val});   // 就地更新兩邊快取
+    _wlRerender(view);                    // 只重繪，不重抓 → 秒切
   }catch(e){ alert('切換「想買」失敗：'+(e.message||'請稍後再試')); }
 }
 
 async function setTargetPrice(id, view, val){
-  const it=_watchlistItems.find(w=>String(w.id)===String(id));
   const num = (val==='' ? null : parseFloat(val));
   if(num==null || !(num>0)) return;   // 空/非正值不動（清除目標價之後再補）
-  if (DEMO_MODE){ if(it) it.target_price=num; return; }
+  if (DEMO_MODE){ _wlSyncLocal(id,{target_price:num}); return; }
   try{
     await api(`/api/watchlist/${id}`, 'PUT', { target_price: num });
-    if(it) it.target_price=num;   // 不強制重繪，避免打斷輸入；下次重整反映
+    _wlSyncLocal(id, {target_price: num});   // 不強制重繪，避免打斷輸入；下次重整反映
     showToast('目標價已存');
   }catch(e){ alert('儲存目標價失敗：'+(e.message||'請稍後再試')); }
 }
@@ -3260,16 +3356,32 @@ function switchWatchlistTab(t) {
     btn.style.color      = id === t ? '#fff' : 'var(--mid)';
     btn.style.fontWeight = id === t ? '600' : '400';
   });
-  loadScreenerWatchlist();
+  // 子頁籤只是前端過濾（全部/BOS/DGM），資料已在手 → 純重繪、不重打 API
+  if (_screenerRaw && _screenerRaw.length) renderScreenerWatchlist(); else loadScreenerWatchlist();
 }
 
+let _screenerRaw = [];   // 快取 screener 觀察清單原始列，供 tab 切換/想買 toggle 就地重繪、不重打 API
+
 async function loadScreenerWatchlist() {
+  const body = document.getElementById('screenerWatchlistBody');
+  if (!body) return;
+  try {
+    _screenerRaw = DEMO_MODE ? _screenerWatchlistDemo : (await api('/api/watchlist') || []);
+    renderScreenerWatchlist();
+  } catch (e) {
+    console.error(e);
+    body.innerHTML = `<div style="padding:20px;text-align:center;color:var(--light);font-size:13px">載入失敗：${e.message}</div>`;
+  }
+}
+
+// 純重繪（不打 API）：tab 切換、想買 toggle 都只走這裡，秒回。
+function renderScreenerWatchlist() {
   const body = document.getElementById('screenerWatchlistBody');
   const sub  = document.getElementById('screenerWatchlistSub');
   if (!body) return;
   const wlTab = _wlTab || 'all';
   try {
-    const allItems = DEMO_MODE ? _screenerWatchlistDemo : await api('/api/watchlist');
+    const allItems = _screenerRaw || [];
 
     // 解析每筆 notes JSON，補充 source/data
     const enriched = allItems.map(w => {
@@ -3376,9 +3488,9 @@ async function removeFromScreenerWatchlist(symbol, btn) {
     if (DEMO_MODE) {
       _screenerWatchlistDemo = _screenerWatchlistDemo.filter(w => w.symbol !== symbol);
     } else {
-      const headers = {};
-      if (API_KEY) headers['X-API-Key'] = API_KEY;
-      await fetch(`${API_BASE}/api/watchlist/${symbol}`, { method:'DELETE', headers });
+      // 走 api() 而非原生 fetch：①刪除後自動 _apiBust() 清 90 秒快取，否則下一行 loadScreenerWatchlist
+      // 會讀到含已刪項目的舊快取讓該列「復活」②附帶 r.ok 錯誤檢查（原生 fetch 失敗不會拋）
+      await api(`/api/watchlist/${symbol}`, 'DELETE');
     }
     loadScreenerWatchlist();
     showToast(`${symbol} 已從觀察清單移除`);
@@ -4558,6 +4670,7 @@ async function addToWatchlist(symbol, name, btn, source = 'AI 推薦') {
     btn.classList.add('added');
     const stored = _screenerDataStore[symbol] || {};
     _screenerWatchlistDemo.push({
+      id: symbol,   // demo 模式也要有 id，否則想買 toggle 的 setWantBuy('undefined',...) 會全部改到第一列
       symbol, name,
       notes: `${source} - ${name}`,
       current_price: stored.data?.price || null,
