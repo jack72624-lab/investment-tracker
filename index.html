@@ -3087,7 +3087,7 @@ async function submitHoldingForm() {
 }
 
 async function deleteHolding(id, symbol) {
-  if (!confirm(`確定要刪除 ${symbol} 持倉？此操作無法復原。`)) return;
+  if (!confirm(`確定要刪除 ${symbol} 持倉？\n\n注意：有交易記錄的持倉不能直接刪（會弄亂現金帳）——請改到「交易記錄」逐筆刪除、或記一筆賣出(SELL)。只有手動匯入、沒有交易的持倉可直接刪除。`)) return;
   try {
     await api(`/api/portfolio/${id}`, 'DELETE');
     await refreshPortfolio();
