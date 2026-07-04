@@ -1391,6 +1391,7 @@ tr:hover td{background:var(--bg)}
   <!-- PAGE: 現金 -->
   <div class="page" id="page-cash">
     <div id="cashPools"></div>
+    <div id="divPending"></div>
     <div class="card">
       <div class="card-header">
         <div><div class="card-title">現金事件</div><div class="card-sub" id="cashSub">入金 / 出金 / 換匯</div></div>
@@ -4113,9 +4114,58 @@ async function loadCashPage() {
       ? [DEMO_CASH, (typeof DEMO_SUMMARY!=='undefined'?DEMO_SUMMARY:{})]
       : await Promise.all([api('/api/portfolio/cash'), api('/api/portfolio/summary')]);
     renderCash(cash, summary);
+    loadPendingDividends();   // 股息待確認：非同步、不擋現金頁
   } catch(e) {
     console.error(e);
     document.getElementById('cashFlowList').innerHTML = '<div style="padding:24px;color:var(--mid)">現金資料載入失敗</div>';
+  }
+}
+
+// ── 股息待確認（近期除息、尚未入帳）──────────────────────────────
+const DEMO_PENDING_DIV = [
+  {symbol:'2330.TW',currency:'TWD',ex_date:'2026-06-18',per_share:4.5,shares:120,est_amount:540},
+  {symbol:'AAPL',   currency:'USD',ex_date:'2026-06-12',per_share:0.26,shares:40,est_amount:10.4},
+];
+async function loadPendingDividends() {
+  const el = document.getElementById('divPending');
+  if (!el) return;
+  if (DEMO_MODE) { renderPendingDividends(el, DEMO_PENDING_DIV); return; }
+  el.innerHTML = '';
+  try {
+    const d = await api('/api/portfolio/dividends/pending');
+    renderPendingDividends(el, d.pending || []);
+  } catch(e) { el.innerHTML = ''; }   // 靜默降級，不擋現金頁
+}
+function renderPendingDividends(el, pending) {
+  if (!pending || !pending.length) { el.innerHTML = ''; return; }
+  const money = (cur,v) => cur==='TWD' ? 'NT$'+Math.round(v||0).toLocaleString('en') : '$'+(+v||0).toLocaleString('en',{maximumFractionDigits:2});
+  const rows = pending.map(p => `
+    <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap">
+      <div style="flex:1;min-width:150px">
+        <div style="font-size:13px;font-weight:600">${p.symbol} <span style="font-size:11px;color:var(--mid);font-weight:400">除息 ${p.ex_date}</span></div>
+        <div style="font-size:11px;color:var(--light);margin-top:2px">每股 ${money(p.currency,p.per_share)} × ${p.shares} 股 · 估計 ${money(p.currency,p.est_amount)}（毛額）</div>
+      </div>
+      <input type="number" step="0.01" min="0" id="divamt-${p.symbol}-${p.ex_date}" value="${p.currency==='USD'?(Math.round(p.est_amount*0.7*100)/100):p.est_amount}" style="width:104px;text-align:right;border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:13px;font-family:inherit">
+      <span style="font-size:12px;color:var(--mid)">${p.currency}</span>
+      <button class="btn btn-primary" style="height:30px;font-size:12px" onclick="confirmDividend('${p.symbol}','${p.currency}','${p.ex_date}',this)">確認入帳</button>
+    </div>`).join('');
+  el.innerHTML = `<div class="card" style="margin-bottom:12px;border-left:3px solid var(--green)">
+    <div class="card-header"><div><div class="card-title">股息待確認 <span style="font-size:12px;color:var(--green)">${pending.length}</span></div><div class="card-sub">近期除息、尚未入帳。美股金額已預填「扣 30% 預扣稅」的估計、台股為毛額——請一律改成實際到帳金額再確認</div></div></div>
+    <div>${rows}</div></div>`;
+}
+async function confirmDividend(symbol, currency, exDate, btn) {
+  const inp = document.getElementById(`divamt-${symbol}-${exDate}`);
+  const amount = parseFloat(inp && inp.value);
+  if (!amount || amount <= 0) { alert('請輸入實際到帳金額'); return; }
+  if (DEMO_MODE) { showToast(`${symbol} 股息已入帳（示範）`); return; }
+  if (btn) { btn.disabled = true; btn.textContent = '處理中...'; }   // 防連點重複入帳
+  try {
+    await api('/api/portfolio/cash-flows', 'POST', { flow_type:'DIVIDEND', symbol, currency, amount, flow_date: exDate, notes:'股息實收' });
+    showToast(`${symbol} 股息已入帳`);
+    await loadCashPage();   // 刷新現金池與待確認（已入帳的會消失）
+  } catch(e) {
+    alert('入帳失敗：' + (e.message || '未知錯誤'));
+    if (btn) { btn.disabled = false; btn.textContent = '確認入帳'; }
   }
 }
 
@@ -4152,7 +4202,9 @@ function renderCash(d, s) {
 
   renderCashFlows(d.flows || []);
   const seedBtn = document.getElementById('cashSeedBtn');
-  if (seedBtn) seedBtn.style.display = (d.flows && d.flows.length) ? 'none' : '';
+  // 股息(DIVIDEND)不算「已有現金紀錄」，先確認股息不該把初始化按鈕藏掉（與後端 seed 條件一致）
+  const nonDivFlows = (d.flows || []).filter(f => f.flow_type !== 'DIVIDEND');
+  if (seedBtn) seedBtn.style.display = nonDivFlows.length ? 'none' : '';
 }
 
 function renderCashFlows(flows) {
@@ -4165,12 +4217,13 @@ function renderCashFlows(flows) {
   const ntd = v => 'NT$' + (+v||0).toLocaleString('en', {maximumFractionDigits:0});
   const usc = v => '$'  + (+v||0).toLocaleString('en', {maximumFractionDigits:2});
   const money = (cur, v) => cur==='TWD' ? ntd(v) : usc(v);
-  const ICON = {DEPOSIT:['入','var(--green-lt)','var(--green)'], WITHDRAW:['出','var(--red-lt)','var(--red)'], CONVERT:['換','var(--blue-lt)','var(--blue)']};
+  const ICON = {DEPOSIT:['入','var(--green-lt)','var(--green)'], WITHDRAW:['出','var(--red-lt)','var(--red)'], CONVERT:['換','var(--blue-lt)','var(--blue)'], DIVIDEND:['息','var(--green-lt)','var(--green)']};
   const rows = flows.map(f => {
     const [ic, bg, fg] = ICON[f.flow_type] || ['?','var(--bg)','var(--mid)'];
     let title, amt, amtCol = 'var(--dark)';
     if (f.flow_type==='DEPOSIT') { title='入金 · '+(f.currency==='TWD'?'台幣':'美金'); amt='+'+money(f.currency,f.amount); amtCol='var(--green)'; }
     else if (f.flow_type==='WITHDRAW') { title='出金 · '+(f.currency==='TWD'?'台幣':'美金'); amt='−'+money(f.currency,f.amount); amtCol='var(--red)'; }
+    else if (f.flow_type==='DIVIDEND') { title='股息 · '+(f.symbol||''); amt='+'+money(f.currency,f.amount); amtCol='var(--green)'; }
     else { const fc=f.from_currency==='TWD'?'台幣':'美金', tc=f.to_currency==='TWD'?'台幣':'美金'; title='換匯 · '+fc+' → '+tc; amt=money(f.from_currency,f.from_amount)+' → '+money(f.to_currency,f.to_amount); }
     const sub = (f.flow_date||'') + (f.flow_type==='CONVERT'&&f.rate?` · 匯率 ${(+f.rate).toFixed(2)}`:'') + (f.notes?` · ${f.notes}`:'');
     return `<div style="display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid var(--border)">
@@ -4180,7 +4233,7 @@ function renderCashFlows(flows) {
       <span onclick="deleteCashFlow('${f.id}')" title="刪除" style="color:var(--light);cursor:pointer;padding:4px;font-size:16px;line-height:1">×</span>
     </div>`;
   }).join('');
-  el.innerHTML = rows + '<div style="font-size:11px;color:var(--light);padding:11px 16px;background:var(--bg);line-height:1.5">餘額已自動扣掉股票買賣（買進扣現金、賣出加現金），這裡只列入金／出金／換匯。</div>';
+  el.innerHTML = rows + '<div style="font-size:11px;color:var(--light);padding:11px 16px;background:var(--bg);line-height:1.5">餘額已自動扣掉股票買賣（買進扣現金、賣出加現金）。此清單含入金／出金／換匯／股息；股息計入現金與報酬、但不計入本金。</div>';
 }
 
 function setCashType(type) {
