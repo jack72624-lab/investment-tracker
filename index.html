@@ -351,6 +351,14 @@ tr:hover td{background:var(--bg)}
 /* 再平衡「目標 %」輸入框：原本是瀏覽器預設樣式很醜，統一成 app 卡片風（圓角、置中、聚焦藍框） */
 .sym-target-input{width:64px;height:34px;padding:0 8px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;text-align:center;font-variant-numeric:tabular-nums;color:var(--dark);background:var(--white);outline:none;transition:border-color .13s,box-shadow .13s}
 .sym-target-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-lt)}
+/* 觀察清單「想買」篩選 chip + 星號 toggle */
+.wl-chip{padding:6px 13px;border-radius:999px;font-size:13px;border:1px solid var(--border);background:var(--white);color:var(--mid);cursor:pointer;transition:.13s}
+.wl-chip.active{background:var(--dark);color:var(--white);border-color:var(--dark)}
+.wl-star{display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:7px;font-size:12px;color:var(--mid);transition:.13s}
+.wl-star:hover{background:var(--blue-lt)}
+.wl-star.on{color:#7A3FD6;font-weight:700}
+.wl-star svg{width:18px;height:18px}
+.wl-tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:700;background:#F1E9FF;color:#7A3FD6;margin-left:6px;vertical-align:middle}
 /* 隱藏 number input 的上下箭頭，維持乾淨外觀 */
 .sym-target-input::-webkit-outer-spin-button,.sym-target-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .sym-target-input{-moz-appearance:textfield}
@@ -1447,10 +1455,14 @@ tr:hover td{background:var(--bg)}
         <div><div class="card-title">Watchlist</div><div class="card-sub" id="watchlistSub">—</div></div>
         <button class="btn btn-ghost" onclick="showAddWatchlist()">+ Add</button>
       </div>
+      <div id="wlFilter" style="display:flex;gap:8px;margin:0 0 12px">
+        <button class="wl-chip active" data-f="all" onclick="setWatchlistFilter('all',this)">全部</button>
+        <button class="wl-chip" data-f="buy" onclick="setWatchlistFilter('buy',this)">只看想買</button>
+      </div>
       <div class="table-wrap">
         <table><thead><tr>
           <th>Ticker</th><th>Company</th><th>Price</th><th>Change</th>
-          <th>52W H/L</th><th>P/E</th><th>Target</th><th>Upside</th><th>Signal</th>
+          <th>52W H/L</th><th>P/E</th><th>Target</th><th>Upside</th><th>Signal</th><th>想買</th>
         </tr></thead>
         <tbody id="watchlistTbody"></tbody>
         </table>
@@ -2773,17 +2785,22 @@ function rebalMarketBlockHtml(m) {
 
 async function loadRebalancePage() {
   try {
-    const [holdings, divData, tnxRes, summary] = DEMO_MODE
-      ? [DEMO_HOLDINGS, {total_annual_dividend:162, holdings:[]}, {value:4.30}, {usdtwd:31.5}]
+    const [holdings, divData, tnxRes, summary, wl] = DEMO_MODE
+      ? [DEMO_HOLDINGS, {total_annual_dividend:162, holdings:[]}, {value:4.30}, {usdtwd:31.5},
+         [{symbol:'AMD',name:'Advanced Micro Devices',want_buy:true},{symbol:'AVGO',name:'Broadcom',want_buy:true}]]
       : await Promise.all([
           api('/api/portfolio'),
           api('/api/portfolio/dividends').catch(()=>({total_annual_dividend:0, holdings:[]})),
           api('/api/stocks/treasury10y').catch(()=>({value:null})),
           api('/api/portfolio/summary').catch(()=>null),
+          api('/api/watchlist').catch(()=>[]),
         ]);
     // 合併 TWD 換算要用匯率；直接進再平衡頁（沒先開總覽）也拿得到
     if (summary && summary.usdtwd) window._usdtwd = summary.usdtwd;
     _rebalHoldings = holdings;
+    // 想買標的（觀察清單標記 want_buy、且還沒持有的）→ 以現況 0% 列進目標卡（新進場藍圖）
+    const _heldSyms = new Set(holdings.map(h=>String(h.symbol)));
+    _rebalWish = (wl||[]).filter(w=>w.want_buy && !_heldSyms.has(String(w.symbol)));
     _rebalDiv = divData;
     _rebalTnx = (tnxRes && tnxRes.value != null) ? tnxRes.value : null;
 
@@ -2814,7 +2831,7 @@ function renderRebalMarkets() {
 // ── Part 2A：按個股・跨市場 目標配置（單一目標來源）──────────────────
 // 個股目標存新 key 'targetAllocSymbols'（跨市場 combined）。存檔時「反推」出各市場板塊目標，
 // 同步進 targetAlloc_us/tw（股息再投資頁用）＋後端 app_settings（晨報再平衡偏移警示用）。
-let _rebalHoldings = [], _rebalCatMode = 'A', _rebalDiv = null, _rebalTnx = null;
+let _rebalHoldings = [], _rebalCatMode = 'A', _rebalDiv = null, _rebalTnx = null, _rebalWish = [];
 function getSymbolTargets(){ try { return JSON.parse(localStorage.getItem('targetAllocSymbols')||'{}'); } catch(e){ return {}; } }
 
 // 由個股目標反推「各市場板塊目標」（市場內正規化成 100%）→ 本機 localStorage + 後端。
@@ -2841,7 +2858,13 @@ function currentInputTargets(){
   return t;
 }
 function saveSymbolTargets(){
-  const t = currentInputTargets() || {};
+  // 以既有儲存為底，只更新「畫面上有出現」的標的：避免取消想買/賣光後那些列消失，
+  // 下次儲存把它們已存的目標一起洗掉（全量覆寫會靜默刪資料）。畫面上清空＝刪該檔。
+  const t = getSymbolTargets();
+  document.querySelectorAll('.sym-target-input').forEach(inp=>{
+    if(inp.value==='') delete t[inp.dataset.sym];
+    else t[inp.dataset.sym] = parseFloat(inp.value);
+  });
   localStorage.setItem('targetAllocSymbols', JSON.stringify(t));
   pushDerivedSectorTargets(_rebalHoldings, t);   // 反推板塊目標→本機+後端（晨報偏移續用）
   showToast('個股目標已儲存');
@@ -2860,42 +2883,50 @@ function renderPerStockRebalance(holdings){
   const fx = window._usdtwd || 32;
   // 重繪時優先沿用畫面上現有輸入值（切 A/B 不會清掉未儲存的目標）；首次載入才讀 localStorage
   const saved = currentInputTargets() || getSymbolTargets();
-  const totalTWD = holdings.reduce((a,h)=>a+twdValue(h),0) || 1;
+  const portfolioTWD = holdings.reduce((a,h)=>a+twdValue(h),0);
+  const hasPortfolio = portfolioTWD > 0;   // 零持倉時金額無從換算，避免顯示「加碼 ~ $0（新進場）」的荒謬建議
+  const totalTWD = portfolioTWD || 1;
+  // 合併「持有 + 想買（觀察清單標記 want_buy、未持有）」；想買以現況 0% 計，建議標「新進場」
+  const entries = holdings.map(h=>({...h, _wish:false})).concat((_rebalWish||[]).map(w=>({...w, _wish:true})));
+  const cTWD = e => e._wish ? 0 : twdValue(e);   // 想買標的現值 0
 
   // 逐檔：現況%（合併 TWD）/ 目標% / 差 / 原幣建議金額
-  const rows = holdings.map(h=>{
+  const rows = entries.map(h=>{
     const sym = h.symbol;
     const cur = h.currency || (String(sym).includes('.TW')?'TWD':'USD');
     const mkt = cur==='TWD'?'tw':'us';
-    const curTWD = twdValue(h);
+    const curTWD = cTWD(h);
     const curPct = curTWD/totalTWD*100;
     const tgt = saved[sym];
+    const wishTag = h._wish ? '<span class="wl-tag">想買</span>' : '';
     let devHtml='—', actHtml='<span style="color:var(--mid)">—</span>';
     if(tgt!=null){
       const dev = curPct - tgt;                        // + 超配 / − 低配
       const c = Math.abs(dev)>10 ? (dev>0?'var(--red)':'var(--blue)') : 'var(--mid)';
       devHtml = `<strong style="color:${c}">${dev>0?'+':''}${dev.toFixed(1)}%</strong>`;
       const deltaNative = (tgt/100*totalTWD - curTWD) / (mkt==='tw'?1:fx);  // + 要買進
-      if(Math.abs(dev)>=3){
+      if(!hasPortfolio){
+        actHtml = `<span style="color:var(--mid);font-size:11px">${h._wish?'先入金/建倉後計算':'—'}</span>`;
+      } else if(h._wish ? tgt>0 : Math.abs(dev)>=3){    // 想買標的 0 股，>=3% 門檻不適用，只要有目標就給進場金額
         actHtml = deltaNative>0
-          ? `<span class="tag tag-blue" style="font-size:10px">加碼 ~ ${mktMoney(mkt, Math.abs(deltaNative), 0)}</span>`
+          ? `<span class="tag tag-blue" style="font-size:10px">加碼 ~ ${mktMoney(mkt, Math.abs(deltaNative), 0)}${h._wish?'（新進場）':''}</span>`
           : `<span class="tag tag-red" style="font-size:10px">減碼 ~ ${mktMoney(mkt, Math.abs(deltaNative), 0)}</span>`;
       } else actHtml = `<span style="color:var(--mid);font-size:11px">均衡</span>`;
     }
-    return `<tr>
-      <td><strong>${sym}</strong><div style="font-size:10px;color:var(--mid)">${h.name||''}</div></td>
-      <td>${curPct.toFixed(1)}%</td>
+    return `<tr${h._wish?' style="background:#FCFAFF"':''}>
+      <td><strong>${sym}</strong>${wishTag}<div style="font-size:10px;color:var(--mid)">${h.name||''}</div></td>
+      <td>${h._wish?'<span style="color:var(--mid)">0.0%</span>':curPct.toFixed(1)+'%'}</td>
       <td><input class="sym-target-input" data-sym="${sym}" type="number" placeholder="%" min="0" max="100" step="1" value="${tgt??''}"></td>
       <td>${devHtml}</td>
       <td>${actHtml}</td>
     </tr>`;
   }).join('');
 
-  // 由個股目標自動換算（唯讀）：市場 + 大類
+  // 由個股目標自動換算（唯讀）：市場 + 大類（含想買標的，讓藍圖加總反映完整規劃）
   let usT=0, twT=0, tgtSum=0;
-  holdings.forEach(h=>{ const t=saved[h.symbol]; if(t==null) return; tgtSum+=t; const cur=h.currency||(String(h.symbol).includes('.TW')?'TWD':'USD'); if(cur==='TWD') twT+=t; else usT+=t; });
+  entries.forEach(h=>{ const t=saved[h.symbol]; if(t==null) return; tgtSum+=t; const cur=h.currency||(String(h.symbol).includes('.TW')?'TWD':'USD'); if(cur==='TWD') twT+=t; else usT+=t; });
   const catMap={};
-  holdings.forEach(h=>{ const t=saved[h.symbol]; if(t==null) return; const key=_rebalCatMode==='A'?(isETF(h)?'ETF':'個股'):(isETF(h)?'大盤/指數':sectorZh(h.sector||'Other')); catMap[key]=(catMap[key]||0)+t; });
+  entries.forEach(h=>{ const t=saved[h.symbol]; if(t==null) return; const key=_rebalCatMode==='A'?(isETF(h)?'ETF':'個股'):(isETF(h)?'大盤/指數':sectorZh(h.sector||'Other')); catMap[key]=(catMap[key]||0)+t; });
   const catStr = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k} ${v.toFixed(0)}%`).join(' ｜ ') || '（尚未設定目標）';
   const mktStr = tgtSum>0 ? `美股 ${usT.toFixed(0)}% ｜ 台股 ${twT.toFixed(0)}%` : '（尚未設定目標）';
   const sumNote = (tgtSum>0 && Math.abs(tgtSum-100)>1)
@@ -2903,24 +2934,24 @@ function renderPerStockRebalance(holdings){
     : `目標加總 ${tgtSum.toFixed(0)}%`;
 
   // 建議清單：偏離 ≥3% 者，依偏離大小排序
-  const advice = holdings.map(h=>{
+  const advice = !hasPortfolio ? [] : entries.map(h=>{
     const t=saved[h.symbol]; if(t==null) return null;
     const cur=h.currency||(String(h.symbol).includes('.TW')?'TWD':'USD'); const mkt=cur==='TWD'?'tw':'us';
-    const curTWD=twdValue(h); const dev=curTWD/totalTWD*100 - t;
-    if(Math.abs(dev)<3) return null;
+    const curTWD=cTWD(h); const dev=curTWD/totalTWD*100 - t;
+    if(h._wish ? !(t>0) : Math.abs(dev)<3) return null;   // 想買：有目標就列（新進場）；持有：偏離 <3% 略過
     const deltaNative=(t/100*totalTWD - curTWD)/(mkt==='tw'?1:fx);
-    return {sym:h.symbol, dev, buy:deltaNative>0, amt:mktMoney(mkt, Math.abs(deltaNative),0)};
+    return {sym:h.symbol, dev, buy:deltaNative>0, amt:mktMoney(mkt, Math.abs(deltaNative),0), wish:h._wish};
   }).filter(Boolean).sort((a,b)=>Math.abs(b.dev)-Math.abs(a.dev));
   const adviceHtml = advice.length ? advice.map(a=>`
     <div style="margin-bottom:8px;padding:9px 12px;background:${a.buy?'#EFF6FF':'#FEF2F2'};border-radius:6px;border-left:3px solid ${a.buy?'var(--blue)':'var(--red)'}">
-      <span style="font-size:12px;color:var(--dark)"><strong>${a.sym}</strong> ${a.buy?'低配':'超配'} ${a.dev>0?'+':''}${a.dev.toFixed(1)}% → ${a.buy?'加碼':'減碼'} ~ ${a.amt}</span>
+      <span style="font-size:12px;color:var(--dark)"><strong>${a.sym}</strong>${a.wish?' <span class="wl-tag">想買</span>':''} ${a.buy?(a.wish?'新進場':'低配'):'超配'} ${a.dev>0?'+':''}${a.dev.toFixed(1)}% → ${a.buy?'加碼':'減碼'} ~ ${a.amt}</span>
     </div>`).join('')
-    : `<div style="padding:12px;background:#F0FDF4;border-radius:6px;border-left:3px solid var(--green);font-size:12px;color:var(--dark)">${tgtSum>0?'各標的都在目標附近（偏離 <3%），續按計畫投入即可。':'請在上表填入各標的目標 %，再按「儲存目標」。'}</div>`;
+    : `<div style="padding:12px;background:#F0FDF4;border-radius:6px;border-left:3px solid var(--green);font-size:12px;color:var(--dark)">${!hasPortfolio?'尚無持倉，設定目標後先入金/建倉即可開始配置。':(tgtSum>0?'各標的都在目標附近（偏離 <3%），續按計畫投入即可。':'請在上表填入各標的目標 %，再按「儲存目標」。')}</div>`;
 
   el.innerHTML = `
   <div class="card mb-20">
     <div class="card-header">
-      <div><div class="card-title">目標配置（按個股・跨市場合併）</div><div class="card-sub">單一目標來源；市場 / 大類由此自動換算。基準 TWD，建議金額用原幣</div></div>
+      <div><div class="card-title">目標配置（按個股・跨市場合併）</div><div class="card-sub">單一目標來源；市場 / 大類由此自動換算。基準 TWD，建議金額用原幣。<span style="color:#7A3FD6">紫列＝想買</span>（觀察清單標記、未持有）</div></div>
       <button class="btn btn-primary" style="height:30px;font-size:11px" onclick="saveSymbolTargets()">儲存目標</button>
     </div>
     <div class="card-body" style="padding:0">
@@ -3027,31 +3058,66 @@ function calcRSI(prices,period=14){
 }
 
 // ── WATCHLIST ─────────────────────────────────────────────────
+let _watchlistItems = [];   // 快取觀察清單，供篩選/toggle 就地重繪，不重打 API
+let _wlFilter = 'all';      // 'all' | 'buy'
+
 async function loadWatchlistPage(){
   try{
     const items = DEMO_MODE
-      ? [{symbol:'AMD',name:'Advanced Micro Devices',current_price:168.40,change_pct:1.2,fifty_two_week_high:227,fifty_two_week_low:94,pe_ratio:45.8,target_price:220,upside_pct:30.6,signal:'買入'},{symbol:'PLTR',name:'Palantir Technologies',current_price:28.60,change_pct:2.1,fifty_two_week_high:34,fifty_two_week_low:12,pe_ratio:178.2,target_price:40,upside_pct:39.9,signal:'買入'},{symbol:'CRWD',name:'CrowdStrike Holdings',current_price:342.80,change_pct:-0.3,fifty_two_week_high:398,fifty_two_week_low:148,pe_ratio:382.4,target_price:430,upside_pct:25.4,signal:'買入'},{symbol:'AVGO',name:'Broadcom Inc',current_price:1420,change_pct:0.9,fifty_two_week_high:1978,fifty_two_week_low:774,pe_ratio:34.2,target_price:1800,upside_pct:26.8,signal:'買入'}]
+      ? [{id:'AMD',symbol:'AMD',name:'Advanced Micro Devices',current_price:168.40,change_pct:1.2,fifty_two_week_high:227,fifty_two_week_low:94,pe_ratio:45.8,target_price:220,upside_pct:30.6,signal:'買入',want_buy:true},{id:'PLTR',symbol:'PLTR',name:'Palantir Technologies',current_price:28.60,change_pct:2.1,fifty_two_week_high:34,fifty_two_week_low:12,pe_ratio:178.2,target_price:40,upside_pct:39.9,signal:'買入',want_buy:false},{id:'CRWD',symbol:'CRWD',name:'CrowdStrike Holdings',current_price:342.80,change_pct:-0.3,fifty_two_week_high:398,fifty_two_week_low:148,pe_ratio:382.4,target_price:430,upside_pct:25.4,signal:'買入',want_buy:false},{id:'AVGO',symbol:'AVGO',name:'Broadcom Inc',current_price:1420,change_pct:0.9,fifty_two_week_high:1978,fifty_two_week_low:774,pe_ratio:34.2,target_price:1800,upside_pct:26.8,signal:'買入',want_buy:true}]
       : await api('/api/watchlist');
-    document.getElementById('watchlistSub').textContent=`${items.length} stocks tracked`;
-    const tbody=document.getElementById('watchlistTbody'); tbody.innerHTML='';
-    const aMap={'買入':'tag-green','持有':'tag-amber','觀察':'tag-blue'};
-    items.forEach(w=>{
-      const up=(w.change_pct||0)>=0;
-      // 依標的判斷幣別：優先用後端 currency，否則以 .TW/.TWO 或 4-6 位數字代號視為台股（NT$）
-      const cur=(w.currency||((/(\.TWO?$)|(^\d{4,6}$)/i.test(String(w.symbol||'')))?'TWD':'USD'));
-      tbody.innerHTML+=`<tr>
-        <td><span class="ticker">${w.symbol}</span></td>
-        <td><div class="co-name">${w.name||w.symbol}</div></td>
-        <td><strong>${formatMoneyDec(w.current_price||0, cur)}</strong></td>
-        <td style="color:${up?'var(--green)':'var(--red)'}">${up?'+':''}${(w.change_pct||0).toFixed(2)}%</td>
-        <td style="font-family:monospace;font-size:12px;color:var(--mid)">${w.fifty_two_week_high?formatMoneyDec(w.fifty_two_week_high, cur):'—'} / ${w.fifty_two_week_low?formatMoneyDec(w.fifty_two_week_low, cur):'—'}</td>
-        <td>${w.pe_ratio?w.pe_ratio.toFixed(1):'—'}</td>
-        <td style="color:var(--blue);font-weight:600">${w.target_price?formatMoneyDec(w.target_price, cur):'—'}</td>
-        <td>${w.upside_pct!=null?`<span class="tag tag-green">${w.upside_pct>=0?'+':''}${w.upside_pct.toFixed(1)}%</span>`:'—'}</td>
-        <td><span class="tag ${aMap[w.signal]||'tag-gray'}">${w.signal||'—'}</span></td>
-      </tr>`;
-    });
+    _watchlistItems = items || [];
+    renderWatchlist();
   } catch(e){ console.error(e); }
+}
+
+function setWatchlistFilter(mode, btn){
+  _wlFilter = mode;
+  document.querySelectorAll('#wlFilter .wl-chip').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderWatchlist();
+}
+
+function renderWatchlist(){
+  const all = _watchlistItems || [];
+  const buyN = all.filter(w=>w.want_buy).length;
+  const items = _wlFilter==='buy' ? all.filter(w=>w.want_buy) : all;
+  document.getElementById('watchlistSub').textContent=`${all.length} 檔追蹤 · ${buyN} 檔想買`;
+  const cAll=document.querySelector('#wlFilter [data-f="all"]'), cBuy=document.querySelector('#wlFilter [data-f="buy"]');
+  if(cAll) cAll.textContent=`全部（${all.length}）`;
+  if(cBuy) cBuy.textContent=`只看想買（${buyN}）`;
+  const tbody=document.getElementById('watchlistTbody'); tbody.innerHTML='';
+  const aMap={'買入':'tag-green','持有':'tag-amber','觀察':'tag-blue'};
+  if(!items.length){ tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;color:var(--mid);padding:24px">${_wlFilter==='buy'?'還沒有標記為「想買」的標的，點右側 ☆ 加入藍圖':'觀察清單是空的'}</td></tr>`; return; }
+  items.forEach(w=>{
+    const up=(w.change_pct||0)>=0;
+    // 依標的判斷幣別：優先用後端 currency，否則以 .TW/.TWO 或 4-6 位數字代號視為台股（NT$）
+    const cur=(w.currency||((/(\.TWO?$)|(^\d{4,6}$)/i.test(String(w.symbol||'')))?'TWD':'USD'));
+    const on=!!w.want_buy;
+    const star=`<button class="wl-star ${on?'on':''}" onclick="toggleWantBuy('${w.id}',${on})" title="${on?'已納入藍圖，點一下取消':'點一下標記想買、納入再平衡藍圖＋晨報提醒'}"><svg viewBox="0 0 24 24" fill="${on?'#7A3FD6':'none'}" stroke="${on?'#7A3FD6':'#C4C9D0'}" stroke-width="1.6"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg><span>${on?'想買':'只觀察'}</span></button>`;
+    tbody.innerHTML+=`<tr>
+      <td><span class="ticker">${w.symbol}</span></td>
+      <td><div class="co-name">${w.name||w.symbol}</div></td>
+      <td><strong>${formatMoneyDec(w.current_price||0, cur)}</strong></td>
+      <td style="color:${up?'var(--green)':'var(--red)'}">${up?'+':''}${(w.change_pct||0).toFixed(2)}%</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--mid)">${w.fifty_two_week_high?formatMoneyDec(w.fifty_two_week_high, cur):'—'} / ${w.fifty_two_week_low?formatMoneyDec(w.fifty_two_week_low, cur):'—'}</td>
+      <td>${w.pe_ratio?w.pe_ratio.toFixed(1):'—'}</td>
+      <td style="color:var(--blue);font-weight:600">${w.target_price?formatMoneyDec(w.target_price, cur):'—'}</td>
+      <td>${w.upside_pct!=null?`<span class="tag tag-green">${w.upside_pct>=0?'+':''}${w.upside_pct.toFixed(1)}%</span>`:'—'}</td>
+      <td><span class="tag ${aMap[w.signal]||'tag-gray'}">${w.signal||'—'}</span></td>
+      <td>${star}</td>
+    </tr>`;
+  });
+}
+
+async function toggleWantBuy(id, cur){
+  const it=_watchlistItems.find(w=>String(w.id)===String(id));
+  if (DEMO_MODE){ if(it) it.want_buy=!cur; renderWatchlist(); return; }
+  try{
+    await api(`/api/watchlist/${id}`, 'PUT', { want_buy: !cur });
+    if(it) it.want_buy=!cur;   // 就地更新，避免重打整張清單
+    renderWatchlist();
+  }catch(e){ alert('切換「想買」失敗：'+(e.message||'請稍後再試')); }
 }
 
 // ── HOLDING MODAL ──────────────────────────────────────────────
