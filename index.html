@@ -361,6 +361,12 @@ tr:hover td{background:var(--bg)}
 .wl-seg button.on-watch{background:var(--mid);color:#fff;font-weight:600}
 .wl-seg button.on-buy{background:#7A3FD6;color:#fff;font-weight:700}
 .wl-seg button:not(.on-watch):not(.on-buy):hover{background:var(--blue-lt);color:var(--dark)}
+/* 淨值走勢｜配置歷史 切換（Net Worth Trend 卡） */
+.trend-seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:12.5px}
+.trend-seg button{border:none;background:var(--white);color:var(--mid);cursor:pointer;padding:5px 13px;font-weight:600;font-family:inherit;transition:.12s}
+.trend-seg button:first-child{border-right:1px solid var(--border)}
+.trend-seg button.on{background:var(--blue);color:#fff}
+.trend-seg button:not(.on):hover{background:var(--blue-lt);color:var(--dark)}
 /* 想買標的的目標價輸入（晨報到價提醒用） */
 .wl-tp{width:92px;padding:4px 7px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;text-align:right;font-variant-numeric:tabular-nums;color:var(--dark);background:var(--white);outline:none}
 .wl-tp:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-lt)}
@@ -930,7 +936,13 @@ tr:hover td{background:var(--bg)}
     <div class="grid-7030 mb-20">
       <div class="card">
         <div class="card-header">
-          <div><div class="card-title">Net Worth Trend</div><div class="card-sub" id="trendSub">Loading data...</div></div>
+          <div>
+            <div class="trend-seg" style="margin-bottom:5px">
+              <button id="tm-networth" class="on" onclick="setTrendMode('networth')">淨值走勢</button>
+              <button id="tm-alloc" onclick="setTrendMode('alloc')">配置歷史</button>
+            </div>
+            <div class="card-sub" id="trendSub">Loading data...</div>
+          </div>
           <div class="timeframe-row">
             <button class="tf-btn active" onclick="setHistTF(this,'1y')">1Y</button>
             <button class="tf-btn" onclick="setHistTF(this,'6mo')">6M</button>
@@ -939,7 +951,11 @@ tr:hover td{background:var(--bg)}
           </div>
         </div>
         <div class="card-body" style="position:relative">
-          <div class="chart-wrap"><canvas id="netWorthChart"></canvas></div>
+          <div class="chart-wrap" id="netWorthWrap"><canvas id="netWorthChart"></canvas></div>
+          <div id="allocWrap" style="display:none">
+            <div class="chart-wrap"><svg id="allocHistChart" viewBox="0 0 760 300" style="width:100%;height:100%" role="img" aria-label="板塊配置歷史"></svg></div>
+            <div id="allocLegend" style="display:flex;flex-wrap:wrap;gap:7px 15px;margin-top:8px;font-size:12px;color:var(--mid)"></div>
+          </div>
           <div class="loading-overlay" id="trendLoading"><div class="loading-spinner"></div> Loading</div>
         </div>
       </div>
@@ -2004,10 +2020,126 @@ async function renderNetWorthChart(period) {
   document.getElementById('trendLoading').style.display='none';
 }
 
+// 淨值走勢 / 配置歷史 共用同一張卡與同一組時間範圍鈕
+let _trendMode = 'networth';   // 'networth' | 'alloc'
+let _trendPeriod = '1y';       // 淨值圖用的 period 記號（'1y'/'6mo'/'3mo'/'1mo'）
+
 function setHistTF(btn,period){
   document.querySelectorAll('[onclick^="setHistTF"]').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  renderNetWorthChart(period);
+  _trendPeriod = period;
+  if(_trendMode==='alloc') renderAllocHistory(period);
+  else renderNetWorthChart(period);
+}
+
+function setTrendMode(mode){
+  if(_trendMode===mode) return;
+  _trendMode = mode;
+  document.getElementById('tm-networth').classList.toggle('on', mode==='networth');
+  document.getElementById('tm-alloc').classList.toggle('on', mode==='alloc');
+  document.getElementById('netWorthWrap').style.display = mode==='networth' ? '' : 'none';
+  document.getElementById('allocWrap').style.display    = mode==='alloc'    ? '' : 'none';
+  if(mode==='alloc') renderAllocHistory(_trendPeriod);
+  else renderNetWorthChart(_trendPeriod);
+}
+
+// 板塊配色複用既有 ALLOC_COLORS（sector 圓餅圖同一組色盤，色系一致）；series[0]=最大板塊→色盤首色主藍
+const _allocDemo = {
+  dates:['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06'],
+  series:[
+    {name:'Technology', data:[34,38,42,40,46,52]},
+    {name:'ETF',        data:[29,27,25,27,24,21]},
+    {name:'Financials', data:[18,17,16,17,15,14]},
+    {name:'Healthcare', data:[12,11,10,10,9,8]},
+    {name:'Other',      data:[7,7,7,6,6,5]},
+  ],
+};
+
+async function renderAllocHistory(period){
+  const loading = document.getElementById('trendLoading');
+  const sub = document.getElementById('trendSub');
+  loading.style.display='flex';
+  let data;
+  try{
+    if(DEMO_MODE){ data = _allocDemo; }
+    else{
+      const pm = {'1y':'1y','6mo':'6m','3mo':'3m','1mo':'1m'};
+      data = await api(`/api/portfolio/allocation-history?period=${pm[period]||'6m'}`);
+    }
+  }catch(e){
+    loading.style.display='none';
+    sub.textContent='配置歷史暫時載入失敗，稍後再試';
+    _drawAllocSVG(null); return;
+  }
+  loading.style.display='none';
+  const dates=(data&&data.dates)||[], series=(data&&data.series)||[];
+  if(dates.length<2 || !series.length){
+    sub.textContent='配置歷史資料不足（至少需 2 個交易日）';
+    _drawAllocSVG(null); return;
+  }
+  sub.textContent=`${dates[0]} — ${dates[dates.length-1]} · ${series.length} 個板塊`;
+  _drawAllocSVG(data);
+}
+
+// 純 SVG 堆疊面積圖（無外部依賴）。data={dates:[], series:[{name,data:[%...]}]}；傳 null 清空。
+function _drawAllocSVG(data){
+  const svg=document.getElementById('allocHistChart');
+  const legend=document.getElementById('allocLegend');
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+  legend.innerHTML='';
+  if(!data) return;
+  const NS='http://www.w3.org/2000/svg';
+  const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const dates=data.dates, series=data.series, n=dates.length;
+  const P={l:44,r:132,t:16,b:28,W:760,H:300};
+  const plotW=P.W-P.l-P.r, plotH=P.H-P.t-P.b;
+  const X=i=> P.l + (n>1 ? plotW*i/(n-1) : plotW/2);
+  const Y=pct=> P.t + plotH*(1-pct/100);
+  // 累積上界（series[0] 墊底）
+  const cum=[];
+  for(let i=0;i<n;i++){ let acc=0; const col=[]; for(let k=0;k<series.length;k++){acc+=(series[k].data[i]||0);col.push(acc);} cum.push(col); }
+  // 網格 + y 標籤
+  [0,25,50,75,100].forEach(g=>{
+    const y=Y(g);
+    svg.appendChild(el('line',{x1:P.l,y1:y,x2:P.l+plotW,y2:y,stroke:'#eef1f5','stroke-width':1}));
+    const t=el('text',{x:P.l-8,y:y+4,'text-anchor':'end','font-size':11,fill:'#9ca3af'}); t.textContent=g+'%'; svg.appendChild(t);
+  });
+  // 每層堆疊面積
+  series.forEach((s,k)=>{
+    const color=ALLOC_COLORS[k%ALLOC_COLORS.length];
+    const lower = k===0 ? new Array(n).fill(0) : cum.map(c=>c[k-1]);
+    const upper = cum.map(c=>c[k]);
+    let pts='';
+    for(let i=0;i<n;i++) pts+=`${X(i)},${Y(upper[i])} `;
+    for(let i=n-1;i>=0;i--) pts+=`${X(i)},${Y(lower[i])} `;
+    svg.appendChild(el('polygon',{points:pts.trim(),fill:color,stroke:'#fff','stroke-width':0.8}));
+    // 右側 band 標籤（最後一點該層中點）
+    const midPct=(lower[n-1]+upper[n-1])/2;
+    const bandH=Y(lower[n-1])-Y(upper[n-1]);
+    if(bandH>=12){  // 太薄不標，避免疊字
+      const t=el('text',{x:X(n-1)+10,y:Y(midPct)+4,'font-size':11.5,'font-weight':600,fill:'#1a1f2e'});
+      t.textContent=`${s.name} ${Math.round(series[k].data[n-1]||0)}%`; svg.appendChild(t);
+    }
+  });
+  // x 軸日期（最多 ~6 個等距）
+  const step=Math.max(1,Math.ceil(n/6));
+  for(let i=0;i<n;i+=step){
+    const t=el('text',{x:X(i),y:P.t+plotH+20,'text-anchor':'middle','font-size':11,fill:'#6b7280'});
+    t.textContent=_fmtAllocDate(dates[i]); svg.appendChild(t);
+  }
+  // 圖例
+  series.forEach((s,k)=>{
+    const d=document.createElement('div'); d.style.cssText='display:flex;align-items:center;gap:6px';
+    d.innerHTML=`<span style="width:11px;height:11px;border-radius:3px;background:${ALLOC_COLORS[k%ALLOC_COLORS.length]};display:inline-block"></span>${s.name}`;
+    legend.appendChild(d);
+  });
+}
+// ISO 日期 → 精簡標籤（真實資料 '2026-01-02'→'1/2'；DEMO '2026-01'→'1月'）
+function _fmtAllocDate(s){
+  const p=String(s).split('-');
+  if(p.length>=3) return `${+p[1]}/${+p[2]}`;
+  if(p.length===2) return `${+p[1]}月`;
+  return s;
 }
 
 function renderAiInsight(summary) {
