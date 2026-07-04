@@ -1251,7 +1251,7 @@ tr:hover td{background:var(--bg)}
         <div class="loading-overlay" id="priceLoading"><div class="loading-spinner"></div> Loading</div>
       </div>
       <div class="tab-pane" id="chart-rsi">
-        <div style="font-size:11px;color:var(--mid);margin-bottom:12px">RSI &gt; 70 = 超買，股價偏高，注意風險 &nbsp;|&nbsp; RSI &lt; 30 = 超賣，股價偏低，可能是買入機會</div>
+        <div style="font-size:11px;color:var(--mid);margin-bottom:12px">RSI &gt; 70 = 超買（股價相對偏高） &nbsp;|&nbsp; RSI &lt; 30 = 超賣（股價相對偏低）</div>
         <div class="chart-wrap-lg"><canvas id="rsiChart"></canvas></div>
       </div>
       <div class="tab-pane" id="chart-volume">
@@ -1861,7 +1861,12 @@ async function renderNetWorthChart(period) {
       const data = await api(`/api/portfolio/value-history?period=${periodMap[period]||'1m'}`);
       dates=data.dates; prices=data.values;
       if(!dates||!dates.length) throw new Error('no data');
-    } catch { dates=genDates(21); prices=genPrices(3000,21,8); }
+    } catch {
+      // API 失敗時不畫假資料，直接顯示錯誤訊息（canvas 留白，前面已 destroy）
+      document.getElementById('trendLoading').style.display='none';
+      document.getElementById('trendSub').textContent='淨值資料暫時載入失敗，稍後再試';
+      return;
+    }
   }
 
   document.getElementById('trendSub').textContent=`${dates[0]} — ${dates[dates.length-1]}`;
@@ -2402,7 +2407,7 @@ async function loadTechnical(symbol, period) {
 
   const rsiLabel = lastRSI>70 ? '超買（偏高）' : lastRSI<30 ? '超賣（偏低）' : '正常範圍';
   const maVsLabel = cur>lastSMA20 ? '在均線上方' : '在均線下方';
-  const maXLabel  = lastSMA20>lastSMA50 ? '黃金交叉（看漲）' : '死亡交叉（看跌）';
+  const maXLabel  = lastSMA20>lastSMA50 ? '黃金交叉（短均線在上）' : '死亡交叉（短均線在下）';
   document.getElementById('techIndicators').innerHTML=`
     <div class="alloc-item">
       <div class="alloc-name">RSI 超買超賣<div style="font-size:10px;color:var(--mid);font-weight:400">0–100，70以上偏高，30以下偏低</div></div>
@@ -2447,24 +2452,24 @@ async function loadTechnical(symbol, period) {
       <div class="alloc-name">支撐位（下方支撐）<div style="font-size:10px;color:var(--mid);font-weight:400">${support?`近 6 週低點，約 ${supDist}% 處可能止跌`:'已跌破近期低點，下方暫無明顯支撐'}</div></div>
       <div style="color:var(--green);font-weight:600;font-family:monospace">${support?cs+support.toFixed(2):'—'}</div>
     </div>`;
-  // 決定白話結論
+  // 決定白話結論（中性事實描述，指標僅供粗篩參考、不當買賣訊號）
   let sigColor, sigBg, sigTitle, sigText;
   if(lastRSI>70){
     sigColor='var(--red)'; sigBg='#FEF2F2';
-    sigTitle='目前偏高，建議觀望';
-    sigText=`RSI ${lastRSI?.toFixed(0)} 已進入超買區（>70），代表短期漲幅較大，市場情緒偏熱。建議等股價稍微回調、RSI 降至 60 以下，再考慮分批買入。`;
+    sigTitle='RSI 位於超買區';
+    sigText=`RSI ${lastRSI?.toFixed(0)} 已進入超買區（>70），代表短期漲幅較大，市場情緒偏熱。`;
   } else if(lastRSI<30){
     sigColor='var(--green)'; sigBg='#F0FDF4';
-    sigTitle='目前偏低，可考慮分批買入';
-    sigText=`RSI ${lastRSI?.toFixed(0)} 進入超賣區（<30），代表股價短期跌幅較大，可能已接近相對低點。若長期看好這支股票，可考慮開始分批買入。`;
+    sigTitle='RSI 位於超賣區';
+    sigText=`RSI ${lastRSI?.toFixed(0)} 進入超賣區（<30），代表股價短期跌幅較大（相對偏低）。`;
   } else if(lastSMA20>lastSMA50){
     sigColor='var(--blue)'; sigBg='#EFF6FF';
-    sigTitle='趨勢偏強，可繼續持有或定期買入';
-    sigText=`20日均線在50日均線之上（黃金交叉），代表短期走勢比中期強，整體趨勢看漲。RSI ${lastRSI?.toFixed(0)} 在正常範圍，沒有明顯超買。適合繼續持有或定期定額累積。`;
+    sigTitle='短期均線在中期均線之上';
+    sigText=`20日均線在50日均線之上（黃金交叉），代表短期走勢比中期強。RSI ${lastRSI?.toFixed(0)} 在正常範圍，沒有明顯超買。`;
   } else {
     sigColor='var(--amber)'; sigBg='#FFFBEB';
-    sigTitle='趨勢中性，建議定期定額持續投入';
-    sigText=`目前均線呈死亡交叉（短期弱於中期），但 RSI ${lastRSI?.toFixed(0)} 正常。若是長期定期定額計畫，不需要特別在意短期訊號，按計畫持續投入即可。`;
+    sigTitle='短期均線在中期均線之下';
+    sigText=`目前均線呈死亡交叉（短期弱於中期），RSI ${lastRSI?.toFixed(0)} 在正常範圍。`;
   }
   document.getElementById('techSignals').innerHTML=`
     <div style="margin-bottom:12px;padding:13px 14px;background:${sigBg};border-radius:7px;border-left:3px solid ${sigColor}">
@@ -2473,7 +2478,7 @@ async function loadTechnical(symbol, period) {
     </div>
     <div class="alloc-item">
       <div class="alloc-name">整體趨勢</div>
-      <span class="tag ${lastSMA20>lastSMA50?'tag-green':'tag-red'}">${lastSMA20>lastSMA50?'看漲':'看跌'}</span>
+      <span class="tag ${lastSMA20>lastSMA50?'tag-green':'tag-red'}">${lastSMA20>lastSMA50?'短均線在上':'短均線在下'}</span>
     </div>
     <div class="alloc-item">
       <div class="alloc-name">超買超賣</div>
@@ -2646,7 +2651,7 @@ function _renderMarketIRR(irrId, lblId, txns, market, currentValue) {
     return;
   }
   const isTw = market === 'tw';
-  const mk = (txns||[]).filter(t => isTw === /\.TW$|^\d{4,6}$/i.test(String(t.symbol||'')));
+  const mk = (txns||[]).filter(t => isTw === /\.TWO?$|^\d{4,6}$/i.test(String(t.symbol||'')));   // .TWO? 同時認上市(.TW)與上櫃(.TWO)
   if (!mk.length) { irrEl.textContent='—'; irrEl.style.color='var(--mid)'; setLbl('尚無交易記錄'); return; }
   let invested = 0, earliest = new Date();
   mk.forEach(t => {
@@ -2996,15 +3001,17 @@ async function loadWatchlistPage(){
     const aMap={'買入':'tag-green','持有':'tag-amber','觀察':'tag-blue'};
     items.forEach(w=>{
       const up=(w.change_pct||0)>=0;
+      // 依標的判斷幣別：優先用後端 currency，否則以 .TW/.TWO 或 4-6 位數字代號視為台股（NT$）
+      const cur=(w.currency||((/(\.TWO?$)|(^\d{4,6}$)/i.test(String(w.symbol||'')))?'TWD':'USD'));
       tbody.innerHTML+=`<tr>
         <td><span class="ticker">${w.symbol}</span></td>
         <td><div class="co-name">${w.name||w.symbol}</div></td>
-        <td><strong>$${(w.current_price||0).toFixed(2)}</strong></td>
+        <td><strong>${formatMoneyDec(w.current_price||0, cur)}</strong></td>
         <td style="color:${up?'var(--green)':'var(--red)'}">${up?'+':''}${(w.change_pct||0).toFixed(2)}%</td>
-        <td style="font-family:monospace;font-size:12px;color:var(--mid)">$${w.fifty_two_week_high||'—'} / $${w.fifty_two_week_low||'—'}</td>
+        <td style="font-family:monospace;font-size:12px;color:var(--mid)">${w.fifty_two_week_high?formatMoneyDec(w.fifty_two_week_high, cur):'—'} / ${w.fifty_two_week_low?formatMoneyDec(w.fifty_two_week_low, cur):'—'}</td>
         <td>${w.pe_ratio?w.pe_ratio.toFixed(1):'—'}</td>
-        <td style="color:var(--blue);font-weight:600">${w.target_price?'$'+w.target_price:'—'}</td>
-        <td>${w.upside_pct!=null?`<span class="tag tag-green">+${w.upside_pct.toFixed(1)}%</span>`:'—'}</td>
+        <td style="color:var(--blue);font-weight:600">${w.target_price?formatMoneyDec(w.target_price, cur):'—'}</td>
+        <td>${w.upside_pct!=null?`<span class="tag tag-green">${w.upside_pct>=0?'+':''}${w.upside_pct.toFixed(1)}%</span>`:'—'}</td>
         <td><span class="tag ${aMap[w.signal]||'tag-gray'}">${w.signal||'—'}</span></td>
       </tr>`;
     });
@@ -3095,7 +3102,8 @@ async function refreshPortfolio() {
     renderSummaryCards(summary);
     if(window.polishCountUp){polishCountUp(document.getElementById('s-totalMv'));polishCountUp(document.getElementById('tw-s-totalMv'));}
     renderHoldings(holdings);
-    renderSectorChart(summary.sector_allocation);
+    // 與 loadOverview 一致：優先用合併美台的板塊配置，避免增刪持倉後退回美股-only
+    renderSectorChart(summary.sector_allocation_combined || summary.sector_allocation);
     await loadPortfolioPage(holdings, summary);
   } catch(e) {
     console.error('refreshPortfolio failed', e);
@@ -3703,7 +3711,7 @@ async function loadDividends() {
     const data = DEMO_MODE ? DEMO_DIVIDENDS : await api('/api/portfolio/dividends');
     const holdings = data.holdings || [];
     // 美股 / 台股各自分開（與淨值/成本等卡片一致，原幣顯示、互不重複計算）
-    const isTw = h => (h.currency === 'TWD') || /\.TW$|^\d{4,6}$/i.test(String(h.symbol||''));
+    const isTw = h => (h.currency === 'TWD') || /\.TWO?$|^\d{4,6}$/i.test(String(h.symbol||''));   // .TWO? 同時認上市(.TW)與上櫃(.TWO)
     const usH = holdings.filter(h => !isTw(h));
     const twH = holdings.filter(h =>  isTw(h));
     const sumDiv = arr => arr.reduce((a,b)=>a+(b.annual_dividend_total||0),0);
