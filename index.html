@@ -2659,44 +2659,32 @@ async function loadPerformanceVsBenchmark(period = '1y') {
 }
 
 // ── 年化報酬率 IRR ───────────────────────────────────────────
+// 真 XIRR：後端算（含匯入基準 opening + 手續費 + 逐筆日期加權），前端只顯示。summary 參數保留相容、不再使用。
 async function calcPortfolioIRR(summary) {
-  // 美股 IRR（USD）、台股 IRR（TWD）各自獨立：各市場用自己的交易（原幣，不折算）+ 自己的現值
-  const usVal = (summary && summary.us && summary.us.total_market_value) || 0;
-  const twVal = (summary && summary.tw && summary.tw.total_market_value) || 0;
-  let txns = [];
-  if (!DEMO_MODE) txns = await api('/api/portfolio/transactions').catch(()=>[]);
-  _renderMarketIRR('s-irr',    's-irrLabel',    txns, 'us', usVal);
-  _renderMarketIRR('tw-s-irr', 'tw-s-irrLabel', txns, 'tw', twVal);
-}
-function _renderMarketIRR(irrId, lblId, txns, market, currentValue) {
-  const irrEl = document.getElementById(irrId), lblEl = document.getElementById(lblId);
-  if (!irrEl) return;
-  const setLbl = t => { if (lblEl) lblEl.textContent = t; };
   if (DEMO_MODE) {
-    const up = market !== 'tw';
-    irrEl.textContent = up ? '+14.2%' : '-3.4%';
-    irrEl.style.color = up ? 'var(--green)' : 'var(--red)';
-    setLbl('持有 1.2 年');
+    _renderIRR('s-irr',    's-irrLabel',    { irr: 14.2, years: 1.2 });
+    _renderIRR('tw-s-irr', 'tw-s-irrLabel', { irr: -3.4, years: 1.2 });
     return;
   }
-  const isTw = market === 'tw';
-  const mk = (txns||[]).filter(t => isTw === /\.TWO?$|^\d{4,6}$/i.test(String(t.symbol||'')));   // .TWO? 同時認上市(.TW)與上櫃(.TWO)
-  if (!mk.length) { irrEl.textContent='—'; irrEl.style.color='var(--mid)'; setLbl('尚無交易記錄'); return; }
-  let invested = 0, earliest = new Date();
-  mk.forEach(t => {
-    const d = new Date(t.transaction_date);
-    const amt = Number(t.total_amount);   // 原幣（美股 USD、台股 TWD），與 currentValue 同基準
-    if (t.transaction_type === 'BUY')  invested += amt;
-    if (t.transaction_type === 'SELL') invested -= amt;
-    if (d < earliest) earliest = d;
-  });
-  if (invested <= 0 || !currentValue) { irrEl.textContent='—'; irrEl.style.color='var(--mid)'; setLbl('—'); return; }
-  const years = (Date.now() - earliest.getTime()) / (1000*60*60*24*365);
-  if (years < 0.05) { irrEl.textContent='—'; setLbl('持有期太短'); return; }
-  const irr = (Math.pow(currentValue / invested, 1/years) - 1) * 100, up = irr >= 0;
-  irrEl.textContent = (up?'+':'') + irr.toFixed(1) + '%';
-  irrEl.style.color = up ? 'var(--green)' : 'var(--red)';
-  setLbl(years<1 ? `持有 ${(years*12).toFixed(0)} 個月` : `持有 ${years.toFixed(1)} 年`);
+  const r = await api('/api/portfolio/irr').catch(() => null);
+  const fail = { note: '讀取失敗' };   // 網路/後端錯誤 → 明說「讀取失敗」，別誤報成「尚無交易記錄」
+  _renderIRR('s-irr',    's-irrLabel',    r ? r.us : fail);
+  _renderIRR('tw-s-irr', 'tw-s-irrLabel', r ? r.tw : fail);
+}
+function _renderIRR(irrId, lblId, d) {
+  const el = document.getElementById(irrId), lblEl = document.getElementById(lblId);
+  if (!el) return;
+  const setLbl = t => { if (lblEl) lblEl.textContent = t; };
+  if (!d || d.irr == null) {   // 資料不足 / 持有太短 → 顯示後端給的原因
+    el.textContent = '—'; el.style.color = 'var(--mid)';
+    setLbl((d && d.note) || '尚無交易記錄');
+    return;
+  }
+  const up = d.irr >= 0;
+  el.textContent = (up ? '+' : '') + d.irr.toFixed(1) + '%';
+  el.style.color = up ? 'var(--green)' : 'var(--red)';
+  const y = d.years || 0;
+  setLbl(y < 1 ? `年化 · 持有 ${Math.max(1, Math.round(y * 12))} 個月` : `年化 · 持有 ${y.toFixed(1)} 年`);
 }
 
 // ── 再平衡頁面（美股 / 台股各自獨立計算）────────────────────────
