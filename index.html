@@ -3093,8 +3093,7 @@ function renderWatchlist(){
     const up=(w.change_pct||0)>=0;
     // 依標的判斷幣別：優先用後端 currency，否則以 .TW/.TWO 或 4-6 位數字代號視為台股（NT$）
     const cur=(w.currency||((/(\.TWO?$)|(^\d{4,6}$)/i.test(String(w.symbol||'')))?'TWD':'USD'));
-    const on=!!w.want_buy;
-    const star=`<button class="wl-star ${on?'on':''}" onclick="toggleWantBuy('${w.id}',${on})" title="${on?'已納入藍圖，點一下取消':'點一下標記想買、納入再平衡藍圖＋晨報提醒'}"><svg viewBox="0 0 24 24" fill="${on?'#7A3FD6':'none'}" stroke="${on?'#7A3FD6':'#C4C9D0'}" stroke-width="1.6"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg><span>${on?'想買':'只觀察'}</span></button>`;
+    const star=_wlStarBtn(w,'watchlist');
     tbody.innerHTML+=`<tr>
       <td><span class="ticker">${w.symbol}</span></td>
       <td><div class="co-name">${w.name||w.symbol}</div></td>
@@ -3110,13 +3109,21 @@ function renderWatchlist(){
   });
 }
 
-async function toggleWantBuy(id, cur){
+// 想買星號按鈕（觀察清單頁 view='watchlist' 與 選股頁的觀察清單卡 view='screener' 共用；旗標同一張表）
+function _wlStarBtn(w, view){
+  const on=!!w.want_buy;
+  return `<button class="wl-star ${on?'on':''}" onclick="toggleWantBuy('${w.id}',${on},'${view}')" title="${on?'已納入藍圖，點一下取消':'點一下標記想買、納入再平衡藍圖＋晨報提醒'}"><svg viewBox="0 0 24 24" fill="${on?'#7A3FD6':'none'}" stroke="${on?'#7A3FD6':'#C4C9D0'}" stroke-width="1.6"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg><span>${on?'想買':'只觀察'}</span></button>`;
+}
+
+async function toggleWantBuy(id, cur, view){
   const it=_watchlistItems.find(w=>String(w.id)===String(id));
-  if (DEMO_MODE){ if(it) it.want_buy=!cur; renderWatchlist(); return; }
+  const after=!cur;
+  const rerender=()=>{ if(view==='screener') loadScreenerWatchlist(); else renderWatchlist(); };
+  if (DEMO_MODE){ if(it) it.want_buy=after; rerender(); return; }
   try{
-    await api(`/api/watchlist/${id}`, 'PUT', { want_buy: !cur });
-    if(it) it.want_buy=!cur;   // 就地更新，避免重打整張清單
-    renderWatchlist();
+    await api(`/api/watchlist/${id}`, 'PUT', { want_buy: after });
+    if(it) it.want_buy=after;   // 就地更新 view A 的快取；view B 由 loadScreenerWatchlist 重抓反映
+    rerender();
   }catch(e){ alert('切換「想買」失敗：'+(e.message||'請稍後再試')); }
 }
 
@@ -3309,6 +3316,7 @@ async function loadScreenerWatchlist() {
         <td><strong>${w.current_price ? '$'+w.current_price.toFixed(2) : '—'}</strong></td>
         <td style="color:${up?'var(--green)':'var(--red)'};font-size:11px">${up?'+':''}${(w.change_pct||0).toFixed(2)}%</td>
         ${extra}
+        <td>${_wlStarBtn(w,'screener')}</td>
         <td><button onclick="removeFromScreenerWatchlist('${w.symbol}',this)"
           style="border:none;background:none;cursor:pointer;color:var(--light);font-size:13px;padding:2px 6px"
           >移除</button></td>
@@ -3324,7 +3332,7 @@ async function loadScreenerWatchlist() {
         <table>
           <thead><tr>
             <th>Ticker</th><th>Company</th><th>Price</th><th>Change</th>
-            ${extraHeader}<th></th>
+            ${extraHeader}<th>想買</th><th></th>
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>
