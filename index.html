@@ -2591,13 +2591,33 @@ function _perfBlock(portName, benchName, portRet, benchRet, dates) {
     </div>`;
 }
 
+// 匯率歸因：前面的 sleeve 對比都是「原幣」，看不出台幣計價報酬裡匯率佔多少。這塊補上。
+function _fxBlock(fx, usW) {
+  if (!fx || fx.change_pct == null) return '';
+  const c  = v => v>=0?'var(--green)':'var(--red)';
+  const sg = v => (v>=0?'+':'')+v.toFixed(2)+'%';
+  const dir = fx.change_pct>=0 ? '台幣貶值' : '台幣升值';   // USD/TWD 上升＝台幣貶
+  const impact = (usW!=null) ? fx.change_pct*usW : null;     // 對總報酬的估計影響 ≈ 匯率變動 × 美股持股佔比
+  const rng = (fx.from&&fx.to) ? `（${fx.from} ~ ${fx.to}）` : '';
+  const row = (label,val,bg='') => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 11px;${bg}"><span style="color:var(--dark)">${label}</span><span style="font-size:18px;font-weight:800;color:${c(val)}">${sg(val)}</span></div>`;
+  return `
+    <div style="border:1px solid #EEF0F2;border-radius:10px;overflow:hidden">
+      <div style="padding:8px 11px;background:#F8F9FB;font-weight:700;font-size:13px">匯率貢獻 USD/TWD（對台幣計價）<span style="font-size:11px;color:var(--mid);font-weight:400">${rng}</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 11px"><span style="color:var(--dark)">${dir}</span><span style="font-size:14px;font-weight:700;color:var(--dark)">${fx.start!=null?fx.start.toFixed(3):'—'} → ${fx.end!=null?fx.end.toFixed(3):'—'}</span></div>
+      ${row('匯率變動', fx.change_pct)}
+      ${impact!=null ? row(`估對總報酬影響（×美股持股佔比 ${(usW*100).toFixed(0)}%）`, impact, 'background:var(--accent)') : ''}
+    </div>`;
+}
+
 async function loadPerformanceVsBenchmark(period = '1y') {
   const el = document.getElementById('perfContent');
   el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--mid)">計算中...</div>';
   const periodMap = { '1y':'1y', '6mo':'6mo', '3mo':'3mo', '1mo':'1m' };
   try {
     if (DEMO_MODE) {
-      el.innerHTML = _perfBlock('美股組合', 'VOO 標普500', 8.8, 6.2, ['2025-06-27','2026-06-25']);
+      el.innerHTML = _perfBlock('美股組合', 'VOO 標普500', 8.8, 6.2, ['2025-06-27','2026-06-25'])
+        + '<div style="height:14px"></div>'
+        + _fxBlock({start:32.1, end:29.4, change_pct:-8.41, from:'2025-06-27', to:'2026-06-25'}, 0.62);
       return;
     }
     const vh = await api(`/api/portfolio/value-history?period=${periodMap[period]||'1m'}`);
@@ -2619,12 +2639,20 @@ async function loadPerformanceVsBenchmark(period = '1y') {
       const br = benchReturn(t50, vh.tw.dates[0], vh.tw.dates[vh.tw.dates.length-1]);
       blocks.push(_perfBlock('台股組合', '0050 台灣50', vh.tw.twr, br, vh.tw.dates));
     }
+    // 匯率歸因：美股持股佔比 = 美股 sleeve 現值(USD) / 合併現值(USD)。
+    // 兩者取「合併序列的最後一天」同一天的值（美股/合併終點可能因台股連休而不同天，直接拿各自最後一筆會混到不同日）。
+    const cv = (vh.combined && vh.combined.values) || [], cd = (vh.combined && vh.combined.dates) || [];
+    const ud = (vh.us && vh.us.dates) || [], uv = (vh.us && vh.us.values) || [];
+    const ui = cd.length ? ud.indexOf(cd[cd.length-1]) : -1;
+    const usW = (ui >= 0 && cv[cv.length-1] > 0) ? uv[ui] / cv[cv.length-1] : null;
+    const fxHtml = _fxBlock(vh.attribution && vh.attribution.fx, usW);
+    if (fxHtml) blocks.push(fxHtml);
     if (!blocks.length) {
       el.innerHTML = '<div style="padding:16px;color:var(--mid);text-align:center">資料不足，請確認持倉設定正確</div>';
       return;
     }
     el.innerHTML = blocks.join('<div style="height:14px"></div>') +
-      `<div style="font-size:11px;color:var(--mid);margin-top:10px;padding:0 4px;line-height:1.5">報酬率為「時間加權報酬」：已用交易記錄逐日重建持股、並排除加減碼時點影響，才能公平對比大盤。美股對 VOO、台股對 0050，各自原幣計算。</div>`;
+      `<div style="font-size:11px;color:var(--mid);margin-top:10px;padding:0 4px;line-height:1.5">報酬率為「時間加權報酬」：已用交易記錄逐日重建持股、並排除加減碼時點影響，才能公平對比大盤。美股對 VOO、台股對 0050，各自原幣計算。匯率貢獻用合併序列首末日的 USD/TWD 變動估算，對總報酬影響為近似值（×美股持股佔比）。</div>`;
   } catch(e) {
     el.innerHTML = `<div style="padding:16px;color:var(--red)">載入失敗：${e.message}</div>`;
   }
