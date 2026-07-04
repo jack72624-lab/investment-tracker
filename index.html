@@ -842,6 +842,8 @@ tr:hover td{background:var(--bg)}
 
   <!-- PAGE: 總覽 -->
   <div class="page active" id="page-overview">
+    <!-- A-8：報價暫缺警示（部分持倉抓不到即時價，總額可能偏低） -->
+    <div id="staleWarn" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:10px;background:#FFF4E5;border:1px solid #FFD8A8;color:#8A5300;font-size:13px;line-height:1.5"></div>
     <!-- 美股統計列 -->
     <div class="stats-section" id="stats-us-section">
       <div class="stats-section-label" style="color:var(--mid)">美股 <span style="font-weight:400">USD</span></div>
@@ -1740,6 +1742,17 @@ function formatMoneyDec(val, currency) {
 }
 
 function renderSummaryCards(s) {
+  // A-8：有報價暫缺的持倉 → 顯示警示，避免使用者把「抓不到價→市值算 0」誤讀成真的縮水
+  const sw = document.getElementById('staleWarn');
+  if (sw) {
+    const stale = (s && s.stale_symbols) || [];
+    if (stale.length) {
+      sw.style.display = '';
+      sw.textContent = `報價暫缺：${stale.join('、')}（共 ${stale.length} 檔）暫時抓不到即時價，這幾檔市值以 0 計、總淨值與佔比可能偏低，稍後重整再看。`;
+    } else {
+      sw.style.display = 'none';
+    }
+  }
   const usData = s.us || s;
   document.getElementById('s-totalMv').textContent = '$'+(usData.total_market_value||0).toLocaleString('en',{maximumFractionDigits:0});
   document.getElementById('s-cost').textContent    = '$'+(usData.total_cost||0).toLocaleString('en',{maximumFractionDigits:0});
