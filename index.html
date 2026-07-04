@@ -348,6 +348,12 @@ tr:hover td{background:var(--bg)}
 .modal-field{margin-bottom:16px}
 .modal-label{font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
 .modal-input{width:100%;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color .13s;color:var(--dark)}
+/* 再平衡「目標 %」輸入框：原本是瀏覽器預設樣式很醜，統一成 app 卡片風（圓角、置中、聚焦藍框） */
+.sym-target-input{width:64px;height:34px;padding:0 8px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;text-align:center;font-variant-numeric:tabular-nums;color:var(--dark);background:var(--white);outline:none;transition:border-color .13s,box-shadow .13s}
+.sym-target-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-lt)}
+/* 隱藏 number input 的上下箭頭，維持乾淨外觀 */
+.sym-target-input::-webkit-outer-spin-button,.sym-target-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.sym-target-input{-moz-appearance:textfield}
 .modal-input:focus{border-color:var(--blue)}
 .modal-hint{font-size:11px;color:var(--light);margin-top:4px}
 .modal-footer{display:flex;gap:8px;margin-top:24px;justify-content:flex-end}
@@ -2879,7 +2885,7 @@ function renderPerStockRebalance(holdings){
     return `<tr>
       <td><strong>${sym}</strong><div style="font-size:10px;color:var(--mid)">${h.name||''}</div></td>
       <td>${curPct.toFixed(1)}%</td>
-      <td><input class="sym-target-input" data-sym="${sym}" type="number" placeholder="%" min="0" max="100" step="1" value="${tgt??''}" style="width:56px"></td>
+      <td><input class="sym-target-input" data-sym="${sym}" type="number" placeholder="%" min="0" max="100" step="1" value="${tgt??''}"></td>
       <td>${devHtml}</td>
       <td>${actHtml}</td>
     </tr>`;
