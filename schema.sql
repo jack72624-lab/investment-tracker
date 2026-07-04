@@ -50,9 +50,10 @@ CREATE TABLE IF NOT EXISTS transactions (
 --   換匯 CONVERT → from_currency/from_amount（換出）+ to_currency/to_amount（換入），rate=台幣額/美金額
 CREATE TABLE IF NOT EXISTS cash_flows (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  flow_type     TEXT NOT NULL CHECK (flow_type IN ('DEPOSIT','WITHDRAW','CONVERT')),
-  currency      TEXT CHECK (currency IN ('TWD','USD')),  -- 入金/出金用
-  amount        NUMERIC,                                  -- 入金/出金金額（正數）
+  flow_type     TEXT NOT NULL CHECK (flow_type IN ('DEPOSIT','WITHDRAW','CONVERT','DIVIDEND')),
+  symbol        TEXT,                                     -- DIVIDEND：股息來源代號（也用來去重「已入帳」）
+  currency      TEXT CHECK (currency IN ('TWD','USD')),  -- 入金/出金/股息用
+  amount        NUMERIC,                                  -- 入金/出金/股息金額（正數）
   from_currency TEXT,                                     -- 換匯：換出幣別
   from_amount   NUMERIC,                                  -- 換匯：換出金額
   to_currency   TEXT,                                     -- 換匯：換入幣別
@@ -63,6 +64,11 @@ CREATE TABLE IF NOT EXISTS cash_flows (
   created_at    TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE cash_flows ENABLE ROW LEVEL SECURITY;
+-- 遷移（既有 DB 需手動跑；CREATE TABLE IF NOT EXISTS 對已存在的表是 no-op）：股息實收 DIVIDEND
+--   ALTER TABLE cash_flows DROP CONSTRAINT IF EXISTS cash_flows_flow_type_check;
+--   ALTER TABLE cash_flows ADD  CONSTRAINT cash_flows_flow_type_check CHECK (flow_type IN ('DEPOSIT','WITHDRAW','CONVERT','DIVIDEND'));
+--   ALTER TABLE cash_flows ADD COLUMN IF NOT EXISTS symbol TEXT;
+--   CREATE UNIQUE INDEX IF NOT EXISTS uniq_dividend_symbol_date ON cash_flows(symbol, flow_date) WHERE flow_type = 'DIVIDEND';
 
 -- ── 觀察清單表 ───────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS watchlist (
