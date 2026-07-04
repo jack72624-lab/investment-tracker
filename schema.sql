@@ -76,8 +76,11 @@ CREATE TABLE IF NOT EXISTS watchlist (
   symbol       TEXT    NOT NULL UNIQUE,
   target_price NUMERIC,                     -- 你設定的目標價
   notes        TEXT,
+  want_buy     BOOLEAN DEFAULT false,       -- 「想買/納入藍圖」：true＝進再平衡目標卡＋晨報入場提醒
   added_at     TIMESTAMPTZ DEFAULT NOW()
 );
+-- 遷移（既有 DB 需手動跑；CREATE TABLE IF NOT EXISTS 對已存在的表是 no-op）：想買旗標
+--   ALTER TABLE watchlist ADD COLUMN IF NOT EXISTS want_buy BOOLEAN DEFAULT false;
 
 -- ── 股價快取表 ───────────────────────────────────────────────
 -- 快取 yfinance 抓回來的資料，避免頻繁打外部 API
