@@ -354,10 +354,17 @@ tr:hover td{background:var(--bg)}
 /* 觀察清單「想買」篩選 chip + 星號 toggle */
 .wl-chip{padding:6px 13px;border-radius:999px;font-size:13px;border:1px solid var(--border);background:var(--white);color:var(--mid);cursor:pointer;transition:.13s}
 .wl-chip.active{background:var(--dark);color:var(--white);border-color:var(--dark)}
-.wl-star{display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:7px;font-size:12px;color:var(--mid);transition:.13s}
-.wl-star:hover{background:var(--blue-lt)}
-.wl-star.on{color:#7A3FD6;font-weight:700}
-.wl-star svg{width:18px;height:18px}
+/* 觀察｜想買 分段切換 */
+.wl-seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:12px;white-space:nowrap}
+.wl-seg button{border:none;background:var(--white);color:var(--mid);cursor:pointer;padding:5px 12px;font-size:12px;font-family:inherit;transition:.12s}
+.wl-seg button:first-child{border-right:1px solid var(--border)}
+.wl-seg button.on-watch{background:var(--mid);color:#fff;font-weight:600}
+.wl-seg button.on-buy{background:#7A3FD6;color:#fff;font-weight:700}
+.wl-seg button:not(.on-watch):not(.on-buy):hover{background:var(--blue-lt);color:var(--dark)}
+/* 想買標的的目標價輸入（晨報到價提醒用） */
+.wl-tp{width:92px;padding:4px 7px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;text-align:right;font-variant-numeric:tabular-nums;color:var(--dark);background:var(--white);outline:none}
+.wl-tp:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-lt)}
+.wl-tp::-webkit-outer-spin-button,.wl-tp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .wl-tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:700;background:#F1E9FF;color:#7A3FD6;margin-left:6px;vertical-align:middle}
 /* 隱藏 number input 的上下箭頭，維持乾淨外觀 */
 .sym-target-input::-webkit-outer-spin-button,.sym-target-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
@@ -3093,7 +3100,7 @@ function renderWatchlist(){
     const up=(w.change_pct||0)>=0;
     // 依標的判斷幣別：優先用後端 currency，否則以 .TW/.TWO 或 4-6 位數字代號視為台股（NT$）
     const cur=(w.currency||((/(\.TWO?$)|(^\d{4,6}$)/i.test(String(w.symbol||'')))?'TWD':'USD'));
-    const star=_wlStarBtn(w,'watchlist');
+    const star=_wlToggle(w,'watchlist');
     tbody.innerHTML+=`<tr>
       <td><span class="ticker">${w.symbol}</span></td>
       <td><div class="co-name">${w.name||w.symbol}</div></td>
@@ -3109,22 +3116,41 @@ function renderWatchlist(){
   });
 }
 
-// 想買星號按鈕（觀察清單頁 view='watchlist' 與 選股頁的觀察清單卡 view='screener' 共用；旗標同一張表）
-function _wlStarBtn(w, view){
+// 觀察｜想買 分段切換（觀察清單頁 view='watchlist' 與 選股頁的觀察清單卡 view='screener' 共用；旗標同一張表）
+// 想買時多出一個「目標價」輸入——這就是晨報到價提醒要盯的價位。
+function _wlToggle(w, view){
   const on=!!w.want_buy;
-  return `<button class="wl-star ${on?'on':''}" onclick="toggleWantBuy('${w.id}',${on},'${view}')" title="${on?'已納入藍圖，點一下取消':'點一下標記想買、納入再平衡藍圖＋晨報提醒'}"><svg viewBox="0 0 24 24" fill="${on?'#7A3FD6':'none'}" stroke="${on?'#7A3FD6':'#C4C9D0'}" stroke-width="1.6"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg><span>${on?'想買':'只觀察'}</span></button>`;
+  const seg=`<span class="wl-seg">`
+    + `<button class="${!on?'on-watch':''}" onclick="setWantBuy('${w.id}',false,'${view}')">觀察</button>`
+    + `<button class="${on?'on-buy':''}" onclick="setWantBuy('${w.id}',true,'${view}')">想買</button>`
+    + `</span>`;
+  const tp=(w.target_price!=null && w.target_price!=='') ? w.target_price : '';
+  const tgt=on ? `<div style="margin-top:6px"><input class="wl-tp" type="number" step="any" min="0" placeholder="目標價" value="${tp}" title="到價時晨報提醒你入場" onchange="setTargetPrice('${w.id}','${view}',this.value)"></div>` : '';
+  return seg + tgt;
 }
 
-async function toggleWantBuy(id, cur, view){
+async function setWantBuy(id, val, view){
   const it=_watchlistItems.find(w=>String(w.id)===String(id));
-  const after=!cur;
   const rerender=()=>{ if(view==='screener') loadScreenerWatchlist(); else renderWatchlist(); };
-  if (DEMO_MODE){ if(it) it.want_buy=after; rerender(); return; }
+  if(it && !!it.want_buy===val) return;   // 已是該狀態，不重打
+  if (DEMO_MODE){ if(it) it.want_buy=val; rerender(); return; }
   try{
-    await api(`/api/watchlist/${id}`, 'PUT', { want_buy: after });
-    if(it) it.want_buy=after;   // 就地更新 view A 的快取；view B 由 loadScreenerWatchlist 重抓反映
+    await api(`/api/watchlist/${id}`, 'PUT', { want_buy: val });
+    if(it) it.want_buy=val;   // 就地更新 view A 快取；view B 由 loadScreenerWatchlist 重抓反映
     rerender();
   }catch(e){ alert('切換「想買」失敗：'+(e.message||'請稍後再試')); }
+}
+
+async function setTargetPrice(id, view, val){
+  const it=_watchlistItems.find(w=>String(w.id)===String(id));
+  const num = (val==='' ? null : parseFloat(val));
+  if(num==null || !(num>0)) return;   // 空/非正值不動（清除目標價之後再補）
+  if (DEMO_MODE){ if(it) it.target_price=num; return; }
+  try{
+    await api(`/api/watchlist/${id}`, 'PUT', { target_price: num });
+    if(it) it.target_price=num;   // 不強制重繪，避免打斷輸入；下次重整反映
+    showToast('目標價已存');
+  }catch(e){ alert('儲存目標價失敗：'+(e.message||'請稍後再試')); }
 }
 
 // ── HOLDING MODAL ──────────────────────────────────────────────
@@ -3316,7 +3342,7 @@ async function loadScreenerWatchlist() {
         <td><strong>${w.current_price ? '$'+w.current_price.toFixed(2) : '—'}</strong></td>
         <td style="color:${up?'var(--green)':'var(--red)'};font-size:11px">${up?'+':''}${(w.change_pct||0).toFixed(2)}%</td>
         ${extra}
-        <td>${_wlStarBtn(w,'screener')}</td>
+        <td>${_wlToggle(w,'screener')}</td>
         <td><button onclick="removeFromScreenerWatchlist('${w.symbol}',this)"
           style="border:none;background:none;cursor:pointer;color:var(--light);font-size:13px;padding:2px 6px"
           >移除</button></td>
