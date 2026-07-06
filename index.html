@@ -20,6 +20,9 @@
   --r:8px; --navy:#111827; --text:#111827; --accent:#F3F4F6;
   --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.06);
   --shadow-hover:0 4px 12px rgba(0,0,0,.10),0 12px 32px rgba(0,0,0,.09);
+  /* BOS 評分卡：精緻單色＋兩個低飽和點綴（森林綠/陶紅）＋組成條雙色（財報綠/護城河藍灰）*/
+  --bsc-pos:#3f6b57; --bsc-pos-bg:#eef2ef; --bsc-neg:#9a4a42; --bsc-neg-bg:#f4ece9;
+  --bsc-seg-a:#3f6b57; --bsc-seg-b:#5a6a8c; --bsc-soft:#f4f3f0;
 }
 /* ── 主題切換：原 index-coinbase/revolut/wise.html 已整併為下列 data-theme 覆蓋，
    3 份重複檔已刪除。切換方式：document.documentElement.dataset.theme = 'coinbase'。
@@ -42,6 +45,9 @@ html[data-theme="revolut"]{
   --radius:20px; --r:12px; --navy:#FFFFFF; --accent:rgba(255,255,255,.06); --text:#FFFFFF;
   --shadow:0 0 0 1px rgba(255,255,255,.04);
   --shadow-hover:0 0 0 1px rgba(255,255,255,.08),0 12px 32px rgba(0,0,0,.5);
+  /* BOS 評分卡：深色主題下把兩個點綴色提亮、tint 改半透明才不會變成亮色塊 */
+  --bsc-pos:#6aa588; --bsc-pos-bg:rgba(106,165,136,.15); --bsc-neg:#cf7a6f; --bsc-neg-bg:rgba(207,122,111,.15);
+  --bsc-seg-a:#6aa588; --bsc-seg-b:#8592b8; --bsc-soft:rgba(255,255,255,.05);
 }
 html[data-theme="wise"]{
   --blue:#38C8FF; --blue-lt:#DEF7FF; --dark:#0E0F0C; --mid:#454745;
@@ -450,6 +456,81 @@ tr:hover td{background:var(--bg)}
 .bos-list-title.strength{color:var(--green)}.bos-list-title.risk{color:var(--red)}
 .bos-list-item{font-size:11px;color:var(--dark);padding:2px 0;display:flex;gap:4px;align-items:flex-start;line-height:1.4;word-break:break-word;overflow-wrap:anywhere}
 .bos-summary{background:var(--blue-lt);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--dark);border-left:3px solid var(--blue);line-height:1.5}
+/* ── BOS SCORECARD（精緻單色版 v3）─── 全部 bsc- 前綴避免與全域 CSS 撞名 ── */
+.bsc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(392px,100%),1fr));gap:20px;padding:4px 0;font-variant-numeric:tabular-nums}
+.bsc{background:var(--white);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;transition:box-shadow .16s,transform .16s}
+.bsc:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover)}
+.bsc-top{padding:20px 20px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.bsc-sym{font-size:16px;font-weight:700;color:var(--dark);letter-spacing:-.01em;display:flex;align-items:center;gap:8px;font-family:'SF Mono',ui-monospace,monospace}
+.bsc-mkt{font-size:9.5px;font-weight:600;padding:2px 6px;border-radius:5px;background:var(--bsc-soft);color:var(--mid);letter-spacing:.05em;font-family:'Inter',sans-serif}
+.bsc-nm{font-size:12px;color:var(--mid);margin-top:5px;line-height:1.35}
+.bsc-src{font-size:10.5px;color:var(--light);margin-top:6px}
+.bsc-hr{text-align:center;flex:0 0 auto;display:flex;flex-direction:column;align-items:center}
+.bsc-ring{width:66px;height:66px}
+.bsc-badge{display:inline-block;font-size:10px;font-weight:600;padding:4px 11px;border-radius:20px;letter-spacing:.02em;margin-top:9px}
+.bsc-badge.invest{background:var(--bsc-pos-bg);color:var(--bsc-pos)}
+.bsc-badge.hold{background:var(--bsc-soft);color:var(--mid)}
+.bsc-badge.cut{background:var(--bsc-neg-bg);color:var(--bsc-neg)}
+.bsc-comp{margin:0 20px 4px}
+.bsc-comp-track{height:6px;border-radius:4px;background:var(--bsc-soft);display:flex;overflow:hidden;position:relative}
+.bsc-comp-track .a{background:var(--bsc-seg-a)}
+.bsc-comp-track .b{background:var(--bsc-seg-b)}
+.bsc-comp-track .gate{position:absolute;top:-2px;bottom:-2px;left:70%;width:1.5px;background:var(--white);box-shadow:0 0 0 1px var(--light)}
+.bsc-ck{display:flex;gap:14px;margin-top:8px;font-size:10.5px;color:var(--mid)}
+.bsc-ck span{display:flex;align-items:center;gap:5px}
+.bsc-ck i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.bsc-sec{padding:0 20px}
+.bsc-sh{display:flex;justify-content:space-between;align-items:baseline;padding:16px 0 9px}
+.bsc-sht{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--mid)}
+.bsc-shr{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:600;color:var(--dark)}
+.bsc-dots{display:flex;gap:3px}
+.bsc-dots i{width:6px;height:6px;border-radius:50%;background:var(--border)}
+.bsc-dots i.on{background:var(--dark)}
+.bsc-dots i.half{background:linear-gradient(90deg,var(--dark) 50%,var(--border) 50%)}
+.bsc-row{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--bsc-soft)}
+.bsc-k{flex:1;font-size:12.5px;color:var(--dark);line-height:1.5}
+.bsc-k b{font-weight:600}
+.bsc-why{display:block;font-size:11px;color:var(--mid);margin-top:2px;line-height:1.45}
+.bsc-pt{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:20px;font-weight:600;font-size:11px;padding:0 7px;border-radius:6px;font-family:'Inter',sans-serif}
+.bsc-pt.plus{color:var(--bsc-pos);background:var(--bsc-pos-bg)}
+.bsc-pt.half{color:var(--bsc-pos);background:var(--bsc-pos-bg);opacity:.75}
+.bsc-pt.zero{color:var(--light);background:var(--bsc-soft)}
+.bsc-pt.minus{color:var(--bsc-neg);background:var(--bsc-neg-bg)}
+.bsc-pills{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 10px}
+.bsc-pill{font-size:11px;font-weight:500;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--light)}
+.bsc-pill.on{border-color:transparent;background:var(--bsc-pos-bg);color:var(--bsc-pos);font-weight:600}
+.bsc-pill.on::before{content:'✓ ';font-weight:700}
+.bsc-verdict{margin:14px 20px 2px;padding:12px;border-radius:11px;text-align:center;font-size:12.5px;font-weight:600;color:var(--dark);background:var(--bsc-soft)}
+.bsc-verdict b{font-size:15px;letter-spacing:-.01em}
+.bsc-confirm{margin:10px 20px 0;padding:11px 13px;background:var(--bsc-pos-bg);border-radius:10px;font-size:11.5px;line-height:1.55;color:var(--dark)}
+.bsc-confirm button{margin-top:8px;font-size:11px;font-weight:600;padding:6px 13px;border-radius:8px;border:none;background:var(--bsc-pos);color:#fff;cursor:pointer;font-family:'Inter',sans-serif}
+.bsc-val{margin:14px 20px 0;padding:15px;border:1px solid var(--border);border-radius:13px}
+.bsc-valh{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--mid);margin-bottom:10px}
+.bsc-valh select{font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--dark);letter-spacing:0;text-transform:none;font-family:inherit}
+.bsc-m{display:flex;align-items:center;gap:9px;padding:7px 4px;font-size:12px;cursor:pointer;border-radius:8px}
+.bsc-m:hover{background:var(--bsc-soft)}
+.bsc-m input{accent-color:var(--dark);margin:0}
+.bsc-ml{flex:1;color:var(--dark)}
+.bsc-m.off .bsc-ml{color:var(--mid)}
+.bsc-mn{font-size:10.5px;color:var(--light)}
+.bsc-m b{font-weight:600}
+.bsc-pgw{margin-top:12px;padding-top:13px;border-top:1px solid var(--bsc-soft)}
+.bsc-pgl{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mid);margin-bottom:7px}
+.bsc-pgl b{font-weight:600;color:var(--dark)}
+.bsc-pg{position:relative;height:7px;border-radius:5px;background:var(--bsc-soft)}
+.bsc-pgbuy{position:absolute;left:0;top:0;bottom:0;background:var(--bsc-pos-bg);border-radius:5px 0 0 5px;border-right:1.5px solid var(--bsc-pos)}
+.bsc-pgmark{position:absolute;top:-4px;width:3px;height:15px;border-radius:2px;background:var(--dark);transform:translateX(-50%)}
+.bsc-pgv{margin-top:10px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px}
+.bsc-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.bsc-gatecut{margin:14px 20px 18px;padding:13px;border-radius:11px;background:var(--bsc-neg-bg);color:var(--bsc-neg);font-size:12px;font-weight:500;text-align:center;line-height:1.5}
+.bsc-stale{margin:0 20px 4px;font-size:11px;font-weight:500;color:var(--mid);background:var(--bsc-soft);padding:7px 11px;border-radius:9px;cursor:pointer}
+.bsc-foot{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:11px}
+.bsc-summary{font-size:11.5px;color:var(--dark);line-height:1.6;padding-left:11px;border-left:2px solid var(--border)}
+.bsc-actions{display:flex;justify-content:space-between;align-items:center}
+.bsc-analyzed{font-size:10px;color:var(--light)}
+.bsc-btn{height:30px;padding:0 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--mid);font-family:'Inter',sans-serif;transition:all .13s}
+.bsc-btn:hover{border-color:var(--light);color:var(--dark)}
+.bsc-btn.added{background:var(--bsc-pos-bg);border-color:transparent;color:var(--bsc-pos);cursor:default}
 /* ── SECTOR DISCOVER CARDS ────────────────── */
 .sector-discover-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;padding:16px}
 .sector-card{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--white)}
@@ -1082,22 +1163,17 @@ tr:hover td{background:var(--bg)}
       </div>
       <div class="card">
         <div class="card-header">
-          <div><div class="card-title">BOS 價值投資篩選結果</div><div class="card-sub" id="bosCount">—</div></div>
+          <div><div class="card-title">BOS 價值投資評分</div><div class="card-sub" id="bosCount">—</div></div>
           <div style="display:flex;gap:12px;font-size:11px;color:var(--mid)">
-            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--green);margin-right:4px"></span>建議購買</span>
-            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--amber);margin-right:4px"></span>等待進場</span>
-            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--light);margin-right:4px"></span>暫不考慮</span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:4px"></span>到價可進</span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--light);margin-right:4px"></span>偏貴/觀望</span>
+            <span>總分 ≥7 才投資</span>
           </div>
         </div>
         <div style="position:relative">
           <div class="loading-overlay" id="bosLoading" style="display:none;min-height:80px"><div class="loading-spinner"></div><span id="bosLoadingText" style="font-size:13px;color:var(--mid)">分析中...</span></div>
-          <div id="bosTableView" class="table-wrap">
-            <table id="bosTable"><thead><tr>
-              <th>Ticker</th><th>Company</th><th>Price</th><th>P/E</th>
-              <th>ROE</th><th>BOS Score</th><th>淨利率趨勢</th><th>護城河</th><th>進場訊號</th><th></th>
-            </tr></thead>
-            <tbody id="bosResults"></tbody>
-            </table>
+          <div id="bosTableView">
+            <div id="bosGrid" class="bsc-grid"></div>
           </div>
           <div id="bosSectorView" style="display:none"></div>
         </div>
@@ -3692,129 +3768,170 @@ function _bosMiniSparkline(values, color) {
   </svg>`;
 }
 
-function renderBosRow(s, idx) {
-  const scoreColor = _bosScoreColor(s.bos_score || 0);
-  const fillPct    = Math.min((s.bos_score || 0) * 10, 100);
-  const entryTag   = BOS_ENTRY_TAG[s.entry_signal]  || 'tag-gray';
-  const moatColor  = BOS_MOAT_COLOR[s.competitive_moat]  || 'var(--mid)';
-  const trendColor = BOS_TREND_COLOR[s.net_margin_trend] || 'var(--mid)';
-  const bdId = `bos-bd-${idx}`;
+// ══ BOS 新版評分卡（精緻單色 v3：圓環／組成條／五格燈／護城河藥丸／價格刻度尺）══
+const _bosCardData = {};   // symbol → 完整評分資料（供覆寫/重算後單卡就地重畫）
+
+function _bscRingCol(sc) {
+  if (sc == null) return 'var(--light)';
+  return sc >= 7 ? 'var(--bsc-pos)' : sc >= 5 ? 'var(--dark)' : 'var(--bsc-neg)';
+}
+function _bscPt(score) {
+  if (score == null) return '<span class="bsc-pt zero">—</span>';
+  if (score >= 1) return `<span class="bsc-pt plus">＋${score}</span>`;
+  if (score > 0)  return `<span class="bsc-pt half">＋${score}</span>`;
+  if (score < 0)  return `<span class="bsc-pt minus">${score}</span>`;
+  return '<span class="bsc-pt zero">0</span>';
+}
+function _esc(str) { return String(str == null ? '' : str).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function _bscRing(sc) {
+  const C = 2 * Math.PI * 27, col = _bscRingCol(sc);
+  const frac = sc == null ? 0 : Math.max(0, Math.min(sc / 10, 1));
+  return `<svg class="bsc-ring" viewBox="0 0 66 66"><circle cx="33" cy="33" r="27" fill="none" stroke="var(--border)" stroke-width="4.5"/><circle cx="33" cy="33" r="27" fill="none" stroke="${col}" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${(frac*C).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 33 33)"/><text x="33" y="35.5" text-anchor="middle" font-size="18" font-weight="700" fill="${col}">${sc ?? '—'}</text><text x="33" y="47" text-anchor="middle" font-size="7.5" fill="var(--light)">/ 10</text></svg>`;
+}
+function _bscComp(s) {
+  const ed = s.edfri?.total || 0, mo = s.moat?.total || 0, rk = s.risk?.total || 0;
+  return `<div class="bsc-comp"><div class="bsc-comp-track"><div class="a" style="flex:0 0 ${ed/10*100}%"></div><div class="b" style="flex:0 0 ${mo/10*100}%"></div><div class="gate"></div></div>
+    <div class="bsc-ck"><span><i style="background:var(--bsc-seg-a)"></i>財報 ${ed}</span><span><i style="background:var(--bsc-seg-b)"></i>護城河 ${mo}</span>${rk ? `<span style="color:var(--bsc-neg)">− 風險 ${rk}</span>` : ''}<span style="margin-left:auto;color:var(--light)">門檻 7</span></div></div>`;
+}
+function _bscDots(items) {
+  return `<div class="bsc-dots">${(items||[]).map(it => `<i class="${it.score>=1?'on':it.score>0?'half':''}" title="${it.code}"></i>`).join('')}</div>`;
+}
+function _bscFoot(s) {
   const nameEsc = (s.name||s.symbol).replace(/'/g,"\\'").replace(/"/g,'\\"');
+  const analyzed = s.analyzed_at ? '護城河分析於 ' + String(s.analyzed_at).slice(0,10) : '';
+  return `<div class="bsc-foot">
+    ${s.summary ? `<div class="bsc-summary">${_esc(s.summary)}</div>` : ''}
+    <div class="bsc-actions">
+      <span class="bsc-analyzed">${analyzed}</span>
+      <div style="display:flex;gap:7px">
+        ${s.moat ? `<button class="bsc-btn" onclick="bosReanalyze('${s.symbol}')" title="用 Claude 重新分析護城河與風險">↻ 重算</button>` : ''}
+        <button class="bsc-btn" onclick="addToWatchlist('${s.symbol}','${nameEsc}',this,'BOS')">加入關注</button>
+      </div>
+    </div>
+  </div>`;
+}
 
-  const netMargins = (s.net_margins_4yr || []).map(v => v != null ? v.toFixed(1)+'%' : '—').join(' → ');
-  const sparkline  = _bosMiniSparkline(s.net_margins_4yr, trendColor);
-  const strengths = (s.strengths || []).map(t =>
-    `<div class="bos-list-item"><span style="color:var(--green);font-weight:700;margin-right:3px">+</span>${t}</div>`
-  ).join('');
-  const risks = (s.risks || []).map(t =>
-    `<div class="bos-list-item"><span style="color:var(--red);font-weight:700;margin-right:3px">-</span>${t}</div>`
-  ).join('');
-  const hotBadge = s.is_hot_concept ? `<span class="tag tag-red" style="font-size:10px;margin-left:4px">概念股風險</span>` : '';
-
-  // BOS 六大原則個別評分
-  const epsPts   = (s.eps_growth_pct||0) > 10 ? 2 : (s.eps_growth_pct||0) > 0 ? 1 : -1;
-  const revPts   = (s.revenue_growth_pct||0) > 10 ? 2 : (s.revenue_growth_pct||0) > 0 ? 1 : 0;
-  const trendPts = s.net_margin_trend==='上升' ? 2 : s.net_margin_trend==='穩定' ? 1 : (s.net_margin_trend==='下降' ? -1 : 0);
-  const moatPts  = s.competitive_moat==='強' ? 2 : s.competitive_moat==='中' ? 1 : 0;
-  const hotPts   = s.is_hot_concept ? -2 : 1;
-  const roePts   = (s.roe||0) > 20 ? 2 : (s.roe||0) > 15 ? 1 : 0;
-  function ptColor(p) { return p > 0 ? 'var(--green)' : p < 0 ? 'var(--red)' : 'var(--light)'; }
-  function ptLabel(p) { return p > 0 ? '+'+p : String(p); }
-
-  const principlesHtml = `
-    <div class="dgm-bd-item" style="align-items:center">
-      <span class="dgm-bd-name">1. 淨利率趨勢</span>
-      <span class="dgm-bd-note" style="display:flex;align-items:center;gap:6px">
-        ${_bosMiniSparkline(s.net_margins_4yr, trendColor)}
-        <span style="font-size:10px;color:var(--light)">${(s.net_margins_4yr||[]).length ? s.net_margins_4yr[0].toFixed(1)+'% → '+s.net_margins_4yr[s.net_margins_4yr.length-1].toFixed(1)+'%' : '—'}</span>
-      </span>
-      <span class="dgm-bd-pts" style="color:${trendColor}">${s.net_margin_trend || '—'} (${ptLabel(trendPts)})</span>
-    </div>
-    <div class="dgm-bd-item">
-      <span class="dgm-bd-name">2. EPS 穩定成長</span>
-      <span class="dgm-bd-note">${s.eps_growth_pct != null ? (s.eps_growth_pct>=0?'+':'')+s.eps_growth_pct.toFixed(1)+'%' : '—'}</span>
-      <span class="dgm-bd-pts" style="color:${ptColor(epsPts)}">${ptLabel(epsPts)}</span>
-    </div>
-    <div class="dgm-bd-item">
-      <span class="dgm-bd-name">3. 營收成長</span>
-      <span class="dgm-bd-note">${s.revenue_growth_pct != null ? (s.revenue_growth_pct>=0?'+':'')+s.revenue_growth_pct.toFixed(1)+'%' : '—'}</span>
-      <span class="dgm-bd-pts" style="color:${ptColor(revPts)}">${ptLabel(revPts)}</span>
-    </div>
-    <div class="dgm-bd-item">
-      <span class="dgm-bd-name">4. 護城河強度</span>
-      <span class="dgm-bd-note" style="color:${moatColor}">${s.competitive_moat || '—'}</span>
-      <span class="dgm-bd-pts" style="color:${ptColor(moatPts)}">${ptLabel(moatPts)}</span>
-    </div>
-    <div class="dgm-bd-item">
-      <span class="dgm-bd-name">5. 非熱門概念股</span>
-      <span class="dgm-bd-note">${s.is_hot_concept ? '概念股風險' : '符合標準'}</span>
-      <span class="dgm-bd-pts" style="color:${ptColor(hotPts)}">${ptLabel(hotPts)}</span>
-    </div>
-    <div class="dgm-bd-item">
-      <span class="dgm-bd-name">6. 財務健康 ROE</span>
-      <span class="dgm-bd-note">${s.roe != null ? s.roe.toFixed(1)+'%' : '—'} ｜ P/E ${s.pe_ratio ? s.pe_ratio.toFixed(1) : '—'}</span>
-      <span class="dgm-bd-pts" style="color:${ptColor(roePts)}">${ptLabel(roePts)}</span>
-    </div>`;
-
+function renderBosScorecard(s) {
+  _bosCardData[s.symbol] = s;
   _screenerDataStore[s.symbol] = { source: 'BOS', data: s };
+  const mkt = (s.market || '').toUpperCase();
+  const badge = s.gate_failed  ? '<span class="bsc-badge cut">體質淘汰</span>'
+              : s.needs_claude ? '<span class="bsc-badge hold">待分析</span>'
+              : s.invest       ? '<span class="bsc-badge invest">值得投資</span>'
+              :                  '<span class="bsc-badge hold">未達 7</span>';
 
-  return `
-<tr onclick="toggleBosBd('${bdId}',this)" style="cursor:pointer">
-  <td><span class="ticker">${s.symbol}</span>${hotBadge}</td>
-  <td>
-    <div class="co-name">${s.name || s.symbol}</div>
-    <div class="co-sector">${s.sector || ''}</div>
-  </td>
-  <td>${s.price ? '$'+s.price.toFixed(2) : '—'}</td>
-  <td>${s.pe_ratio ? s.pe_ratio.toFixed(1) : '—'}</td>
-  <td>${s.roe != null ? s.roe.toFixed(1)+'%' : '—'}</td>
-  <td>
-    <div class="dgm-score-wrap">
-      <div class="dgm-score-bar">
-        <div class="dgm-score-fill" style="width:${fillPct}%;background:${scoreColor}"></div>
-      </div>
-      <span class="dgm-score-val" style="color:${scoreColor}">${s.bos_score ?? '—'}/10</span>
+  const top = `<div class="bsc-top">
+    <div style="min-width:0">
+      <div class="bsc-sym">${s.symbol}${mkt ? `<span class="bsc-mkt">${mkt}</span>` : ''}</div>
+      <div class="bsc-nm">${_esc(s.name)}${s.sector ? ' · ' + _esc(s.sector) : ''}</div>
+      <div class="bsc-src">${s.data_source || ''} · ${s.data_years || '?'} 年資料</div>
     </div>
-  </td>
-  <td>
-    <div style="display:flex;flex-direction:column;gap:2px;align-items:flex-start">
-      <strong style="color:${trendColor};font-size:11px">${s.net_margin_trend || '—'}</strong>
-      ${sparkline}
+    <div class="bsc-hr">${_bscRing(s.bos_score)}${badge}</div>
+  </div>`;
+
+  const stale = s.stale_financials
+    ? `<div class="bsc-stale" onclick="bosReanalyze('${s.symbol}')">↻ 新財報已出（${s.financial_period}），護城河分析可能過時</div>`
+    : '';
+
+  const edItems = (s.edfri?.items || []).map(it =>
+    `<div class="bsc-row"><div class="bsc-k"><b>${it.code} · ${it.name}</b><span class="bsc-why">${_esc(it.reason)}</span></div>${_bscPt(it.score)}</div>`
+  ).join('');
+  const edfriSec = `<div class="bsc-sec">
+    <div class="bsc-sh"><span class="bsc-sht">財報基本面 · E.D.F.R.I</span><div class="bsc-shr">${_bscDots(s.edfri?.items)}<span>${s.edfri?.total ?? '—'} / 5</span></div></div>
+    ${edItems}
+  </div>`;
+
+  // 閘門淘汰：只到財報層
+  if (s.gate_failed) {
+    return `<div class="bsc" id="bsc-${s.symbol}">${top}${_bscComp(s)}${edfriSec}
+      <div class="bsc-gatecut">財報 ${s.edfri.total} / 5 ＜ 3，體質未過閘門 → 淘汰，省下 Claude 分析</div>
+      ${_bscFoot(s)}</div>`;
+  }
+  // 尚未做 Claude 分析
+  if (s.needs_claude || !s.moat) {
+    return `<div class="bsc" id="bsc-${s.symbol}">${top}${_bscComp(s)}${stale}${edfriSec}
+      <div class="bsc-confirm">護城河與風險尚未分析。<button onclick="bosReanalyze('${s.symbol}')">立即用 Claude 分析</button></div>
+      ${_bscFoot(s)}</div>`;
+  }
+
+  const moat = s.moat;
+  const pills = (moat.types || []).map(t =>
+    `<span class="bsc-pill ${t.hit ? 'on' : ''}" title="${_esc(t.reason)}">${t.type}</span>`
+  ).join('');
+  const hitRows = (moat.types || []).filter(t => t.hit).map(t =>
+    `<div class="bsc-row"><div class="bsc-k"><b>${t.type}</b><span class="bsc-why">${_esc(t.reason)}</span></div><span class="bsc-pt plus">成立</span></div>`
+  ).join('');
+  const nmRow = `<div class="bsc-row"><div class="bsc-k">＋N · Net Margin（同業比）<span class="bsc-why">${_esc(moat.net_margin?.reason)}</span></div>${_bscPt(moat.net_margin?.score || 0)}</div>`;
+  const confirm = moat.needs_user_confirm
+    ? `<div class="bsc-confirm">Claude 看好但無明確護城河：「${_esc(moat.confidence_note)}」<button onclick="bosConfirmMoat('${s.symbol}')">核可「對公司有自信 ＋1」</button></div>`
+    : '';
+  const moatSec = `<div class="bsc-sec">
+    <div class="bsc-sh"><span class="bsc-sht">經濟護城河</span><div class="bsc-shr"><span style="color:var(--light);font-weight:500">命中 ${moat.count} / 5</span><span>${moat.total} / 5</span></div></div>
+    <div class="bsc-pills">${pills}</div>${hitRows}${nmRow}${confirm}
+  </div>`;
+
+  const riskRows = (s.risk?.items || []).map(r =>
+    `<div class="bsc-row"><div class="bsc-k">${r.name}<span class="bsc-why">${_esc(r.reason)}</span></div>${r.deduct ? '<span class="bsc-pt minus">−1</span>' : '<span class="bsc-pt zero">0</span>'}</div>`
+  ).join('');
+  const riskSec = `<div class="bsc-sec">
+    <div class="bsc-sh"><span class="bsc-sht">環境風險</span><div class="bsc-shr"><span>− ${s.risk?.total || 0}</span></div></div>
+    ${riskRows}
+  </div>`;
+
+  const verdict = `<div class="bsc-verdict">財報 ${s.edfri.total} ＋ 護城河 ${moat.total} － 風險 ${s.risk.total} ＝ <b style="color:${_bscRingCol(s.bos_score)}">${s.bos_score}</b> / 10</div>`;
+
+  const val = s.valuation || {};
+  const clsOpts = ['資產股','股息股','成長股'].map(c => `<option value="${c}"${c === s.classification ? ' selected' : ''}>${c}</option>`).join('');
+  const methodRows = (val.methods || []).map(m => {
+    const alt = m.alt_price ? ` <span class="bsc-mn">/ 相對殖利率 ≤${m.alt_price}</span>` : '';
+    return `<label class="bsc-m ${m.primary ? '' : 'off'}" title="${_esc(m.note)}"><input type="radio" name="pm-${s.symbol}" ${m.primary ? 'checked' : ''} onchange="bosSetPrimary('${s.symbol}','${m.key}')"><span class="bsc-ml">${m.label}</span><b>≤${m.buy_price}</b>${alt}</label>`;
+  }).join('');
+  let gauge = '';
+  if (val.buy_price && s.price) {
+    const M = Math.max(val.buy_price, s.price) * 1.12;
+    const buyPct = (val.buy_price / M * 100).toFixed(1), prPct = (s.price / M * 100).toFixed(1);
+    const green = val.lamp === 'green';
+    const overPct = ((s.price / val.buy_price - 1) * 100).toFixed(0);
+    gauge = `<div class="bsc-pgw"><div class="bsc-pgl"><span>可買區 ≤ <b>$${val.buy_price}</b></span><span>現價 <b>$${s.price}</b></span></div>
+      <div class="bsc-pg"><div class="bsc-pgbuy" style="width:${buyPct}%"></div><div class="bsc-pgmark" style="left:${prPct}%"></div></div>
+      <div class="bsc-pgv"><span class="bsc-dot" style="background:${green ? 'var(--bsc-pos)' : 'var(--light)'}"></span><span style="color:${green ? 'var(--bsc-pos)' : 'var(--mid)'}">${green ? '到價 · 可進場' : `偏貴 · 現價高於買點 ${overPct}%`}</span></div></div>`;
+  }
+  const valSec = `<div class="bsc-val">
+    <div class="bsc-valh"><span>估價 · 買進價（不打折）</span>
+      <select onchange="bosSetClass('${s.symbol}',this.value)" title="股票類型（切換主用估價法）">${clsOpts}</select>
     </div>
-  </td>
-  <td><strong style="color:${moatColor}">${s.competitive_moat || '—'}</strong></td>
-  <td><span class="tag ${entryTag}">${s.entry_signal || '—'}</span></td>
-  <td><button class="expand-btn" title="查看詳細">▼</button></td>
-</tr>
-<tr id="${bdId}" style="display:none">
-  <td colspan="10" style="padding:0;border-bottom:1px solid var(--border)">
-    <div class="dgm-breakdown open">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.06em">BOS 六大原則評估</div>
-        <span class="tag ${BOS_VERDICT_TAG[s.verdict]||'tag-gray'}" style="font-size:10px">${s.verdict || '—'}</span>
-      </div>
-      <div class="dgm-bd-grid" style="margin-bottom:14px">${principlesHtml}</div>
-      <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">護城河分析（AI）</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
-        <div>
-          <div class="bos-list-title strength">優勢</div>
-          ${strengths || '<div class="bos-list-item" style="color:var(--light)">—</div>'}
-        </div>
-        <div>
-          <div class="bos-list-title risk">風險</div>
-          ${risks || '<div class="bos-list-item" style="color:var(--light)">—</div>'}
-        </div>
-      </div>
-      ${s.summary ? `<div class="bos-summary" style="margin-bottom:10px">${s.summary}</div>` : ''}
-      <div style="display:flex;justify-content:flex-end">
-        <button class="bos-add-btn"
-          onclick="event.stopPropagation();addToWatchlist('${s.symbol}','${nameEsc}',this,'BOS')">
-          加入關注
-        </button>
-      </div>
-    </div>
-  </td>
-</tr>`;
+    ${methodRows}${gauge}
+  </div>`;
+
+  return `<div class="bsc" id="bsc-${s.symbol}">${top}${_bscComp(s)}${stale}${edfriSec}${moatSec}${riskSec}${verdict}${valSec}${_bscFoot(s)}</div>`;
+}
+
+// 單卡就地替換（覆寫分類/主用法/核可、重算後）
+function _bscReplace(sym, data) {
+  const el = document.getElementById('bsc-' + sym);
+  if (el && data) el.outerHTML = renderBosScorecard(data);
+}
+async function bosSetPrimary(sym, key) {
+  try { const d = await api(`/api/screener/bos/${sym}`, 'PATCH', { primary_method_override: key }); if (d && d.result) _bscReplace(sym, d.result); }
+  catch (e) { console.error(e); }
+}
+async function bosSetClass(sym, cls) {
+  try { const d = await api(`/api/screener/bos/${sym}`, 'PATCH', { classification_override: cls }); if (d && d.result) _bscReplace(sym, d.result); }
+  catch (e) { console.error(e); }
+}
+async function bosConfirmMoat(sym) {
+  try { const d = await api(`/api/screener/bos/${sym}`, 'PATCH', { moat_confidence_bonus: true }); if (d && d.result) _bscReplace(sym, d.result); }
+  catch (e) { console.error(e); }
+}
+async function bosReanalyze(sym) {
+  const el = document.getElementById('bsc-' + sym);
+  if (el) el.style.opacity = '.5';
+  try {
+    const d = await api(`/api/screener/bos/analyze?symbols=${sym}`, 'POST');
+    if (d && d.results && d.results[0]) _bscReplace(sym, d.results[0]);
+  } catch (e) { console.error(e); alert('重算失敗：' + e.message); }
+  finally { const e2 = document.getElementById('bsc-' + sym); if (e2) e2.style.opacity = ''; }
 }
 
 function toggleBosBd(id, row) {
@@ -3834,44 +3951,59 @@ function _staleSuffix(data) {
     : '';
 }
 
+// BOS Demo 假資料（新版評分卡結構）
+const DEMO_BOS = [
+  { symbol:'COST', name:'Costco', sector:'零售 · 會員制量販', market:'us', price:905, data_source:'SEC EDGAR', data_years:10, financial_period:'2025',
+    edfri:{ total:5, gate_pass:true, items:[
+      {code:'E',name:'EPS 10 年成長',score:1,reason:'近 10 年 EPS 年化 +14.7%（5.30→18.26），下滑 0 年'},
+      {code:'D',name:'10 年持續配息',score:1,reason:'10 年皆配息，Payout 28%'},
+      {code:'F',name:'自由現金流 10 年為正',score:1,reason:'年年正現金流'},
+      {code:'R',name:'ROE 10 年 >15%',score:1,reason:'長年 25%＋'},
+      {code:'I',name:'利息保障倍數',score:1,reason:'IC 67（>10，還債輕鬆）'} ]},
+    moat:{ total:4.5, base:4, count:3, needs_user_confirm:false, confidence_note:'',
+      net_margin:{score:0.5,reason:'淨利率僅 2.9% 但十年穩定上升，符合薄利多銷'},
+      types:[ {type:'無形資產',hit:true,reason:'會員品牌與 Kirkland 忠誠度'}, {type:'成本優勢',hit:true,reason:'採購規模＋精簡 SKU 壓低成本'}, {type:'網路效應',hit:false,reason:'屬規模效應非網路效應'}, {type:'高轉換成本',hit:true,reason:'年費會員黏著、續約率九成'}, {type:'利基市場',hit:false,reason:'量販為大眾市場'} ]},
+    risk:{ total:0, items:[ {code:'政',name:'政策風險',deduct:0,reason:'民生零售受監管有限'}, {code:'科',name:'科技風險',deduct:0,reason:'量販模式不易退燒'}, {code:'人',name:'關鍵人物風險',deduct:0,reason:'制度化營運'} ]},
+    bos_score:9.5, invest:true, classification:'成長股', classification_source:'claude',
+    valuation:{ classification:'成長股', primary:'growth_pe', buy_price:218.5, price:905, lamp:'gray', methods:[
+      {key:'asset',label:'資產股 · BVPS×0.8',buy_price:60.5,note:'',applicable:false,primary:false},
+      {key:'growth_pe',label:'成長股 · EPS×12',buy_price:218.5,note:'EPS 18.2 ×12',applicable:true,primary:true},
+      {key:'peg',label:'彼得林區 PEG · G×EPS',buy_price:209.4,note:'G=12',applicable:true,primary:false} ]},
+    summary:'會員制護城河深厚、EPS 十年穩健翻倍的優質成長股', analyzed_at:'2026-07-06', stale_financials:false },
+];
+
 async function runBosScreen() {
   _showBosTableView();
   const raw     = document.getElementById('bos-symbols').value.trim();
   const symbols = raw ? raw.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean) : [];
   const loading = document.getElementById('bosLoading');
-  const tbody   = document.getElementById('bosResults');
+  const grid    = document.getElementById('bosGrid');
   const count   = document.getElementById('bosCount');
 
   loading.style.display = 'flex';
-  tbody.innerHTML = '';
+  grid.innerHTML = '';
   count.textContent = '—';
 
   try {
     if (DEMO_MODE) {
-      await new Promise(r => setTimeout(r, 1200));
-      const demoData = [
-        { symbol:'AAPL', name:'Apple Inc', sector:'Technology', price:189.20, pe_ratio:29.4, roe:147.8, eps_growth_pct:8.2, revenue_growth_pct:5.1, net_margin_pct:26.4, net_margins_4yr:[26.4,25.3,25.9,21.7], bos_score:8, verdict:'潛力股', entry_signal:'等待更好進場點', strengths:['強大品牌護城河','持續股份回購','高ROE產出效率'], risks:['估值偏高PE近30','成長趨緩'], net_margin_trend:'穩定', competitive_moat:'強', is_hot_concept:false, summary:'蘋果生態黏著度高，財務極健康，等待估值回落後建倉更理想' },
-        { symbol:'MSFT', name:'Microsoft Corp', sector:'Technology', price:415.80, pe_ratio:35.1, roe:36.4, eps_growth_pct:12.8, revenue_growth_pct:17.0, net_margin_pct:34.1, net_margins_4yr:[34.1,33.2,31.0,28.2], bos_score:9, verdict:'潛力股', entry_signal:'建議購買', strengths:['雲端Azure強勁成長','淨利率持續上升','AI整合競爭力顯著'], risks:['估值稍高'], net_margin_trend:'上升', competitive_moat:'強', is_hot_concept:false, summary:'基本面優秀，淨利率持續上升，AI佈局明確，為價值投資首選' },
-        { symbol:'META', name:'Meta Platforms', sector:'Technology', price:510.60, pe_ratio:26.4, roe:32.8, eps_growth_pct:21.4, revenue_growth_pct:22.0, net_margin_pct:29.0, net_margins_4yr:[29.0,23.0,14.5,29.2], bos_score:7, verdict:'潛力股', entry_signal:'等待更好進場點', strengths:['廣告收入大幅回升','成本效率大幅提升'], risks:['VR/元宇宙持續燒錢','監管風險'], net_margin_trend:'上升', competitive_moat:'強', is_hot_concept:false, summary:'廣告業務回暖，利潤大幅改善，但元宇宙投入仍為不確定因素' },
-        { symbol:'NVDA', name:'NVIDIA Corp', sector:'Technology', price:875.50, pe_ratio:45.2, roe:98.3, eps_growth_pct:168.0, revenue_growth_pct:122.0, net_margin_pct:55.0, net_margins_4yr:[55.0,16.0,26.0,26.0], bos_score:6, verdict:'繼續觀察', entry_signal:'等待更好進場點', strengths:['AI晶片市場絕對龍頭','利潤率爆發式成長'], risks:['估值極高PE>40','熱門概念股波動大','淨利率歷史波動大'], net_margin_trend:'上升', competitive_moat:'強', is_hot_concept:true, summary:'AI景氣週期性風險高，BOS原則下熱門概念股需等估值合理後再考慮' },
-      ];
-      const filtered = symbols.length ? demoData.filter(d => symbols.includes(d.symbol)) : demoData;
-      tbody.innerHTML = filtered.map((r,i) => renderBosRow(r,i)).join('');
-      count.textContent = `${filtered.length} 支股票`;
+      await new Promise(r => setTimeout(r, 1000));
+      const filtered = symbols.length ? DEMO_BOS.filter(d => symbols.includes(d.symbol)) : DEMO_BOS;
+      grid.innerHTML = filtered.map(renderBosScorecard).join('');
+      count.textContent = `${filtered.length} 支 · 總分 ≥7 才投資`;
     } else {
       const sym_param = symbols.length ? `?symbols=${symbols.join(',')}` : '';
       const data = await api(`/api/screener/bos${sym_param}`);
       if (!data || !data.results) throw new Error('No results');
-      count.textContent = `${data.results.length} 支股票` + _staleSuffix(data);
+      count.textContent = `${data.results.length} 支 · 總分 ≥7 才投資` + _staleSuffix(data);
       if (data.results.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--light)">沒有找到結果，請輸入有效的股票代號</td></tr>';
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--light)">沒有找到結果，請輸入有效的股票代號</div>';
       } else {
-        tbody.innerHTML = data.results.map((r,i) => renderBosRow(r,i)).join('');
+        grid.innerHTML = data.results.map(renderBosScorecard).join('');
       }
     }
   } catch(e) {
     console.error(e);
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--red)">${e.message}</td></tr>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--red)">${e.message}</div>`;
   } finally {
     loading.style.display = 'none';
   }
@@ -3879,7 +4011,7 @@ async function runBosScreen() {
 
 function resetBosScreen() {
   document.getElementById('bos-symbols').value = '';
-  document.getElementById('bosResults').innerHTML = '';
+  document.getElementById('bosGrid').innerHTML = '';
   document.getElementById('bosCount').textContent = '—';
   document.getElementById('bosSectorView').innerHTML = '';
   _showBosTableView();
@@ -4851,32 +4983,32 @@ const DEMO_BOS_DISCOVER_FLAT = [
 async function runBosDiscover() {
   _showBosTableView();
   const loading = document.getElementById('bosLoading');
-  const tbody   = document.getElementById('bosResults');
+  const grid    = document.getElementById('bosGrid');
   const count   = document.getElementById('bosCount');
   loading.style.display = 'flex';
-  tbody.innerHTML = '';
+  grid.innerHTML = '';
   count.textContent = '—';
   document.getElementById('bosLoadingText').textContent = 'AI 正在推薦 BOS 品質股 · 約需 30-60 秒...';
 
   try {
     if (DEMO_MODE) {
-      await new Promise(r => setTimeout(r, 1500));
-      tbody.innerHTML = DEMO_BOS_DISCOVER_FLAT.map((r,i) => renderBosRow(r,i)).join('');
-      count.textContent = `AI 推薦 ${DEMO_BOS_DISCOVER_FLAT.length} 支品質股`;
+      await new Promise(r => setTimeout(r, 1200));
+      grid.innerHTML = DEMO_BOS.map(renderBosScorecard).join('');
+      count.textContent = `AI 推薦 ${DEMO_BOS.length} 支品質股`;
     } else {
       const data = await api('/api/screener/bos/discover');
       if (!data || !data.results) throw new Error('No results returned');
       const n = data.results.length;
       if (n === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--light)">沒有找到結果</td></tr>';
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--light)">沒有找到結果</div>';
       } else {
-        tbody.innerHTML = data.results.map((r,i) => renderBosRow(r,i)).join('');
+        grid.innerHTML = data.results.map(renderBosScorecard).join('');
         count.textContent = `AI 推薦 ${n} 支品質股` + _staleSuffix(data);
       }
     }
   } catch(e) {
     console.error(e);
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--red)">${e.message}</td></tr>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--red)">${e.message}</div>`;
   } finally {
     loading.style.display = 'none';
     document.getElementById('bosLoadingText').textContent = '分析中...';

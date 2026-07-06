@@ -189,6 +189,30 @@ CREATE TABLE IF NOT EXISTS signal_log (
 );
 ALTER TABLE signal_log ENABLE ROW LEVEL SECURITY;
 
+-- ── BOS 護城河/風險分析（2026-07-06 新版評分持久化）────────────────
+-- 存「慢速、1–3 年才重跑一次」的 Claude 結果（護城河/風險/分類）＋使用者覆寫。
+-- 財報 E.D.F.R.I 與估價買進價是純數據、每次即時重算，不存這裡。
+-- 用途：重開/換 session 不用重付 Claude 費用；新財報出來時比對 financial_period 提醒重算。
+CREATE TABLE IF NOT EXISTS bos_analysis (
+  symbol                  TEXT PRIMARY KEY,       -- 解析後代號（.TW→.TWO 已處理）
+  name                    TEXT,
+  market                  TEXT,                   -- 'us' | 'tw'
+  classification          TEXT,                   -- Claude 建議類型：資產股/股息股/成長股
+  is_financial            BOOLEAN DEFAULT false,  -- 金融業（F 自由現金流免評用）
+  moat_json               JSONB,                  -- 5 種護城河 [{type,hit,reason}]
+  confidence_note         TEXT,                   -- Claude「無明確護城河但看好」的理由
+  net_margin_json         JSONB,                  -- {score, reason}
+  risk_json               JSONB,                  -- 3 項風險 [{code,name,deduct,reason}]
+  summary                 TEXT,                   -- 一句話總結
+  financial_period        TEXT,                   -- 分析當下最新財報年（如 "2025"）
+  analyzed_at             TIMESTAMPTZ DEFAULT NOW(),
+  -- 使用者覆寫（Claude 出草稿、使用者拍板）──────────────────────
+  classification_override TEXT,                   -- 覆寫分類（優先於 classification）
+  primary_method_override TEXT,                   -- 覆寫主用估價法：asset/dividend/growth_pe/peg
+  moat_confidence_bonus   BOOLEAN DEFAULT false   -- 核可「對公司有自信 +1」（命中 0 種時）
+);
+ALTER TABLE bos_analysis ENABLE ROW LEVEL SECURITY;
+
 -- ── 範例初始資料（可選）────────────────────────────────────────
 -- 貼入後你可以在 Dashboard 立刻看到資料，確認系統正常運作
 INSERT INTO holdings (symbol, shares, avg_cost) VALUES
