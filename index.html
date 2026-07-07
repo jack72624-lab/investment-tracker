@@ -1247,29 +1247,7 @@ tr:hover td{background:var(--bg)}
       </div>
     </div>
 
-    <!-- ── 篩選器底部觀察清單 ── -->
-    <div class="card" id="screenerWatchlistCard" style="margin-top:20px">
-      <div class="card-header">
-        <div>
-          <div class="card-title">觀察清單</div>
-          <div class="card-sub" id="screenerWatchlistSub">—</div>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <div style="display:flex;gap:2px;background:var(--accent);border-radius:6px;padding:3px">
-            <button id="wl-tab-all" onclick="switchWatchlistTab('all')" style="border:none;cursor:pointer;padding:4px 10px;border-radius:4px;font-size:11px;background:var(--blue);color:#fff;font-weight:600">全部</button>
-            <button id="wl-tab-bos" onclick="switchWatchlistTab('bos')" style="border:none;cursor:pointer;padding:4px 10px;border-radius:4px;font-size:11px;background:none;color:var(--mid)">BOS</button>
-            <button id="wl-tab-dgm" onclick="switchWatchlistTab('dgm')" style="border:none;cursor:pointer;padding:4px 10px;border-radius:4px;font-size:11px;background:none;color:var(--mid)">DGM</button>
-          </div>
-          <button class="btn btn-ghost" onclick="loadScreenerWatchlist()" style="font-size:12px">重新整理</button>
-        </div>
-      </div>
-      <div id="screenerWatchlistBody">
-        <div class="empty-state" style="padding:28px">
-          <div class="es-text">觀察清單是空的</div>
-          <div class="es-sub">在上方篩選結果中點「加入關注」即可追蹤</div>
-        </div>
-      </div>
-    </div>
+    <!-- 篩選器底部觀察清單已移除（與主觀察清單頁＋釘選卡＋評分卡重複）；加入關注仍寫入主清單 -->
 
   </div>
 
@@ -1712,7 +1690,6 @@ function showPage(id) {
   const [t,b] = PAGE_META[id] || [id, id];
   document.getElementById('page-title').textContent = t;
   document.getElementById('page-breadcrumb').textContent = b;
-  if (id === 'screener') loadScreenerWatchlist();
   if (id === 'transactions') loadTransactionsPage();
   if (id === 'cash') loadCashPage();
   if (id === 'health') loadHealthPage();
