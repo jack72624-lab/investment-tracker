@@ -12,7 +12,7 @@
   --blue:#3f6caf; --blue-lt:#eaeef6; --dark:#282d34; --mid:#6c727d;
   --light:#a3a29d; --border:#e8e6e0; --bg:#f8f7f3; --white:#FFFFFF;
   --green:#337c53; --green-lt:#e7f3ea; --red:#ae3f3a; --red-lt:#f6ebe8;
-  --amber:#ae792c; --amber-lt:#f4eddf; --purple:#7C3AED; --purple-lt:#EDE9FE;
+  --amber:#ae792c; --amber-lt:#f4eddf; --purple:#7a6aa0; --purple-lt:#eceaf2;
   --radius:16px;
   --mono:'Geist Mono','SF Mono',ui-monospace,'SFMono-Regular','Menlo',monospace;
   /* 下列變數原本只在 coinbase/revolut/wise 變體檔定義，但共用 CSS
@@ -33,7 +33,7 @@ html[data-theme="coinbase"]{
   --blue:#0052FF; --blue-lt:#E5EDFF; --dark:#0A0B0D; --mid:#5B616E;
   --light:#7C828A; --border:#DEE1E6; --bg:#F7F7F7; --white:#FFFFFF;
   --green:#05B169; --green-lt:#E3F8EE; --red:#CF202F; --red-lt:#FBE8EA;
-  --amber:#F4B000; --amber-lt:#FDF3D9; --purple:#7C3AED; --purple-lt:#EDE9FE;
+  --amber:#F4B000; --amber-lt:#FDF3D9; --purple:#7a6aa0; --purple-lt:#eceaf2;
   --radius:20px; --r:16px; --navy:#0A0B0D; --accent:#EEF0F3; --text:#0A0B0D;
   --shadow:0 1px 2px rgba(10,11,13,.04),0 4px 16px rgba(10,11,13,.04);
   --shadow-hover:0 4px 16px rgba(10,11,13,.08),0 12px 32px rgba(10,11,13,.08);
@@ -54,7 +54,7 @@ html[data-theme="wise"]{
   --blue:#38C8FF; --blue-lt:#DEF7FF; --dark:#0E0F0C; --mid:#454745;
   --light:#868685; --border:#DCE3D7; --bg:#E8EBE6; --white:#FFFFFF;
   --green:#2EAD4B; --green-lt:#E2F6D5; --red:#D03238; --red-lt:#FBE3E4;
-  --amber:#B86700; --amber-lt:#FFF6DD; --purple:#7C3AED; --purple-lt:#EDE9FE;
+  --amber:#B86700; --amber-lt:#FFF6DD; --purple:#7a6aa0; --purple-lt:#eceaf2;
   --radius:24px; --r:16px; --navy:#0E0F0C; --accent:#E2F6D5; --text:#0E0F0C;
   --shadow:0 1px 3px rgba(14,15,12,.05),0 4px 16px rgba(14,15,12,.05);
   --shadow-hover:0 4px 12px rgba(14,15,12,.10),0 12px 32px rgba(14,15,12,.08);
@@ -346,8 +346,8 @@ tr:hover td{background:var(--bg)}
 .risk-card-wrap{position:relative}
 .risk-tip-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--border);color:var(--light);font-size:9px;font-weight:700;cursor:help;margin-left:5px;line-height:1;vertical-align:middle;transition:background .13s}
 .risk-tip-icon:hover{background:var(--blue);color:#fff}
-.risk-card-wrap .risk-tooltip{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1a2035;color:#e8eaf0;font-size:11.5px;line-height:1.6;padding:10px 13px;border-radius:9px;white-space:normal;width:230px;opacity:0;pointer-events:none;transition:opacity .18s;z-index:300;box-shadow:0 6px 24px rgba(0,0,0,.22)}
-.risk-card-wrap .risk-tooltip::before{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-bottom-color:#1a2035}
+.risk-card-wrap .risk-tooltip{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#282d34;color:#eceae4;font-size:11.5px;line-height:1.6;padding:10px 13px;border-radius:9px;white-space:normal;width:230px;opacity:0;pointer-events:none;transition:opacity .18s;z-index:300;box-shadow:0 6px 24px rgba(0,0,0,.22)}
+.risk-card-wrap .risk-tooltip::before{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-bottom-color:#282d34}
 .risk-card-wrap:hover .risk-tooltip{opacity:1}
 
 /* LOADING */
@@ -374,7 +374,7 @@ tr:hover td{background:var(--bg)}
 .wl-seg button{border:none;background:var(--white);color:var(--mid);cursor:pointer;padding:5px 12px;font-size:12px;font-family:inherit;transition:.12s}
 .wl-seg button:first-child{border-right:1px solid var(--border)}
 .wl-seg button.on-watch{background:var(--mid);color:#fff;font-weight:600}
-.wl-seg button.on-buy{background:#7A3FD6;color:#fff;font-weight:700}
+.wl-seg button.on-buy{background:#7a6aa0;color:#fff;font-weight:700}
 .wl-seg button:not(.on-watch):not(.on-buy):hover{background:var(--blue-lt);color:var(--dark)}
 /* 淨值走勢｜配置歷史 切換（Net Worth Trend 卡） */
 .trend-seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:12.5px}
@@ -386,7 +386,7 @@ tr:hover td{background:var(--bg)}
 .wl-tp{width:92px;padding:4px 7px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;text-align:right;font-variant-numeric:tabular-nums;color:var(--dark);background:var(--white);outline:none}
 .wl-tp:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-lt)}
 .wl-tp::-webkit-outer-spin-button,.wl-tp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.wl-tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:700;background:#F1E9FF;color:#7A3FD6;margin-left:6px;vertical-align:middle}
+.wl-tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:700;background:#eceaf2;color:#7a6aa0;margin-left:6px;vertical-align:middle}
 /* 隱藏 number input 的上下箭頭，維持乾淨外觀 */
 .sym-target-input::-webkit-outer-spin-button,.sym-target-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .sym-target-input{-moz-appearance:textfield}
@@ -593,7 +593,7 @@ tr:hover td{background:var(--bg)}
 .val-dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-right:1px}
 .val-dot.green{background:#337c53}.val-dot.yellow{background:#ae792c}.val-dot.red{background:#ae3f3a}.val-dot.gray{background:#a3a29d}
 .val-wrap{display:inline-flex;align-items:center;gap:5px;cursor:help;position:relative}
-.val-wrap .val-tip{position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:#1a2035;color:#e8eaf0;font-size:11px;padding:7px 11px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;z-index:300;transition:opacity .15s;min-width:180px;line-height:1.55;box-shadow:0 4px 16px rgba(0,0,0,.18)}
+.val-wrap .val-tip{position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:#282d34;color:#eceae4;font-size:11px;padding:7px 11px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;z-index:300;transition:opacity .15s;min-width:180px;line-height:1.55;box-shadow:0 4px 16px rgba(0,0,0,.18)}
 .val-wrap:hover .val-tip{opacity:1}
 /* ── 估值燈號 2.0：三維綜合 ──────────────────────────────── */
 .vc-anchor{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--blue-lt);border-radius:8px;font-size:12px;margin-bottom:12px;flex-wrap:wrap}
@@ -643,7 +643,7 @@ tr:hover td{background:var(--bg)}
 .hm-foot b{color:var(--dark)}
 /* 名詞解釋 tooltip：虛線底線，滑鼠靠近跳白話說明 */
 .jargon{position:relative;border-bottom:1px dotted var(--light);cursor:help;color:var(--mid);font-size:11px}
-.jargon .jbox{position:absolute;bottom:calc(100% + 7px);left:0;background:#1a2035;color:#e8eaf0;font-size:11px;font-weight:400;padding:8px 11px;border-radius:7px;width:210px;line-height:1.55;opacity:0;pointer-events:none;transition:opacity .15s;z-index:80;box-shadow:0 6px 20px rgba(0,0,0,.22)}
+.jargon .jbox{position:absolute;bottom:calc(100% + 7px);left:0;background:#282d34;color:#eceae4;font-size:11px;font-weight:400;padding:8px 11px;border-radius:7px;width:210px;line-height:1.55;opacity:0;pointer-events:none;transition:opacity .15s;z-index:80;box-shadow:0 6px 20px rgba(0,0,0,.22)}
 .jargon:hover .jbox{opacity:1}
 /* ── 訊號計分板 ────────────────────────────────────────────── */
 .sb-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
@@ -701,7 +701,7 @@ tr:hover td{background:var(--bg)}
 .dgm-bd-note{color:var(--mid);font-size:10px;margin-top:1px;white-space:normal;line-height:1.3}
 .dgm-bd-pts{font-weight:700;flex:0 0 48px;text-align:right;white-space:nowrap;font-size:12px}
 /* tooltip */
-.dgm-bd-tooltip{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:200;width:280px;background:#16191F;color:#fff;font-size:11px;line-height:1.5;padding:8px 10px;border-radius:4px;pointer-events:none;white-space:normal;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.dgm-bd-tooltip{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:200;width:280px;background:#282d34;color:#fff;font-size:11px;line-height:1.5;padding:8px 10px;border-radius:4px;pointer-events:none;white-space:normal;box-shadow:0 4px 12px rgba(0,0,0,.3)}
 .dgm-bd-item:hover .dgm-bd-tooltip{display:block}
 .expand-btn{background:none;border:none;cursor:pointer;color:var(--light);padding:2px 6px;border-radius:4px;font-size:11px;transition:all .13s}
 .expand-btn:hover{background:var(--border);color:var(--dark)}
@@ -991,7 +991,7 @@ tr:hover td{background:var(--bg)}
   <!-- PAGE: 總覽 -->
   <div class="page active" id="page-overview">
     <!-- A-8：報價暫缺警示（部分持倉抓不到即時價，總額可能偏低） -->
-    <div id="staleWarn" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:10px;background:#FFF4E5;border:1px solid #FFD8A8;color:#8A5300;font-size:13px;line-height:1.5"></div>
+    <div id="staleWarn" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:10px;background:var(--amber-lt);border:1px solid #e3cd9f;color:#8a5a1a;font-size:13px;line-height:1.5"></div>
     <!-- 美股統計列 -->
     <div class="stats-section" id="stats-us-section">
       <div class="stats-section-label" style="background:var(--blue-lt);color:var(--blue)">美股 <span style="font-weight:400">USD</span></div>
@@ -1190,10 +1190,10 @@ tr:hover td{background:var(--bg)}
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 2a6 6 0 0 1 6 6 6 6 0 0 1-6 6 6 6 0 0 1-6-6 6 6 0 0 1 6-6z"/><path d="M8 6v2l1.5 1.5"/></svg>
               AI 分析
             </button>
-            <button class="btn btn-primary" onclick="runBosDiscover()" style="height:32px;background:linear-gradient(135deg,#7C3AED,#3f6caf)">
+            <button class="btn btn-primary" onclick="runBosDiscover()" style="height:32px;background:var(--blue)">
               AI 推薦（全市場）
             </button>
-            <button class="btn btn-primary" onclick="runBosDiscoverSectors()" style="height:32px;background:linear-gradient(135deg,#0073BB,#337c53)">
+            <button class="btn btn-primary" onclick="runBosDiscoverSectors()" style="height:32px;background:var(--green)">
               分領域各5名
             </button>
             <button class="btn btn-ghost" onclick="resetBosScreen()" style="height:32px">Reset</button>
@@ -2143,7 +2143,7 @@ function renderHoldings(holdings) {
 
 function renderSectorChart(allocation) {
   const labels=Object.keys(allocation), values=Object.values(allocation);
-  const colors=['#3f6caf','#337c53','#7C3AED','#ae792c','#ae3f3a','#0891B2'];
+  const colors=['#3f6caf','#337c53','#7a6aa0','#ae792c','#ae3f3a','#0891B2'];
   const ctx=document.getElementById('sectorChart').getContext('2d');
   if(secChart) secChart.destroy();
   secChart=new Chart(ctx,{type:'doughnut',data:{labels:labels.map((k,i)=>`${k} ${values[i]}%`),datasets:[{data:values,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8,color:'#6c727d'}}}}});
@@ -2321,7 +2321,7 @@ function renderAiInsight(summary) {
 
 // ── PORTFOLIO PAGE ────────────────────────────────────────────
 let allocChart, allocChartTW;
-const ALLOC_COLORS=['#3f6caf','#7C3AED','#337c53','#ae792c','#ae3f3a','#0891B2','#EA580C','#65A30D','#a3a29d'];
+const ALLOC_COLORS=['#3f6caf','#7a6aa0','#337c53','#ae792c','#ae3f3a','#0891B2','#EA580C','#65A30D','#a3a29d'];
 
 // 渲染單一幣別群組的配置圖 + 持倉明細列表，回傳 Chart 實例供下次刷新時 destroy
 function renderAllocGroup(canvasId, listId, holdings, total, prevChart) {
@@ -3342,7 +3342,7 @@ function renderPerStockRebalance(holdings){
   el.innerHTML = `
   <div class="card mb-20">
     <div class="card-header">
-      <div><div class="card-title">目標配置（按個股・跨市場合併）</div><div class="card-sub">單一目標來源；市場 / 大類由此自動換算。基準 TWD，建議金額用原幣。<span style="color:#7A3FD6">紫列＝想買</span>（觀察清單標記、未持有）</div></div>
+      <div><div class="card-title">目標配置（按個股・跨市場合併）</div><div class="card-sub">單一目標來源；市場 / 大類由此自動換算。基準 TWD，建議金額用原幣。<span style="color:#7a6aa0">紫列＝想買</span>（觀察清單標記、未持有）</div></div>
       <button class="btn btn-primary" style="height:30px;font-size:11px" onclick="saveSymbolTargets()">儲存目標</button>
     </div>
     <div class="card-body" style="padding:0">
@@ -5381,8 +5381,8 @@ async function runBosDiscover() {
 // ── BOS 分領域 AI 推薦 ─────────────────────────────────────────
 
 const SECTOR_COLORS = {
-  tech:'#7C3AED', healthcare:'#059669', finance:'#0073BB',
-  food:'#ae792c', defense:'#64748B', energy:'#ae3f3a',
+  tech:'#7a6aa0', healthcare:'#337c53', finance:'#3f6caf',
+  food:'#ae792c', defense:'#6f7280', energy:'#ae3f3a',
 };
 
 const DEMO_BOS_SECTOR_DISCOVER = [
