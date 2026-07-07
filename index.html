@@ -9,15 +9,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root {
-  --blue:#006FFF; --blue-lt:#EAF2FF; --dark:#111827; --mid:#6B7280;
-  --light:#9CA3AF; --border:#E5E7EB; --bg:#F9FAFB; --white:#FFFFFF;
-  --green:#16A34A; --green-lt:#DCFCE7; --red:#DC2626; --red-lt:#FEE2E2;
-  --amber:#D97706; --amber-lt:#FEF3C7; --purple:#7C3AED; --purple-lt:#EDE9FE;
+  --blue:#3f6caf; --blue-lt:#eaeef6; --dark:#282d34; --mid:#6c727d;
+  --light:#a3a29d; --border:#e8e6e0; --bg:#f8f7f3; --white:#FFFFFF;
+  --green:#337c53; --green-lt:#e7f3ea; --red:#ae3f3a; --red-lt:#f6ebe8;
+  --amber:#ae792c; --amber-lt:#f4eddf; --purple:#7C3AED; --purple-lt:#EDE9FE;
   --radius:10px;
   /* 下列變數原本只在 coinbase/revolut/wise 變體檔定義，但共用 CSS
      （.sector-card-hdr / .perf-compare / .target-input 等）有引用，
      預設檔補齊以免未定義變數導致背景/文字色失效。 */
-  --r:8px; --navy:#111827; --text:#111827; --accent:#F3F4F6;
+  --r:8px; --navy:#282d34; --text:#282d34; --accent:#f4f2ee;
   --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.06);
   --shadow-hover:0 4px 12px rgba(0,0,0,.10),0 12px 32px rgba(0,0,0,.09);
   /* BOS 評分卡：精緻單色＋兩個低飽和點綴（森林綠/陶紅）＋組成條雙色（財報綠/護城河藍灰）*/
@@ -165,7 +165,7 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;background:var(
 .topbar-right{display:flex;align-items:center;gap:8px}
 .btn{height:34px;padding:0 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:all .13s;font-family:'Inter',sans-serif}
 .btn-primary{background:var(--blue);color:#fff}
-.btn-primary:hover{background:#0060e0}
+.btn-primary:hover{background:#335a93}
 .btn-ghost{background:transparent;color:var(--mid);border:1px solid var(--border)}
 .btn-ghost:hover{background:var(--bg);color:var(--dark);border-color:var(--dark)}
 .content{padding:24px 28px;flex:1}
@@ -272,7 +272,7 @@ tr:hover td{background:var(--bg)}
 .tf-btn.active{background:var(--blue-lt);color:var(--blue)}
 
 /* INSIGHT */
-.insight-box{background:#F0F6FF;border:1px solid #C7DCFF;border-radius:var(--radius);padding:14px 18px;margin-bottom:16px}
+.insight-box{background:#eef2f9;border:1px solid #d3dcee;border-radius:var(--radius);padding:14px 18px;margin-bottom:16px}
 .insight-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .insight-title{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.05em}
 .insight-text{font-size:13px;color:var(--dark);line-height:1.65}
@@ -395,7 +395,7 @@ tr:hover td{background:var(--bg)}
 .login-input{width:100%;height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color .13s;color:var(--dark);background:var(--white)}
 .login-input:focus{border-color:var(--blue)}
 .login-btn{width:100%;height:42px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:16px;transition:background .13s;letter-spacing:-.1px}
-.login-btn:hover{background:#0060e0}
+.login-btn:hover{background:#335a93}
 .login-btn:disabled{opacity:.6;cursor:default}
 .login-error{background:var(--red-lt);color:var(--red);padding:10px 14px;border-radius:8px;font-size:12px;margin-top:12px;display:none;line-height:1.4}
 
@@ -582,7 +582,7 @@ tr:hover td{background:var(--bg)}
 @media(max-width:640px){.sector-discover-grid{grid-template-columns:1fr;padding:10px}}
 /* ── 估值燈號 ─────────────────────────────────────────────── */
 .val-dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-right:1px}
-.val-dot.green{background:#16A34A}.val-dot.yellow{background:#D97706}.val-dot.red{background:#DC2626}.val-dot.gray{background:#9CA3AF}
+.val-dot.green{background:#337c53}.val-dot.yellow{background:#ae792c}.val-dot.red{background:#ae3f3a}.val-dot.gray{background:#a3a29d}
 .val-wrap{display:inline-flex;align-items:center;gap:5px;cursor:help;position:relative}
 .val-wrap .val-tip{position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:#1a2035;color:#e8eaf0;font-size:11px;padding:7px 11px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;z-index:300;transition:opacity .15s;min-width:180px;line-height:1.55;box-shadow:0 4px 16px rgba(0,0,0,.18)}
 .val-wrap:hover .val-tip{opacity:1}
@@ -997,14 +997,14 @@ tr:hover td{background:var(--bg)}
     </div>
     <!-- 台股統計列（有台股持倉時顯示） -->
     <div class="stats-section" id="stats-tw-section" style="display:none">
-      <div class="stats-section-label" style="color:#DC2626">台股 <span style="font-weight:400">TWD</span></div>
+      <div class="stats-section-label" style="color:#ae3f3a">台股 <span style="font-weight:400">TWD</span></div>
       <div class="stats-grid">
-        <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">台股淨值</div><div class="stat-value" id="tw-s-totalMv">—</div><div class="stat-change" id="tw-s-pnl"></div><div class="stat-sub">Unrealized P&L</div></div>
-        <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">台股成本</div><div class="stat-value" id="tw-s-cost">—</div><div class="stat-change" id="tw-s-ret"></div><div class="stat-sub">Return</div></div>
-        <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">今日變動</div><div class="stat-value" id="tw-s-dayChg">—</div><div class="stat-change" id="tw-s-dayPct"></div><div class="stat-sub">Today's P&L</div></div>
-        <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">台股持倉數</div><div class="stat-value" id="tw-s-count">—</div><div class="stat-change" style="color:var(--mid)">Active holdings</div><div class="stat-sub">&nbsp;</div></div>
-        <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">年化股息收益</div><div class="stat-value" id="tw-s-divIncome" style="color:var(--green)">—</div><div class="stat-change" id="tw-s-divYield" style="color:var(--green)">—</div><div class="stat-sub">Portfolio yield</div></div>
-        <div class="stat-card" style="border-top:3px solid #DC2626"><div class="stat-label">年化報酬率 IRR</div><div class="stat-value" id="tw-s-irr">—</div><div class="stat-change" id="tw-s-irrLabel" style="color:var(--mid)">—</div><div class="stat-sub">依交易記錄計算</div></div>
+        <div class="stat-card" style="border-top:3px solid #ae3f3a"><div class="stat-label">台股淨值</div><div class="stat-value" id="tw-s-totalMv">—</div><div class="stat-change" id="tw-s-pnl"></div><div class="stat-sub">Unrealized P&L</div></div>
+        <div class="stat-card" style="border-top:3px solid #ae3f3a"><div class="stat-label">台股成本</div><div class="stat-value" id="tw-s-cost">—</div><div class="stat-change" id="tw-s-ret"></div><div class="stat-sub">Return</div></div>
+        <div class="stat-card" style="border-top:3px solid #ae3f3a"><div class="stat-label">今日變動</div><div class="stat-value" id="tw-s-dayChg">—</div><div class="stat-change" id="tw-s-dayPct"></div><div class="stat-sub">Today's P&L</div></div>
+        <div class="stat-card" style="border-top:3px solid #ae3f3a"><div class="stat-label">台股持倉數</div><div class="stat-value" id="tw-s-count">—</div><div class="stat-change" style="color:var(--mid)">Active holdings</div><div class="stat-sub">&nbsp;</div></div>
+        <div class="stat-card" style="border-top:3px solid #ae3f3a"><div class="stat-label">年化股息收益</div><div class="stat-value" id="tw-s-divIncome" style="color:var(--green)">—</div><div class="stat-change" id="tw-s-divYield" style="color:var(--green)">—</div><div class="stat-sub">Portfolio yield</div></div>
+        <div class="stat-card" style="border-top:3px solid #ae3f3a"><div class="stat-label">年化報酬率 IRR</div><div class="stat-value" id="tw-s-irr">—</div><div class="stat-change" id="tw-s-irrLabel" style="color:var(--mid)">—</div><div class="stat-sub">依交易記錄計算</div></div>
       </div>
     </div>
 
@@ -1181,10 +1181,10 @@ tr:hover td{background:var(--bg)}
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 2a6 6 0 0 1 6 6 6 6 0 0 1-6 6 6 6 0 0 1-6-6 6 6 0 0 1 6-6z"/><path d="M8 6v2l1.5 1.5"/></svg>
               AI 分析
             </button>
-            <button class="btn btn-primary" onclick="runBosDiscover()" style="height:32px;background:linear-gradient(135deg,#7C3AED,#006FFF)">
+            <button class="btn btn-primary" onclick="runBosDiscover()" style="height:32px;background:linear-gradient(135deg,#7C3AED,#3f6caf)">
               AI 推薦（全市場）
             </button>
-            <button class="btn btn-primary" onclick="runBosDiscoverSectors()" style="height:32px;background:linear-gradient(135deg,#0073BB,#16A34A)">
+            <button class="btn btn-primary" onclick="runBosDiscoverSectors()" style="height:32px;background:linear-gradient(135deg,#0073BB,#337c53)">
               分領域各5名
             </button>
             <button class="btn btn-ghost" onclick="resetBosScreen()" style="height:32px">Reset</button>
@@ -1296,7 +1296,7 @@ tr:hover td{background:var(--bg)}
               <div style="font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">美股 USD</div>
               <div class="chart-wrap"><canvas id="allocChart"></canvas></div>
               <div id="alloc-tw-block" style="display:none">
-                <div style="font-size:10px;font-weight:700;color:#DC2626;text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:16px">台股 TWD</div>
+                <div style="font-size:10px;font-weight:700;color:#ae3f3a;text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:16px">台股 TWD</div>
                 <div class="chart-wrap"><canvas id="allocChartTW"></canvas></div>
               </div>
             </div>
@@ -1422,30 +1422,30 @@ tr:hover td{background:var(--bg)}
 
     <!-- 台股風險（有台股持倉時顯示） -->
     <div class="stats-section" id="stats-tw-risk-section" style="display:none">
-      <div class="stats-section-label" style="color:#DC2626">台股風險 <span style="font-weight:400">TWD</span></div>
+      <div class="stats-section-label" style="color:#ae3f3a">台股風險 <span style="font-weight:400">TWD</span></div>
       <div class="stats-grid mb-20">
-        <div class="stat-card risk-card-wrap" style="border-top:3px solid #DC2626">
+        <div class="stat-card risk-card-wrap" style="border-top:3px solid #ae3f3a">
           <div class="stat-label">Portfolio Beta <span class="risk-tip-icon">?</span></div>
           <div class="stat-value" id="tw-r-beta">—</div>
           <div class="stat-change" id="tw-r-betaLabel" style="color:var(--amber)">—</div>
           <div class="stat-sub">vs. 台灣加權指數</div>
           <div class="risk-tooltip">📊 衡量組合相對大盤的波動性。<br>• Beta = 1：跟大盤同步<br>• Beta &gt; 1：比大盤波動更大（漲更多也跌更多）<br>• Beta &lt; 1：比大盤穩定</div>
         </div>
-        <div class="stat-card risk-card-wrap" style="border-top:3px solid #DC2626">
+        <div class="stat-card risk-card-wrap" style="border-top:3px solid #ae3f3a">
           <div class="stat-label">夏普比率 <span class="risk-tip-icon">?</span></div>
           <div class="stat-value" id="tw-r-sharpe" style="color:var(--blue)">—</div>
           <div class="stat-change up" id="tw-r-sharpeLabel">—</div>
           <div class="stat-sub">風險調整後報酬</div>
           <div class="risk-tooltip">📈 每承擔一單位風險所獲得的超額報酬。<br>• &gt; 1：優秀<br>• 0.5–1：良好，風險補償合理<br>• &lt; 0.5：風險補償不足<br>數字越高代表在同樣風險下賺得更多。</div>
         </div>
-        <div class="stat-card risk-card-wrap" style="border-top:3px solid #DC2626">
+        <div class="stat-card risk-card-wrap" style="border-top:3px solid #ae3f3a">
           <div class="stat-label">最大回撤 <span class="risk-tip-icon">?</span></div>
           <div class="stat-value" id="tw-r-dd" style="color:var(--red)">—</div>
           <div class="stat-change down">歷史最大跌幅</div>
           <div class="stat-sub">&nbsp;</div>
           <div class="risk-tooltip">📉 從歷史最高點到最低點的最大跌幅。<br>例如 -8.9% 代表組合曾從高峰下跌 8.9%。<br>此數值越接近 0 代表組合越抗跌，心理壓力越小。</div>
         </div>
-        <div class="stat-card risk-card-wrap" style="border-top:3px solid #DC2626">
+        <div class="stat-card risk-card-wrap" style="border-top:3px solid #ae3f3a">
           <div class="stat-label">年化波動率 <span class="risk-tip-icon">?</span></div>
           <div class="stat-value" id="tw-r-vol">—</div>
           <div class="stat-change" style="color:var(--amber)">12 個月滾動計算</div>
@@ -2105,10 +2105,10 @@ function renderHoldings(holdings) {
 
 function renderSectorChart(allocation) {
   const labels=Object.keys(allocation), values=Object.values(allocation);
-  const colors=['#006FFF','#16A34A','#7C3AED','#D97706','#DC2626','#0891B2'];
+  const colors=['#3f6caf','#337c53','#7C3AED','#ae792c','#ae3f3a','#0891B2'];
   const ctx=document.getElementById('sectorChart').getContext('2d');
   if(secChart) secChart.destroy();
-  secChart=new Chart(ctx,{type:'doughnut',data:{labels:labels.map((k,i)=>`${k} ${values[i]}%`),datasets:[{data:values,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8,color:'#6B7280'}}}}});
+  secChart=new Chart(ctx,{type:'doughnut',data:{labels:labels.map((k,i)=>`${k} ${values[i]}%`),datasets:[{data:values,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8,color:'#6c727d'}}}}});
   const list=document.getElementById('sectorList'); list.innerHTML='';
   labels.forEach((k,i)=>{list.innerHTML+=`<div class="alloc-item"><div class="alloc-dot" style="background:${colors[i%colors.length]}"></div><div class="alloc-name">${k}</div><div class="alloc-pct">${values[i]}%</div></div>`;});
 }
@@ -2142,7 +2142,7 @@ async function renderNetWorthChart(period) {
   const _grad=ctx.createLinearGradient(0,0,0,(ctx.canvas&&ctx.canvas.height)||260);
   _grad.addColorStop(0,'rgba(0,111,255,0.30)'); _grad.addColorStop(1,'rgba(0,111,255,0)');
   const _lastIdx=prices.length-1;
-  nwChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'Portfolio',data:prices,borderColor:'#006FFF',backgroundColor:_grad,fill:true,tension:0.4,borderWidth:2.4,pointRadius:prices.map((_,i)=>i===_lastIdx?4.5:0),pointHoverRadius:5,pointBackgroundColor:'#006FFF',pointBorderColor:'#fff',pointBorderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1100,easing:'easeOutQuart'},interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},crosshair:true,tooltip:{displayColors:false,callbacks:{label:c=>'$'+Math.round(c.raw).toLocaleString('en')}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:7,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'K':'$'+Math.round(v),font:{size:11},color:'#9CA3AF'}}}}});
+  nwChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'Portfolio',data:prices,borderColor:'#3f6caf',backgroundColor:_grad,fill:true,tension:0.4,borderWidth:2.4,pointRadius:prices.map((_,i)=>i===_lastIdx?4.5:0),pointHoverRadius:5,pointBackgroundColor:'#3f6caf',pointBorderColor:'#fff',pointBorderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1100,easing:'easeOutQuart'},interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},crosshair:true,tooltip:{displayColors:false,callbacks:{label:c=>'$'+Math.round(c.raw).toLocaleString('en')}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:7,font:{size:11},color:'#a3a29d'}},y:{grid:{color:'#f4f2ee'},ticks:{callback:v=>v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'K':'$'+Math.round(v),font:{size:11},color:'#a3a29d'}}}}});
   document.getElementById('trendLoading').style.display='none';
 }
 
@@ -2283,7 +2283,7 @@ function renderAiInsight(summary) {
 
 // ── PORTFOLIO PAGE ────────────────────────────────────────────
 let allocChart, allocChartTW;
-const ALLOC_COLORS=['#006FFF','#7C3AED','#16A34A','#D97706','#DC2626','#0891B2','#EA580C','#65A30D','#9CA3AF'];
+const ALLOC_COLORS=['#3f6caf','#7C3AED','#337c53','#ae792c','#ae3f3a','#0891B2','#EA580C','#65A30D','#a3a29d'];
 
 // 渲染單一幣別群組的配置圖 + 持倉明細列表，回傳 Chart 實例供下次刷新時 destroy
 function renderAllocGroup(canvasId, listId, holdings, total, prevChart) {
@@ -2291,7 +2291,7 @@ function renderAllocGroup(canvasId, listId, holdings, total, prevChart) {
   if(prevChart) prevChart.destroy();
   const labels=holdings.map(h=>`${h.symbol} ${((h.market_value/total)*100).toFixed(0)}%`);
   const data=holdings.map(h=>h.market_value);
-  const chart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:ALLOC_COLORS,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:8,color:'#6B7280'}}}}});
+  const chart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:ALLOC_COLORS,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:8,color:'#6c727d'}}}}});
 
   const list=document.getElementById(listId); list.innerHTML='';
   holdings.forEach((h,i)=>{const pct=((h.market_value/total)*100).toFixed(1);list.innerHTML+=`<div class="alloc-item"><div class="alloc-dot" style="background:${ALLOC_COLORS[i%ALLOC_COLORS.length]}"></div><div><div class="alloc-name">${h.symbol}</div><div class="alloc-sub">${h.name||''}</div></div><div class="alloc-bar-wrap"><div class="alloc-bar"><div class="alloc-bar-fill" style="width:${Math.min(pct*100/30,100)}%;background:${ALLOC_COLORS[i%ALLOC_COLORS.length]}"></div></div></div><div class="alloc-pct">${pct}%</div></div>`;});
@@ -2391,7 +2391,7 @@ function renderCombinedDonut(segs){
   const ctx=document.getElementById('allocCombinedChart').getContext('2d');
   if(allocCombinedChart) allocCombinedChart.destroy();
   const labels=segs.map(s=>`${s.label} ${s.pct.toFixed(0)}%`);
-  allocCombinedChart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:segs.map(s=>s.pct),backgroundColor:ALLOC_COLORS,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:8,color:'#6B7280'}}}}});
+  allocCombinedChart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:segs.map(s=>s.pct),backgroundColor:ALLOC_COLORS,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:8,color:'#6c727d'}}}}});
   const list=document.getElementById('allocList'); list.innerHTML='';
   document.getElementById('allocListTW').style.display='none';
   const max=Math.max(...segs.map(s=>s.pct),1);
@@ -2761,16 +2761,16 @@ async function loadTechnical(symbol, period) {
   }
   const ctx=document.getElementById('priceChart').getContext('2d');
   if(pChart) pChart.destroy();
-  pChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'股價',data:prices,borderColor:'#006FFF',backgroundColor:'rgba(0,111,255,0.05)',fill:true,tension:0.3,pointRadius:(c)=>c.dataIndex===prices.length-1?4:0,pointBackgroundColor:'#006FFF',pointBorderColor:'#fff',pointBorderWidth:1.5,borderWidth:2},{label:'20日均線',data:sma20,borderColor:'#D97706',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},{label:'50日均線',data:sma50,borderColor:'#DC2626',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#6B7280'}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${cs}${c.raw?.toFixed(2)??'—'}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>cs+v.toFixed(0),font:{size:11},color:'#9CA3AF'}}}}});
+  pChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'股價',data:prices,borderColor:'#3f6caf',backgroundColor:'rgba(0,111,255,0.05)',fill:true,tension:0.3,pointRadius:(c)=>c.dataIndex===prices.length-1?4:0,pointBackgroundColor:'#3f6caf',pointBorderColor:'#fff',pointBorderWidth:1.5,borderWidth:2},{label:'20日均線',data:sma20,borderColor:'#ae792c',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},{label:'50日均線',data:sma50,borderColor:'#ae3f3a',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#6c727d'}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${cs}${c.raw?.toFixed(2)??'—'}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#a3a29d'}},y:{grid:{color:'#f4f2ee'},ticks:{callback:v=>cs+v.toFixed(0),font:{size:11},color:'#a3a29d'}}}}});
 
   const ctx2=document.getElementById('rsiChart').getContext('2d');
   if(rChart) rChart.destroy();
-  rChart=new Chart(ctx2,{type:'line',data:{labels:dates,datasets:[{label:'RSI',data:rsi,borderColor:'#006FFF',fill:false,tension:0.3,pointRadius:0,borderWidth:2},{label:'超買線(70)',data:Array(dates.length).fill(70),borderColor:'rgba(220,38,38,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1},{label:'超賣線(30)',data:Array(dates.length).fill(30),borderColor:'rgba(22,163,74,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#6B7280'}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9CA3AF'}},y:{min:0,max:100,grid:{color:'#F3F4F6'},ticks:{font:{size:11},color:'#9CA3AF'}}}}});
+  rChart=new Chart(ctx2,{type:'line',data:{labels:dates,datasets:[{label:'RSI',data:rsi,borderColor:'#3f6caf',fill:false,tension:0.3,pointRadius:0,borderWidth:2},{label:'超買線(70)',data:Array(dates.length).fill(70),borderColor:'rgba(220,38,38,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1},{label:'超賣線(30)',data:Array(dates.length).fill(30),borderColor:'rgba(22,163,74,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#6c727d'}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#a3a29d'}},y:{min:0,max:100,grid:{color:'#f4f2ee'},ticks:{font:{size:11},color:'#a3a29d'}}}}});
 
   const volColors=prices.map((p,i)=>i===0?'rgba(0,111,255,.6)':p>=prices[i-1]?'rgba(22,163,74,.65)':'rgba(220,38,38,.65)');
   const ctx3=document.getElementById('volumeChart').getContext('2d');
   if(vChart) vChart.destroy();
-  vChart=new Chart(ctx3,{type:'bar',data:{labels:dates,datasets:[{label:'Volume',data:volumes,backgroundColor:volColors}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9CA3AF'}},y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>(v/1e6).toFixed(0)+'M',font:{size:11},color:'#9CA3AF'}}}}});
+  vChart=new Chart(ctx3,{type:'bar',data:{labels:dates,datasets:[{label:'Volume',data:volumes,backgroundColor:volColors}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#a3a29d'}},y:{grid:{color:'#f4f2ee'},ticks:{callback:v=>(v/1e6).toFixed(0)+'M',font:{size:11},color:'#a3a29d'}}}}});
 
   const lastRSI=rsi.filter(v=>v!=null).pop();
   const lastSMA20=sma20.filter(v=>v!=null).pop();
@@ -3283,7 +3283,7 @@ function renderPerStockRebalance(holdings){
   const catStr = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k} ${v.toFixed(0)}%`).join(' ｜ ') || '（尚未設定目標）';
   const mktStr = tgtSum>0 ? `美股 ${usT.toFixed(0)}% ｜ 台股 ${twT.toFixed(0)}%` : '（尚未設定目標）';
   const sumNote = (tgtSum>0 && Math.abs(tgtSum-100)>1)
-    ? `<span style="color:var(--amber,#D97706)">目標加總 ${tgtSum.toFixed(0)}%（非 100%），建議金額為近似值</span>`
+    ? `<span style="color:var(--amber,#ae792c)">目標加總 ${tgtSum.toFixed(0)}%（非 100%），建議金額為近似值</span>`
     : `目標加總 ${tgtSum.toFixed(0)}%`;
 
   // 建議清單：偏離 ≥3% 者，依偏離大小排序
@@ -5202,16 +5202,16 @@ function runCalculator() {
     data:{
       labels,
       datasets:[
-        {label:'帳戶價值',data:values,borderColor:'#006FFF',backgroundColor:'rgba(0,111,255,0.08)',fill:true,tension:0.4,pointRadius:3,borderWidth:2},
-        {label:'總投入',  data:invested,borderColor:'#9CA3AF',backgroundColor:'transparent',fill:false,tension:0.4,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},
+        {label:'帳戶價值',data:values,borderColor:'#3f6caf',backgroundColor:'rgba(0,111,255,0.08)',fill:true,tension:0.4,pointRadius:3,borderWidth:2},
+        {label:'總投入',  data:invested,borderColor:'#a3a29d',backgroundColor:'transparent',fill:false,tension:0.4,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},
       ]
     },
     options:{
       responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'top',labels:{font:{size:11}}},tooltip:{callbacks:{label:c=>'$'+Math.round(c.raw).toLocaleString('en')}}},
       scales:{
-        x:{grid:{display:false},ticks:{font:{size:11},color:'#9CA3AF'}},
-        y:{grid:{color:'#F3F4F6'},ticks:{callback:v=>v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'K':'$'+Math.round(v),font:{size:11},color:'#9CA3AF'}}
+        x:{grid:{display:false},ticks:{font:{size:11},color:'#a3a29d'}},
+        y:{grid:{color:'#f4f2ee'},ticks:{callback:v=>v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'K':'$'+Math.round(v),font:{size:11},color:'#a3a29d'}}
       }
     }
   });
@@ -5344,7 +5344,7 @@ async function runBosDiscover() {
 
 const SECTOR_COLORS = {
   tech:'#7C3AED', healthcare:'#059669', finance:'#0073BB',
-  food:'#D97706', defense:'#64748B', energy:'#DC2626',
+  food:'#ae792c', defense:'#64748B', energy:'#ae3f3a',
 };
 
 const DEMO_BOS_SECTOR_DISCOVER = [
@@ -5613,7 +5613,7 @@ applyMobileTableLabels();
         ctx.setLineDash([]);
         ctx.fillStyle='rgba(0,111,255,0.16)'; ctx.beginPath(); ctx.arc(x,y,9,0,6.2832); ctx.fill();
         ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x,y,4.5,0,6.2832); ctx.fill();
-        ctx.fillStyle='#006FFF'; ctx.beginPath(); ctx.arc(x,y,3,0,6.2832); ctx.fill();
+        ctx.fillStyle='#3f6caf'; ctx.beginPath(); ctx.arc(x,y,3,0,6.2832); ctx.fill();
         ctx.restore();
       }
     });
