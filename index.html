@@ -3738,6 +3738,9 @@ function switchScreenerTab(mode) {
     document.getElementById('smode-'+m).classList.toggle('active', m === mode);
   });
   loadScreenerWatchlist();
+  // 進入 BOS/DGM 分頁時把「釘選」的卡片自動載回來（重整後仍常駐）
+  if (mode === 'dgm') _dgmLoadPinned();
+  else if (mode === 'bos') _bosLoadPinned();
 }
 
 // ── BOS 篩選 ──────────────────────────────────────────────────
@@ -3824,8 +3827,9 @@ function _bscFoot(s) {
     ${s.summary ? `<div class="bsc-summary">${_esc(s.summary)}</div>` : ''}
     <div class="bsc-actions">
       <span class="bsc-analyzed">${analyzed}</span>
-      <div style="display:flex;gap:7px">
-        ${s.moat ? `<button class="bsc-btn" onclick="bosReanalyze('${s.symbol}')" title="用 Claude 重新分析護城河與風險">↻ 重算</button>` : ''}
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="bsc-btn" onclick="bosRefresh('${s.symbol}')" title="重抓最新財報數據（免費，不叫 Claude）">↻ 重抓財報</button>
+        ${s.moat ? `<button class="bsc-btn" onclick="bosReanalyze('${s.symbol}')" title="用 Claude 重評護城河與風險（會花費）">⟳ 護城河重評</button>` : ''}
         <button class="bsc-btn" onclick="addToWatchlist('${s.symbol}','${nameEsc}',this,'BOS')">加入關注</button>
       </div>
     </div>
@@ -3850,9 +3854,9 @@ function renderBosScorecard(s) {
     <div class="bsc-hr">${_bscRing(s.bos_score)}${badge}</div>
   </div>`;
 
-  const stale = s.stale_financials
-    ? `<div class="bsc-stale" onclick="bosReanalyze('${s.symbol}')">↻ 新財報已出（${s.financial_period}），護城河分析可能過時</div>`
-    : '';
+  let stale = '';
+  if (s.stale_financials) stale += `<div class="dgm-banner fin" onclick="bosRefresh('${s.symbol}')">↻ 新財報已出（${s.financial_period}）· 重抓數據<span class="cost">免費</span></div>`;
+  if (s.stale_moat) stale += `<div class="dgm-banner moat" onclick="bosReanalyze('${s.symbol}')">⟳ 護城河分析已滿 12 個月 · 建議重評<span class="cost">用 Claude</span></div>`;
 
   const edItems = (s.edfri?.items || []).map(it =>
     `<div class="bsc-row"><div class="bsc-k"><b>${it.code} · ${it.name}</b><span class="bsc-why">${_esc(it.reason)}</span></div>${_bscPt(it.score)}</div>`
@@ -3946,13 +3950,22 @@ async function bosConfirmMoat(sym) {
   try { const d = await api(`/api/screener/bos/${sym}`, 'PATCH', { moat_confidence_bonus: true }); if (d && d.result) _bscReplace(sym, d.result); }
   catch (e) { console.error(e); }
 }
-async function bosReanalyze(sym) {
+async function bosReanalyze(sym) {   // 護城河重評（Claude，會花費）
   const el = document.getElementById('bsc-' + sym);
   if (el) el.style.opacity = '.5';
   try {
     const d = await api(`/api/screener/bos/analyze?symbols=${sym}`, 'POST');
     if (d && d.results && d.results[0]) _bscReplace(sym, d.results[0]);
-  } catch (e) { console.error(e); alert('重算失敗：' + e.message); }
+  } catch (e) { console.error(e); alert('護城河重評失敗：' + e.message); }
+  finally { const e2 = document.getElementById('bsc-' + sym); if (e2) e2.style.opacity = ''; }
+}
+async function bosRefresh(sym) {     // 財報重抓（免費，不叫 Claude）
+  const el = document.getElementById('bsc-' + sym);
+  if (el) el.style.opacity = '.5';
+  try {
+    const d = await api(`/api/screener/bos/refresh?symbols=${sym}`, 'POST');
+    if (d && d.results && d.results[0]) _bscReplace(sym, d.results[0]);
+  } catch (e) { console.error(e); alert('重抓失敗：' + e.message); }
   finally { const e2 = document.getElementById('bsc-' + sym); if (e2) e2.style.opacity = ''; }
 }
 
@@ -4008,6 +4021,18 @@ function _bosRenderGrid(){
   const list = _bosResults.slice().sort((a,b) => (_bosPins.has(a.symbol)?0:1) - (_bosPins.has(b.symbol)?0:1));  // 釘選浮頂
   grid.innerHTML = list.length ? list.map(renderBosScorecard).join('')
     : '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--light)">沒有找到結果</div>';
+}
+// 進入分頁時載入釘選的卡片（重整後常駐）；grid 已有內容就不覆蓋
+async function _bosLoadPinned(){
+  if (!_bosPins.size || _bosResults.length) return;
+  const pins = [..._bosPins];
+  try {
+    if (DEMO_MODE) { _bosResults = DEMO_BOS.filter(d => pins.includes(d.symbol)); }
+    else { const data = await api(`/api/screener/bos?symbols=${pins.join(',')}`); _bosResults = data.results || []; }
+    _bosRenderGrid();
+    const cnt = document.getElementById('bosCount');
+    if (cnt && _bosResults.length) cnt.textContent = `${_bosResults.length} 支（已釘選）`;
+  } catch(e){ console.error(e); }
 }
 
 async function runBosScreen() {
@@ -4158,8 +4183,9 @@ function renderDgmScorecard(s) {
   }
 
   const foot = `<div class="bsc-foot"><div class="bsc-actions"><span class="bsc-analyzed">${s.ai&&s.analyzed_at?'護城河分析於 '+String(s.analyzed_at).slice(0,10):'軸三未分析'}</span>
-    <div style="display:flex;gap:7px">
-      ${s.ai?`<button class="bsc-btn" onclick="dgmReanalyze('${s.symbol}')" title="用 Claude 重評護城河（會花費）">↻ 護城河重評</button>`:''}
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <button class="bsc-btn" onclick="dgmRefresh('${s.symbol}')" title="重抓最新財報數據（免費，不叫 Claude）">↻ 重抓財報</button>
+      ${s.ai?`<button class="bsc-btn" onclick="dgmReanalyze('${s.symbol}')" title="用 Claude 重評護城河（會花費）">⟳ 護城河重評</button>`:''}
       <button class="bsc-btn" onclick="addToWatchlist('${s.symbol}','${nameEsc}',this,'DGM')">加入關注</button>
     </div></div></div>`;
 
@@ -4192,6 +4218,18 @@ function dgmToggleBuyable(btn){
   _dgmBuyableOnly = !_dgmBuyableOnly;
   if (btn) btn.classList.toggle('active', _dgmBuyableOnly);
   _dgmRenderGrid();
+}
+// 進入分頁時載入釘選的卡片（重整後常駐）；grid 已有內容就不覆蓋
+async function _dgmLoadPinned(){
+  if (!_dgmPins.size || _dgmResults.length) return;
+  const pins = [..._dgmPins];
+  try {
+    if (DEMO_MODE) { _dgmResults = DEMO_DGM.filter(d => pins.includes(d.symbol)); }
+    else { const data = await api(`/api/screener/dgm?symbols=${pins.join(',')}`); _dgmResults = data.results || []; }
+    _dgmRenderGrid();
+    const cnt = document.getElementById('dgmCount');
+    if (cnt && _dgmResults.length) cnt.textContent = `${_dgmResults.length} 支（已釘選）`;
+  } catch(e){ console.error(e); }
 }
 
 // 單卡就地替換（重評/重抓後）
