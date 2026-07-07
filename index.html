@@ -1576,6 +1576,56 @@ tr:hover td{background:var(--bg)}
       .rebal-mkt-btn.active{background:var(--blue);color:#fff;font-weight:700}
       .rebal-mkt-section-hd{font-size:16px;font-weight:800;margin:4px 0 14px;color:var(--text)}
       .rebal-cur{font-size:11px;font-weight:500;color:var(--mid);border:1px solid var(--border);border-radius:4px;padding:1px 8px;margin-left:8px}
+      /* ── 兩層再平衡（rb2-；沿用線框原始配色，命名空間化避免撞 app class；目前為淺色主題）── */
+      .rb2-ctrl{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px 17px;margin:0 0 12px}
+      .rb2-fld{display:flex;flex-direction:column;gap:5px}
+      .rb2-fld label{font-size:11.5px;color:#6b7280;font-weight:600}
+      .rb2-ctrl input{font:inherit;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;border:1px solid #e5e7eb;border-radius:8px;padding:7px 10px;background:#f4f5f7;color:#1a1d21;outline:none}
+      .rb2-ctrl input:focus{border-color:#2563eb}
+      .rb2-budget{width:140px;font-size:15px}
+      .rb2-split{width:64px}
+      .rb2-sum{font-size:11.5px;font-weight:700;padding:7px 10px;border-radius:8px}
+      .rb2-sum.ok{color:#0a7d4d;background:#e7f6ee}
+      .rb2-sum.bad{color:#c02626;background:#fdecec}
+      .rb2-save{height:32px;font-size:12px;padding:0 16px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+      .rb2-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+      .rb2-scroll{overflow-x:auto}
+      .rb2-tbl{border-collapse:collapse;width:100%;min-width:720px;font-size:13.5px}
+      .rb2-tbl thead th{background:#101317;color:#f4f5f7;font-weight:600;text-align:right;padding:11px 12px;font-size:12px;white-space:nowrap}
+      .rb2-tbl thead th:first-child{text-align:left}
+      .rb2-tbl tbody td{padding:10px 12px;border-top:1px solid #eef0f2;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:#1a1d21}
+      .rb2-tbl tbody td:first-child{text-align:left}
+      .rb2-grp td{background:#eef4ff;font-weight:700;border-top:1px solid #e5e7eb}
+      .rb2-grp.tw td{background:#fff6e9}
+      .rb2-tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-right:8px;vertical-align:1px;background:#2563eb;color:#fff}
+      .rb2-grp.tw .rb2-tag{background:#d97706}
+      .rb2-name{padding-left:24px;position:relative}
+      .rb2-name::before{content:"";position:absolute;left:11px;top:50%;width:7px;height:7px;border-left:1.5px solid #9aa1ab;border-bottom:1.5px solid #9aa1ab;transform:translateY(-70%);border-bottom-left-radius:3px}
+      .rb2-name small{color:#9aa1ab;font-weight:400;font-size:11px}
+      .rb2-usd{font-weight:600;color:#1a1d21}
+      .rb2-twd{color:#9aa1ab;font-size:11.5px;display:block;margin-top:1px}
+      .rb2-pct-in{width:42px;font:inherit;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;border:none;border-bottom:1px dashed #cbd0d6;background:transparent;color:#1a1d21;outline:none;padding:1px 2px;cursor:text}
+      .rb2-pct-in:focus{border-bottom:1px solid #2563eb;background:#eef4ff}
+      .rb2-pill{display:inline-block;font-weight:700;padding:3px 9px;border-radius:8px;font-size:12.5px;white-space:nowrap}
+      .rb2-pill.buy{background:#e7f6ee;color:#0a7d4d}
+      .rb2-pill.hold{background:#eef0f2;color:#4b5563}
+      .rb2-pill.over{background:#fdecec;color:#c02626}
+      .rb2-val{font-weight:700;font-size:12px;padding:2px 8px;border-radius:6px;white-space:nowrap}
+      .rb2-val.good{color:#0a7d4d;background:#e7f6ee}
+      .rb2-val.ok{color:#4b5563;background:#eef0f2}
+      .rb2-val.warn{color:#b45309;background:#fdf3e3}
+      .rb2-val.bad{color:#c02626;background:#fdecec}
+      .rb2-val.na{color:#9aa1ab;background:transparent}
+      .rb2-act{font-size:12px;color:#6b7280;white-space:normal;min-width:170px;text-align:left;line-height:1.4}
+      .rb2-tbl tfoot td{padding:12px;border-top:2px solid #e5e7eb;font-weight:800;background:#fff;text-align:right;font-variant-numeric:tabular-nums;color:#1a1d21}
+      .rb2-tbl tfoot td:first-child{text-align:left}
+      .rb2-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+      .rb2-stat{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:13px 14px}
+      .rb2-stat .k{color:#6b7280;font-size:11.5px;margin-bottom:5px}
+      .rb2-stat .v{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;color:#1a1d21}
+      .rb2-stat .v small{font-size:11.5px;font-weight:600;color:#9aa1ab;display:block;margin-top:2px}
+      .rb2-stat.hl{border-color:#0a7d4d} .rb2-stat.hl .v{color:#0a7d4d}
+      @media (max-width:660px){ .rb2-stats{grid-template-columns:repeat(2,1fr)} }
     </style>
     <!-- 合併個股目標（永遠列全部持股、TWD 基準，不受市場切換影響）-->
     <div id="rebalCombined">
@@ -3282,6 +3332,138 @@ function renderPerStockRebalance(holdings){
       <div class="card-body">${adviceHtml}</div>
     </div>
   </div>`;
+}
+
+// ── 兩層再平衡（國際/台灣 → 個股；綁總預算）─────────────────────────
+// 這個同名函式定義在舊版之後 → 覆蓋舊的 renderPerStockRebalance（舊版留著不動、已無效）。
+// 存 rb2Config（budget/split/pct）；儲存時把「群組%×組內%」換算成每檔佔總% 寫進
+// targetAllocSymbols ＋ pushDerivedSectorTargets（晨報偏移提醒沿用、零破壞）。估值接已分析的 BOS/DGM。
+let _rb2 = null;
+function rb2Load(){ try{ return JSON.parse(localStorage.getItem('rb2Config')||'null'); }catch(e){ return null; } }
+function rb2Money(twd, mkt, fx){   // 主顯原幣、副顯另一幣
+  const ntd = 'NT$'+Math.round(twd||0).toLocaleString('en');
+  const us  = '$'+Math.round((twd||0)/(fx||32)).toLocaleString('en');
+  return mkt==='us' ? `<span class="rb2-usd">${us}</span><span class="rb2-twd">${ntd}</span>`
+                    : `<span class="rb2-usd">${ntd}</span><span class="rb2-twd">${us}</span>`;
+}
+function rb2Val(sym){   // 估值：接已分析過的 BOS/DGM（重用 _screenerDataStore）；沒有回 na
+  const st = (typeof _screenerDataStore!=='undefined') ? _screenerDataStore[sym] : null;
+  if(!st || !st.data) return {txt:'—', tone:'na'};
+  const d = st.data;
+  if(st.source==='DGM' && d.timing && d.timing.total!=null){
+    const t = d.timing.total;
+    return t>=7?{txt:'好買點',tone:'good'}:t>=4?{txt:'尚可',tone:'ok'}:{txt:'偏貴',tone:'warn'};
+  }
+  const rec = String(d.recommendation||'');
+  if(/買|投資/.test(rec)) return {txt:'可買',tone:'good'};
+  if(/觀察/.test(rec))   return {txt:'觀察',tone:'warn'};
+  return rec ? {txt:rec, tone:'ok'} : {txt:'—', tone:'na'};
+}
+function rb2Act(gap, tone, budget){
+  const th = Math.max(2500, (budget||0)*0.005);
+  if(Math.abs(gap)<=th) return '持平，已達標';
+  if(gap<0) return (tone==='bad'||tone==='warn') ? '超標且偏貴 → 可考慮 trim' : '超標 → 可考慮減碼';
+  if(tone==='good') return '缺口大且便宜 → 優先加碼';
+  if(tone==='warn'||tone==='bad') return '缺口大但偏貴 → 定期定額別追高';
+  return '定期定額補';
+}
+function rb2Set(field, val){
+  if(!_rb2) return;
+  if(field==='budget') _rb2.budget = Math.max(0, +val||0);
+  else if(field==='su') _rb2.split.us = Math.max(0, +val||0);
+  else if(field==='sl') _rb2.split.tw = Math.max(0, +val||0);
+  renderPerStockRebalance(_rebalHoldings);
+}
+function rb2SetPct(sym, val){ if(_rb2){ _rb2.pct[sym] = Math.max(0, +val||0); renderPerStockRebalance(_rebalHoldings); } }
+function rb2Save(){
+  if(!_rb2) return;
+  localStorage.setItem('rb2Config', JSON.stringify({budget:_rb2.budget, split:_rb2.split, pct:_rb2.pct}));
+  // 每檔佔「總」% = split[mkt]% × 組內pct% / 100 → targetAllocSymbols（晨報反推沿用）
+  const t = {};
+  (_rb2._entries||[]).forEach(e=>{ const p=_rb2.pct[e.sym]; if(p==null) return; const sp=_rb2.split[e.mkt]||0; t[e.sym]=Math.round(sp*p/100*10)/10; });
+  localStorage.setItem('targetAllocSymbols', JSON.stringify(t));
+  pushDerivedSectorTargets(_rebalHoldings, t);   // 反推各市場板塊→後端（晨報偏移續用）
+  showToast('目標配置已儲存');
+}
+function renderPerStockRebalance(holdings){
+  const el = document.getElementById('perStockRebal');
+  if(!el) return;
+  const fx = window._usdtwd || 32;
+  // entries：持有 + 想買（觀察清單標記 want_buy、未持有；現況 0）
+  const entries = (holdings||[]).map(h=>({sym:h.symbol, name:h.name||'', mkt:marketOf(h), curTwd:twdValue(h), wish:false}))
+    .concat((_rebalWish||[]).map(w=>({sym:w.symbol, name:w.name||'', mkt:(String(w.symbol).includes('.TW')?'tw':'us'), curTwd:0, wish:true})));
+
+  if(!_rb2){
+    const saved = rb2Load();
+    if(saved && saved.split){ _rb2 = {budget:saved.budget||0, split:{us:(saved.split.us??50), tw:(saved.split.tw??50)}, pct:saved.pct||{}}; }
+    else {
+      // 無存檔 → 由現況推預設：總預算＝現況總值、比例＝現況市場比、組內%＝現況組內比（初始 0 缺口，之後自己調）
+      const totTwd = entries.reduce((a,e)=>a+e.curTwd,0);
+      const usTwd  = entries.filter(e=>e.mkt==='us').reduce((a,e)=>a+e.curTwd,0);
+      const su = totTwd>0 ? Math.round(usTwd/totTwd*100) : 60;
+      _rb2 = { budget: Math.round(totTwd)||500000, split:{us:su, tw:100-su}, pct:{} };
+      ['us','tw'].forEach(m=>{ const g=entries.filter(e=>e.mkt===m); const gt=g.reduce((a,e)=>a+e.curTwd,0)||1;
+        g.forEach(e=>{ _rb2.pct[e.sym]= e.curTwd>0? Math.round(e.curTwd/gt*100) : 0; }); });
+    }
+  }
+  entries.forEach(e=>{ if(_rb2.pct[e.sym]==null) _rb2.pct[e.sym]=0; });   // 新標的補 0
+  _rb2._entries = entries.map(e=>({sym:e.sym, mkt:e.mkt}));
+
+  const budget=_rb2.budget, su=_rb2.split.us||0, sl=_rb2.split.tw||0, splitSum=su+sl;
+  const GROUPS=[{m:'us',label:'國際股票',tag:'國際'},{m:'tw',label:'台灣股票',tag:'台灣'}];
+  const nf = v => Math.round(v||0).toLocaleString('en');
+  let rowsHtml='', totTarget=0, totCur=0, totGapPos=0, totOver=0;
+
+  GROUPS.forEach(G=>{
+    const g=entries.filter(e=>e.mkt===G.m);
+    if(!g.length) return;
+    const sp=_rb2.split[G.m]||0, gTarget=budget*sp/100, gCur=g.reduce((a,e)=>a+e.curTwd,0);
+    const gPctSum=g.reduce((a,e)=>a+(_rb2.pct[e.sym]||0),0);
+    rowsHtml+=`<tr class="rb2-grp ${G.m==='tw'?'tw':''}">
+      <td><span class="rb2-tag">${G.tag}</span>${G.label} <span style="font-weight:400;color:#9aa1ab;font-size:11px">（組內合計 ${gPctSum}%）</span></td>
+      <td>${sp}%</td><td>${rb2Money(gTarget,G.m,fx)}</td><td>${rb2Money(gCur,G.m,fx)}</td><td colspan="3"></td></tr>`;
+    g.forEach(e=>{
+      const p=_rb2.pct[e.sym]||0, target=gTarget*p/100, gap=target-e.curTwd, v=rb2Val(e.sym);
+      let pill;
+      if(Math.abs(gap)<=Math.max(2500,budget*0.005)) pill=`<span class="rb2-pill hold">持平 ✓</span>`;
+      else if(gap>0) pill=`<span class="rb2-pill buy">+ NT$${nf(gap)}</span>`;
+      else pill=`<span class="rb2-pill over">超 NT$${nf(-gap)}</span>`;
+      rowsHtml+=`<tr>
+        <td class="rb2-name">${e.sym}${e.wish?' <span class="wl-tag">想買</span>':''} <small>${e.name}</small></td>
+        <td><input class="rb2-pct-in" type="number" min="0" value="${p}" onchange="rb2SetPct('${e.sym}',this.value)"><span style="color:#9aa1ab;font-size:11px"> %</span></td>
+        <td>${rb2Money(target,e.mkt,fx)}</td>
+        <td>${e.curTwd? rb2Money(e.curTwd,e.mkt,fx) : '<span style="color:#9aa1ab">—</span>'}</td>
+        <td>${pill}</td>
+        <td><span class="rb2-val ${v.tone}">${v.txt}</span></td>
+        <td class="rb2-act">${rb2Act(gap,v.tone,budget)}</td></tr>`;
+      totTarget+=target; totCur+=e.curTwd; if(gap>0)totGapPos+=gap; else totOver+=-gap;
+    });
+  });
+
+  const netGap=totTarget-totCur, sumCls=splitSum===100?'ok':'bad';
+  el.innerHTML=`
+    <div class="rb2-ctrl">
+      <div class="rb2-fld"><label>總預算（台幣）</label><input class="rb2-budget" type="number" value="${budget}" onchange="rb2Set('budget',this.value)"></div>
+      <div class="rb2-fld"><label>國際股票 %</label><input class="rb2-split" type="number" value="${su}" onchange="rb2Set('su',this.value)"></div>
+      <div class="rb2-fld"><label>台灣股票 %</label><input class="rb2-split" type="number" value="${sl}" onchange="rb2Set('sl',this.value)"></div>
+      <div class="rb2-fld"><label>頂層合計</label><span class="rb2-sum ${sumCls}">${splitSum}%</span></div>
+      <div style="margin-left:auto;align-self:center"><button class="rb2-save" onclick="rb2Save()">儲存目標</button></div>
+    </div>
+    <div class="rb2-card rb2-scroll">
+      <table class="rb2-tbl">
+        <thead><tr><th>標的</th><th>佔比</th><th>目標金額</th><th>現況</th><th>還要加碼</th><th>估值</th><th style="text-align:left">動作</th></tr></thead>
+        <tbody>${rowsHtml || '<tr><td colspan="7" style="padding:24px;text-align:center;color:#9aa1ab">尚無持股</td></tr>'}</tbody>
+        <tfoot><tr><td>核心合計</td><td>${splitSum}%</td><td>${rb2Money(totTarget,'tw',fx)}</td><td>${rb2Money(totCur,'tw',fx)}</td>
+          <td><span class="rb2-pill ${netGap>=0?'buy':'over'}">${netGap>=0?'缺口 +':'超 '}NT$${nf(Math.abs(netGap))}</span></td><td colspan="2"></td></tr></tfoot>
+      </table>
+    </div>
+    <div class="rb2-stats">
+      <div class="rb2-stat"><div class="k">核心目標總額</div><div class="v">NT$${nf(totTarget)}<small>＝總預算×${splitSum}%</small></div></div>
+      <div class="rb2-stat"><div class="k">現況總值</div><div class="v">NT$${nf(totCur)}<small>已投入持股</small></div></div>
+      <div class="rb2-stat hl"><div class="k">待加碼合計</div><div class="v">NT$${nf(totGapPos)}<small>低於目標的缺口</small></div></div>
+      <div class="rb2-stat"><div class="k">可釋出（超標）</div><div class="v">NT$${nf(totOver)}<small>高於目標可減碼</small></div></div>
+    </div>
+    <div style="font-size:11px;color:var(--mid);margin:10px 2px 0;line-height:1.6">先分國際/台灣頂層比例，各自再細分個股%；目標金額＝總預算×頂層%×組內%。「估值」接你分析過的 BOS/DGM（沒分析的顯示 —）；動作＝缺口為主、估值為輔（估值只影響擇時、不改達標判定）。想把某檔清掉就設 0%，它會顯示超標可 trim。儲存後晨報偏移提醒沿用。</div>`;
 }
 
 function renderValuationAlerts(market, holdings, tnx) {
