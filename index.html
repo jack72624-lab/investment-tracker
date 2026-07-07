@@ -1576,55 +1576,58 @@ tr:hover td{background:var(--bg)}
       .rebal-mkt-btn.active{background:var(--blue);color:#fff;font-weight:700}
       .rebal-mkt-section-hd{font-size:16px;font-weight:800;margin:4px 0 14px;color:var(--text)}
       .rebal-cur{font-size:11px;font-weight:500;color:var(--mid);border:1px solid var(--border);border-radius:4px;padding:1px 8px;margin-left:8px}
-      /* ── 兩層再平衡（rb2-；沿用線框原始配色，命名空間化避免撞 app class；目前為淺色主題）── */
-      .rb2-ctrl{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px 17px;margin:0 0 12px}
+      /* ── 兩層再平衡（rb2-；命名空間化避免撞 app class；淺色、貼近 app 風格）── */
+      .rb2-ctrl{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:15px 17px;margin:0 0 10px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
       .rb2-fld{display:flex;flex-direction:column;gap:5px}
-      .rb2-fld label{font-size:11.5px;color:#6b7280;font-weight:600}
-      .rb2-ctrl input{font:inherit;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;border:1px solid #e5e7eb;border-radius:8px;padding:7px 10px;background:#f4f5f7;color:#1a1d21;outline:none}
-      .rb2-ctrl input:focus{border-color:#2563eb}
+      .rb2-fld label{font-size:10px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+      .rb2-ctrl input{font:inherit;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;border:1px solid #e5e7eb;border-radius:8px;padding:7px 10px;background:#fff;color:#111827;outline:none}
+      .rb2-ctrl input:focus{border-color:#006FFF;box-shadow:0 0 0 3px #EAF2FF}
       .rb2-budget{width:140px;font-size:15px}
       .rb2-split{width:64px}
       .rb2-sum{font-size:11.5px;font-weight:700;padding:7px 10px;border-radius:8px}
-      .rb2-sum.ok{color:#0a7d4d;background:#e7f6ee}
-      .rb2-sum.bad{color:#c02626;background:#fdecec}
-      .rb2-save{height:32px;font-size:12px;padding:0 16px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer}
-      .rb2-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+      .rb2-sum.ok{color:#16A34A;background:#DCFCE7}
+      .rb2-sum.bad{color:#DC2626;background:#FEE2E2}
+      .rb2-save{height:32px;font-size:12px;padding:0 16px;background:#006FFF;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+      .rb2-add{display:flex;gap:8px;align-items:center;margin:0 0 12px}
+      .rb2-add input{font:inherit;font-size:12px;border:1px solid #e5e7eb;border-radius:8px;padding:7px 10px;background:#fff;color:#111827;outline:none;width:170px;text-transform:uppercase}
+      .rb2-add input:focus{border-color:#006FFF;box-shadow:0 0 0 3px #EAF2FF}
+      .rb2-add button{height:32px;font-size:12px;padding:0 14px;background:#fff;color:#006FFF;border:1px solid #006FFF;border-radius:8px;font-weight:700;cursor:pointer}
+      .rb2-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
       .rb2-scroll{overflow-x:auto}
-      .rb2-tbl{border-collapse:collapse;width:100%;min-width:720px;font-size:13.5px}
-      .rb2-tbl thead th{background:#101317;color:#f4f5f7;font-weight:600;text-align:right;padding:11px 12px;font-size:12px;white-space:nowrap}
+      .rb2-tbl{border-collapse:collapse;width:100%;min-width:720px;font-size:13px}
+      .rb2-tbl thead th{background:#fff;color:#9ca3af;font-weight:700;text-align:right;padding:11px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;border-bottom:2px solid #e5e7eb}
       .rb2-tbl thead th:first-child{text-align:left}
-      .rb2-tbl tbody td{padding:10px 12px;border-top:1px solid #eef0f2;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:#1a1d21}
+      .rb2-tbl tbody td{padding:11px 14px;border-top:1px solid #f0f1f3;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:#111827}
       .rb2-tbl tbody td:first-child{text-align:left}
-      .rb2-grp td{background:#eef4ff;font-weight:700;border-top:1px solid #e5e7eb}
-      .rb2-grp.tw td{background:#fff6e9}
-      .rb2-tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-right:8px;vertical-align:1px;background:#2563eb;color:#fff}
-      .rb2-grp.tw .rb2-tag{background:#d97706}
-      .rb2-name{padding-left:24px;position:relative}
-      .rb2-name::before{content:"";position:absolute;left:11px;top:50%;width:7px;height:7px;border-left:1.5px solid #9aa1ab;border-bottom:1.5px solid #9aa1ab;transform:translateY(-70%);border-bottom-left-radius:3px}
-      .rb2-name small{color:#9aa1ab;font-weight:400;font-size:11px}
-      .rb2-usd{font-weight:600;color:#1a1d21}
-      .rb2-twd{color:#9aa1ab;font-size:11.5px;display:block;margin-top:1px}
-      .rb2-pct-in{width:42px;font:inherit;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;border:none;border-bottom:1px dashed #cbd0d6;background:transparent;color:#1a1d21;outline:none;padding:1px 2px;cursor:text}
-      .rb2-pct-in:focus{border-bottom:1px solid #2563eb;background:#eef4ff}
-      .rb2-pill{display:inline-block;font-weight:700;padding:3px 9px;border-radius:8px;font-size:12.5px;white-space:nowrap}
-      .rb2-pill.buy{background:#e7f6ee;color:#0a7d4d}
-      .rb2-pill.hold{background:#eef0f2;color:#4b5563}
-      .rb2-pill.over{background:#fdecec;color:#c02626}
-      .rb2-val{font-weight:700;font-size:12px;padding:2px 8px;border-radius:6px;white-space:nowrap}
-      .rb2-val.good{color:#0a7d4d;background:#e7f6ee}
-      .rb2-val.ok{color:#4b5563;background:#eef0f2}
-      .rb2-val.warn{color:#b45309;background:#fdf3e3}
-      .rb2-val.bad{color:#c02626;background:#fdecec}
-      .rb2-val.na{color:#9aa1ab;background:transparent}
-      .rb2-act{font-size:12px;color:#6b7280;white-space:normal;min-width:170px;text-align:left;line-height:1.4}
-      .rb2-tbl tfoot td{padding:12px;border-top:2px solid #e5e7eb;font-weight:800;background:#fff;text-align:right;font-variant-numeric:tabular-nums;color:#1a1d21}
+      .rb2-grp td{background:#f4f8ff;font-weight:700;border-top:1px solid #e5e7eb}
+      .rb2-grp.tw td{background:#fdf8ef}
+      .rb2-tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;margin-right:8px;vertical-align:1px;background:#EAF2FF;color:#006FFF}
+      .rb2-grp.tw .rb2-tag{background:#FEF3C7;color:#B45309}
+      .rb2-name{padding-left:14px;font-weight:600}
+      .rb2-name small{color:#9ca3af;font-weight:400;font-size:11px}
+      .rb2-usd{font-weight:600;color:#111827}
+      .rb2-twd{color:#9ca3af;font-size:11px;display:block;margin-top:1px}
+      .rb2-pct-in{width:42px;font:inherit;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;border:none;border-bottom:1px dashed #d1d5db;background:transparent;color:#111827;outline:none;padding:1px 2px;cursor:text}
+      .rb2-pct-in:focus{border-bottom:1px solid #006FFF;background:#EAF2FF}
+      .rb2-pill{display:inline-block;font-weight:700;padding:3px 9px;border-radius:7px;font-size:12px;white-space:nowrap}
+      .rb2-pill.buy{background:#DCFCE7;color:#16A34A}
+      .rb2-pill.hold{background:#f3f4f6;color:#6b7280}
+      .rb2-pill.over{background:#FEE2E2;color:#DC2626}
+      .rb2-val{font-weight:700;font-size:11.5px;padding:2px 8px;border-radius:6px;white-space:nowrap}
+      .rb2-val.good{color:#16A34A;background:#DCFCE7}
+      .rb2-val.ok{color:#6b7280;background:#f3f4f6}
+      .rb2-val.warn{color:#B45309;background:#FEF3C7}
+      .rb2-val.bad{color:#DC2626;background:#FEE2E2}
+      .rb2-val.na{color:#9ca3af;background:transparent}
+      .rb2-act{font-size:11.5px;color:#6b7280;white-space:normal;min-width:170px;text-align:left;line-height:1.4}
+      .rb2-tbl tfoot td{padding:12px 14px;border-top:2px solid #e5e7eb;font-weight:800;background:#fff;text-align:right;font-variant-numeric:tabular-nums;color:#111827}
       .rb2-tbl tfoot td:first-child{text-align:left}
       .rb2-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
-      .rb2-stat{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:13px 14px}
-      .rb2-stat .k{color:#6b7280;font-size:11.5px;margin-bottom:5px}
-      .rb2-stat .v{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;color:#1a1d21}
-      .rb2-stat .v small{font-size:11.5px;font-weight:600;color:#9aa1ab;display:block;margin-top:2px}
-      .rb2-stat.hl{border-color:#0a7d4d} .rb2-stat.hl .v{color:#0a7d4d}
+      .rb2-stat{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+      .rb2-stat .k{color:#6b7280;font-size:10px;font-weight:600;margin-bottom:7px;text-transform:uppercase;letter-spacing:.04em}
+      .rb2-stat .v{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;color:#111827}
+      .rb2-stat .v small{font-size:11px;font-weight:600;color:#9ca3af;display:block;margin-top:3px}
+      .rb2-stat.hl{border-color:#16A34A} .rb2-stat.hl .v{color:#16A34A}
       @media (max-width:660px){ .rb2-stats{grid-template-columns:repeat(2,1fr)} }
     </style>
     <!-- 合併個股目標（永遠列全部持股、TWD 基準，不受市場切換影響）-->
@@ -3385,6 +3388,28 @@ function rb2Save(){
   pushDerivedSectorTargets(_rebalHoldings, t);   // 反推各市場板塊→後端（晨報偏移續用）
   showToast('目標配置已儲存');
 }
+// 新增「還沒買的目標股」＝寫進觀察清單並標 want_buy=true → 重載後以想買列出現在兩層表
+async function rb2AddTarget(){
+  const inp = document.getElementById('rb2AddInput');
+  const sym = (inp && inp.value || '').trim().toUpperCase();
+  if(!sym) return;
+  if(DEMO_MODE){ showToast('Demo 模式不實際新增','error'); return; }
+  try{
+    const created = await api('/api/watchlist','POST',{symbol:sym});   // 建立
+    if(created && created.id){ await api(`/api/watchlist/${created.id}`,'PUT',{want_buy:true}); }  // 補標想買（後端建立時未寫 want_buy）
+    inp.value=''; showToast(sym+' 已加入目標（想買）'); loadRebalancePage();
+  }catch(e){
+    const msg = String(e && e.message || '');
+    if(msg.includes('409') || /already/i.test(msg)){
+      try{
+        const wl = await api('/api/watchlist');
+        const it = (wl||[]).find(w=>{ const a=String(w.symbol).toUpperCase(); return a===sym || a===sym+'.TW' || a.replace('.TW','')===sym.replace('.TW',''); });
+        if(it){ await api(`/api/watchlist/${it.id}`,'PUT',{want_buy:true}); inp.value=''; showToast(sym+' 已標為想買'); loadRebalancePage(); return; }
+      }catch(_){}
+      showToast(sym+' 已在觀察清單','error');
+    } else showToast('新增失敗：'+msg, 'error');
+  }
+}
 function renderPerStockRebalance(holdings){
   const el = document.getElementById('perStockRebal');
   if(!el) return;
@@ -3448,6 +3473,11 @@ function renderPerStockRebalance(holdings){
       <div class="rb2-fld"><label>台灣股票 %</label><input class="rb2-split" type="number" value="${sl}" onchange="rb2Set('sl',this.value)"></div>
       <div class="rb2-fld"><label>頂層合計</label><span class="rb2-sum ${sumCls}">${splitSum}%</span></div>
       <div style="margin-left:auto;align-self:center"><button class="rb2-save" onclick="rb2Save()">儲存目標</button></div>
+    </div>
+    <div class="rb2-add">
+      <input id="rb2AddInput" type="text" placeholder="代號（如 AMD、2454）" onkeydown="if(event.key==='Enter')rb2AddTarget()">
+      <button onclick="rb2AddTarget()">+ 新增沒買的目標股</button>
+      <span style="font-size:11px;color:var(--mid)">加進來會以「想買」列出現（現況 0）、設好組內 % 就給進場缺口</span>
     </div>
     <div class="rb2-card rb2-scroll">
       <table class="rb2-tbl">
