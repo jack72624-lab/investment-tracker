@@ -4215,12 +4215,21 @@ function _bosRenderGrid(){
 async function _bosLoadPinned(){
   if (!_bosPins.size || _bosResults.length) return;
   const pins = [..._bosPins];
+  // 暖啟動：先秒畫上次的釘選快照，再背景抓最新替換
+  try {
+    const cached = (JSON.parse(localStorage.getItem('bos_pins_cache') || '[]') || []).filter(d => _bosPins.has(d.symbol));
+    if (cached.length && !DEMO_MODE) {
+      _bosResults = cached; _bosRenderGrid();
+      const c = document.getElementById('bosCount'); if (c) c.textContent = `${cached.length} 支（已釘選 · 更新中…）`;
+    }
+  } catch(e){}
   try {
     if (DEMO_MODE) { _bosResults = DEMO_BOS.filter(d => pins.includes(d.symbol)); }
     else { const data = await api(`/api/screener/bos?symbols=${pins.join(',')}`); _bosResults = data.results || []; }
     _bosRenderGrid();
     const cnt = document.getElementById('bosCount');
     if (cnt && _bosResults.length) cnt.textContent = `${_bosResults.length} 支（已釘選）`;
+    if (!DEMO_MODE && _bosResults.length) localStorage.setItem('bos_pins_cache', JSON.stringify(_bosResults));
   } catch(e){ console.error(e); }
 }
 
@@ -4412,12 +4421,21 @@ function dgmToggleBuyable(btn){
 async function _dgmLoadPinned(){
   if (!_dgmPins.size || _dgmResults.length) return;
   const pins = [..._dgmPins];
+  // 暖啟動：先秒畫上次的釘選快照（localStorage），再背景抓最新替換 → 不再空白久等
+  try {
+    const cached = (JSON.parse(localStorage.getItem('dgm_pins_cache') || '[]') || []).filter(d => _dgmPins.has(d.symbol));
+    if (cached.length && !DEMO_MODE) {
+      _dgmResults = cached; _dgmRenderGrid();
+      const c = document.getElementById('dgmCount'); if (c) c.textContent = `${cached.length} 支（已釘選 · 更新中…）`;
+    }
+  } catch(e){}
   try {
     if (DEMO_MODE) { _dgmResults = DEMO_DGM.filter(d => pins.includes(d.symbol)); }
     else { const data = await api(`/api/screener/dgm?symbols=${pins.join(',')}`); _dgmResults = data.results || []; }
     _dgmRenderGrid();
     const cnt = document.getElementById('dgmCount');
     if (cnt && _dgmResults.length) cnt.textContent = `${_dgmResults.length} 支（已釘選）`;
+    if (!DEMO_MODE && _dgmResults.length) localStorage.setItem('dgm_pins_cache', JSON.stringify(_dgmResults));
   } catch(e){ console.error(e); }
 }
 
