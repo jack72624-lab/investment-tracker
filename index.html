@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Investment OS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root {
@@ -14,7 +14,7 @@
   --green:#337c53; --green-lt:#e7f3ea; --red:#ae3f3a; --red-lt:#f6ebe8;
   --amber:#ae792c; --amber-lt:#f4eddf; --purple:#7C3AED; --purple-lt:#EDE9FE;
   --radius:16px;
-  --mono:'SF Mono',ui-monospace,'SFMono-Regular','Menlo',monospace;
+  --mono:'Geist Mono','SF Mono',ui-monospace,'SFMono-Regular','Menlo',monospace;
   /* 下列變數原本只在 coinbase/revolut/wise 變體檔定義，但共用 CSS
      （.sector-card-hdr / .perf-compare / .target-input 等）有引用，
      預設檔補齊以免未定義變數導致背景/文字色失效。 */
@@ -60,7 +60,7 @@ html[data-theme="wise"]{
   --shadow-hover:0 4px 12px rgba(14,15,12,.10),0 12px 32px rgba(14,15,12,.08);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;background:var(--bg);color:var(--dark);-webkit-font-smoothing:antialiased;display:flex;min-height:100vh}
+body{font-family:'Geist',-apple-system,BlinkMacSystemFont,'PingFang TC','Noto Sans TC',sans-serif;font-size:14px;background:var(--bg);color:var(--dark);-webkit-font-smoothing:antialiased;display:flex;min-height:100vh}
 
 /* SIDEBAR */
 .sidebar{width:216px;min-width:216px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;transition:width .22s cubic-bezier(.4,0,.2,1);overflow:hidden}
@@ -164,7 +164,7 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;background:var(
 .page-breadcrumb{font-size:10px;color:var(--light);text-transform:uppercase;letter-spacing:.08em}
 .topbar-title{font-size:16px;font-weight:700;letter-spacing:-.3px}
 .topbar-right{display:flex;align-items:center;gap:8px}
-.btn{height:34px;padding:0 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:all .13s;font-family:'Inter',sans-serif}
+.btn{height:34px;padding:0 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:all .13s;font-family:'Geist',-apple-system,sans-serif}
 .btn-primary{background:var(--blue);color:#fff}
 .btn-primary:hover{background:#335a93}
 .btn-ghost{background:transparent;color:var(--mid);border:1px solid var(--border)}
@@ -212,7 +212,7 @@ th:hover{color:var(--blue)}
 td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--bg)}
-.ticker{font-weight:700;color:var(--blue);font-family:'SF Mono','Fira Code',monospace;font-size:13px}
+.ticker{font-weight:700;color:var(--blue);font-family:'Geist Mono','Geist Mono','SF Mono',monospace;font-size:13px}
 .co-name{font-weight:500;font-size:13px}.co-sector{font-size:11px;color:var(--light)}
 
 /* TAGS */
@@ -232,7 +232,7 @@ tr:hover td{background:var(--bg)}
 .filters-row{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
 .filter-group{display:flex;flex-direction:column;gap:4px}
 .filter-label{font-size:10px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.07em}
-.filter-input,.filter-select{height:32px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--dark);background:var(--bg);outline:none;font-family:'Inter',sans-serif;transition:border-color .13s;appearance:none;-webkit-appearance:none}
+.filter-input,.filter-select{height:32px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--dark);background:var(--bg);outline:none;font-family:'Geist',-apple-system,sans-serif;transition:border-color .13s;appearance:none;-webkit-appearance:none}
 .filter-input:focus,.filter-select:focus{border-color:var(--blue);background:var(--white)}
 .filter-input{width:88px}.filter-select{width:130px}
 
@@ -255,7 +255,7 @@ tr:hover td{background:var(--bg)}
 .risk-metric-desc{font-size:11px;color:var(--light);margin-top:4px}
 
 /* CHIPS + TIMEFRAME */
-.stock-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--mid);transition:all .13s;font-family:'SF Mono','Fira Code',monospace}
+.stock-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--mid);transition:all .13s;font-family:'Geist Mono','Geist Mono','SF Mono',monospace}
 .stock-chip:hover{border-color:var(--blue);color:var(--blue)}
 .stock-chip.active{border-color:var(--blue);background:var(--blue);color:#fff}
 .chip-x{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;font-size:13px;line-height:1;color:var(--light);margin-right:-3px}
@@ -264,14 +264,14 @@ tr:hover td{background:var(--bg)}
 .chip-x:hover{background:rgba(0,0,0,.08)}
 .stock-chip.active .chip-x:hover{background:rgba(255,255,255,.25)}
 .tech-add{display:flex;gap:8px;margin-bottom:10px}
-.tech-add input{flex:1;min-width:0;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'SF Mono','Fira Code',monospace;color:var(--dark);outline:none;text-transform:uppercase;background:var(--white)}
-.tech-add input::placeholder{text-transform:none;color:var(--light);font-family:'Inter',sans-serif;letter-spacing:0}
+.tech-add input{flex:1;min-width:0;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Geist Mono','Geist Mono','SF Mono',monospace;color:var(--dark);outline:none;text-transform:uppercase;background:var(--white)}
+.tech-add input::placeholder{text-transform:none;color:var(--light);font-family:'Geist',-apple-system,sans-serif;letter-spacing:0}
 .tech-add input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-lt)}
 .tech-add button{padding:9px 16px;border:none;border-radius:8px;background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .tech-add button:active{opacity:.8}
 .tech-hint{font-size:11px;color:var(--mid);margin:0 2px 12px;line-height:1.4}
 .timeframe-row{display:flex;gap:2px}
-.tf-btn{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--mid);transition:all .13s;font-family:'Inter',sans-serif}
+.tf-btn{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--mid);transition:all .13s;font-family:'Geist',-apple-system,sans-serif}
 .tf-btn:hover{background:var(--bg);color:var(--dark)}
 .tf-btn.active{background:var(--blue-lt);color:var(--blue)}
 
@@ -292,7 +292,7 @@ tr:hover td{background:var(--bg)}
 .rec-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);margin-bottom:10px;transition:all .2s;cursor:pointer}
 .rec-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-hover)}
 .rec-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
-.rec-ticker{font-size:16px;font-weight:800;color:var(--dark);font-family:'SF Mono','Fira Code',monospace}
+.rec-ticker{font-size:16px;font-weight:800;color:var(--dark);font-family:'Geist Mono','Geist Mono','SF Mono',monospace}
 .rec-name{font-size:11px;color:var(--mid);margin-top:1px}
 .rec-action{padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700}
 .rec-buy{background:var(--green-lt);color:var(--green)}
@@ -306,17 +306,17 @@ tr:hover td{background:var(--bg)}
 .alert-title{font-weight:700;font-size:12px;margin-bottom:3px}
 .alert-text{font-size:12px;color:var(--dark)}
 /* ── TWD toggle ── */
-.twd-btn{height:32px;padding:0 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--mid);transition:all .13s;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:5px}
+.twd-btn{height:32px;padding:0 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--mid);transition:all .13s;font-family:'Geist',-apple-system,sans-serif;display:inline-flex;align-items:center;gap:5px}
 .twd-btn.active{border-color:var(--blue);color:var(--blue);background:var(--blue-lt)}
 .twd-rate-wrap{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)}
-.twd-rate-input{width:52px;height:26px;border:1px solid var(--border);border-radius:5px;text-align:center;font-size:11px;font-family:'Inter',sans-serif;outline:none;padding:0 4px}
+.twd-rate-input{width:52px;height:26px;border:1px solid var(--border);border-radius:5px;text-align:center;font-size:11px;font-family:'Geist',-apple-system,sans-serif;outline:none;padding:0 4px}
 /* ── 交易記錄 ── */
 .tx-type-buy{color:var(--green);font-weight:700;font-size:11px}
 .tx-type-sell{color:var(--red);font-weight:700;font-size:11px}
 /* ── 計算器 ── */
 .calc-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:20px}
 .calc-field label{display:block;font-size:10px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
-.calc-field input,.calc-field select{width:100%;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;color:var(--dark);background:var(--white);transition:border-color .13s}
+.calc-field input,.calc-field select{width:100%;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Geist',-apple-system,sans-serif;outline:none;color:var(--dark);background:var(--white);transition:border-color .13s}
 .calc-field input:focus,.calc-field select:focus{border-color:var(--blue)}
 .calc-result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
 .calc-result-card{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:14px 16px;text-align:center}
@@ -331,7 +331,7 @@ tr:hover td{background:var(--bg)}
 .goal-progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--blue),#00c6ff);transition:width .6s cubic-bezier(.4,0,.2,1)}
 .goal-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--mid)}
 .goal-set-row{display:flex;gap:8px;margin-top:10px}
-.goal-input{flex:1;height:34px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;font-family:'Inter',sans-serif;outline:none;color:var(--dark)}
+.goal-input{flex:1;height:34px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;font-family:'Geist',-apple-system,sans-serif;outline:none;color:var(--dark)}
 .goal-input:focus{border-color:var(--blue)}
 /* ── 股息追蹤 ── */
 .div-stat-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
@@ -357,9 +357,9 @@ tr:hover td{background:var(--bg)}
 .modal-sub{font-size:13px;color:var(--mid);margin-bottom:24px;line-height:1.6}
 .modal-field{margin-bottom:16px}
 .modal-label{font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
-.modal-input{width:100%;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color .13s;color:var(--dark)}
+.modal-input{width:100%;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Geist',-apple-system,sans-serif;outline:none;transition:border-color .13s;color:var(--dark)}
 /* 再平衡「目標 %」輸入框：原本是瀏覽器預設樣式很醜，統一成 app 卡片風（圓角、置中、聚焦藍框） */
-.sym-target-input{width:64px;height:34px;padding:0 8px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;text-align:center;font-variant-numeric:tabular-nums;color:var(--dark);background:var(--white);outline:none;transition:border-color .13s,box-shadow .13s}
+.sym-target-input{width:64px;height:34px;padding:0 8px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:'Geist',-apple-system,sans-serif;text-align:center;font-variant-numeric:tabular-nums;color:var(--dark);background:var(--white);outline:none;transition:border-color .13s,box-shadow .13s}
 .sym-target-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-lt)}
 /* 觀察清單「想買」篩選 chip + 星號 toggle */
 .wl-chip{padding:6px 13px;border-radius:999px;font-size:13px;border:1px solid var(--border);background:var(--white);color:var(--mid);cursor:pointer;transition:.13s}
@@ -396,9 +396,9 @@ tr:hover td{background:var(--bg)}
 .login-title{font-size:20px;font-weight:700;letter-spacing:-.4px;margin-bottom:4px}
 .login-sub{font-size:13px;color:var(--mid);margin-bottom:28px;line-height:1.5}
 .login-label{font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
-.login-input{width:100%;height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color .13s;color:var(--dark);background:var(--white)}
+.login-input{width:100%;height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-family:'Geist',-apple-system,sans-serif;outline:none;transition:border-color .13s;color:var(--dark);background:var(--white)}
 .login-input:focus{border-color:var(--blue)}
-.login-btn{width:100%;height:42px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:16px;transition:background .13s;letter-spacing:-.1px}
+.login-btn{width:100%;height:42px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Geist',-apple-system,sans-serif;margin-top:16px;transition:background .13s;letter-spacing:-.1px}
 .login-btn:hover{background:#335a93}
 .login-btn:disabled{opacity:.6;cursor:default}
 .login-error{background:var(--red-lt);color:var(--red);padding:10px 14px;border-radius:8px;font-size:12px;margin-top:12px;display:none;line-height:1.4}
@@ -414,7 +414,7 @@ tr:hover td{background:var(--bg)}
 
 /* ── SCREENER MODE TABS ─────────────────── */
 .screener-tabs{display:flex;gap:2px;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:3px;margin-bottom:16px;width:fit-content}
-.screener-tab{padding:6px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;color:var(--mid);border:none;background:transparent;transition:all .15s;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px}
+.screener-tab{padding:6px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;color:var(--mid);border:none;background:transparent;transition:all .15s;font-family:'Geist',-apple-system,sans-serif;display:flex;align-items:center;gap:6px}
 .screener-tab:hover{color:var(--dark)}
 .screener-tab.active{background:var(--white);color:var(--dark);box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .screener-tab.active.tab-bos{color:var(--purple)}
@@ -423,7 +423,7 @@ tr:hover td{background:var(--bg)}
 
 /* ── 加入關注按鈕（BOS card 底部）─── */
 .bos-watchlist-bar{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
-.bos-add-btn{height:28px;padding:0 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--mid);transition:all .13s;font-family:'Inter',sans-serif}
+.bos-add-btn{height:28px;padding:0 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--mid);transition:all .13s;font-family:'Geist',-apple-system,sans-serif}
 .bos-add-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-lt)}
 .bos-add-btn.added{background:var(--green-lt);border-color:var(--green);color:var(--green);cursor:default}
 .bos-add-btn:disabled{opacity:.6;cursor:default}
@@ -438,7 +438,7 @@ tr:hover td{background:var(--bg)}
 .bos-card:hover{box-shadow:var(--shadow-hover)}
 .bos-card-header{padding:14px 16px 12px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--border)}
 .bos-ticker-col{flex:1}
-.bos-symbol{font-size:15px;font-weight:800;color:var(--dark);font-family:'SF Mono','Fira Code',monospace}
+.bos-symbol{font-size:15px;font-weight:800;color:var(--dark);font-family:'Geist Mono','Geist Mono','SF Mono',monospace}
 .bos-name{font-size:11px;color:var(--mid);margin-top:1px}
 .bos-sector{font-size:10px;color:var(--light)}
 .bos-score-col{text-align:right}
@@ -465,8 +465,8 @@ tr:hover td{background:var(--bg)}
 .bsc{background:var(--white);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;transition:box-shadow .16s,transform .16s}
 .bsc:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover)}
 .bsc-top{padding:20px 20px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
-.bsc-sym{font-size:16px;font-weight:700;color:var(--dark);letter-spacing:-.01em;display:flex;align-items:center;gap:8px;font-family:'SF Mono',ui-monospace,monospace}
-.bsc-mkt{font-size:9.5px;font-weight:600;padding:2px 6px;border-radius:5px;background:var(--bsc-soft);color:var(--mid);letter-spacing:.05em;font-family:'Inter',sans-serif}
+.bsc-sym{font-size:16px;font-weight:700;color:var(--dark);letter-spacing:-.01em;display:flex;align-items:center;gap:8px;font-family:'Geist Mono','SF Mono',ui-monospace,monospace}
+.bsc-mkt{font-size:9.5px;font-weight:600;padding:2px 6px;border-radius:5px;background:var(--bsc-soft);color:var(--mid);letter-spacing:.05em;font-family:'Geist',-apple-system,sans-serif}
 .bsc-nm{font-size:12px;color:var(--mid);margin-top:5px;line-height:1.35}
 .bsc-src{font-size:10.5px;color:var(--light);margin-top:6px}
 .bsc-hr{text-align:center;flex:0 0 auto;display:flex;flex-direction:column;align-items:center}
@@ -495,7 +495,7 @@ tr:hover td{background:var(--bg)}
 .bsc-k{flex:1;font-size:12.5px;color:var(--dark);line-height:1.5}
 .bsc-k b{font-weight:600}
 .bsc-why{display:block;font-size:11px;color:var(--mid);margin-top:2px;line-height:1.45}
-.bsc-pt{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:20px;font-weight:600;font-size:11px;padding:0 7px;border-radius:6px;font-family:'Inter',sans-serif}
+.bsc-pt{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:20px;font-weight:600;font-size:11px;padding:0 7px;border-radius:6px;font-family:'Geist',-apple-system,sans-serif}
 .bsc-pt.plus{color:var(--bsc-pos);background:var(--bsc-pos-bg)}
 .bsc-pt.half{color:var(--bsc-pos);background:var(--bsc-pos-bg);opacity:.75}
 .bsc-pt.zero{color:var(--light);background:var(--bsc-soft)}
@@ -507,7 +507,7 @@ tr:hover td{background:var(--bg)}
 .bsc-verdict{margin:14px 20px 2px;padding:12px;border-radius:11px;text-align:center;font-size:12.5px;font-weight:600;color:var(--dark);background:var(--bsc-soft)}
 .bsc-verdict b{font-size:15px;letter-spacing:-.01em}
 .bsc-confirm{margin:10px 20px 0;padding:11px 13px;background:var(--bsc-pos-bg);border-radius:10px;font-size:11.5px;line-height:1.55;color:var(--dark)}
-.bsc-confirm button{margin-top:8px;font-size:11px;font-weight:600;padding:6px 13px;border-radius:8px;border:none;background:var(--bsc-pos);color:#fff;cursor:pointer;font-family:'Inter',sans-serif}
+.bsc-confirm button{margin-top:8px;font-size:11px;font-weight:600;padding:6px 13px;border-radius:8px;border:none;background:var(--bsc-pos);color:#fff;cursor:pointer;font-family:'Geist',-apple-system,sans-serif}
 .bsc-val{margin:14px 20px 0;padding:15px;border:1px solid var(--border);border-radius:13px}
 .bsc-valh{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--mid);margin-bottom:10px}
 .bsc-valh select{font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--dark);letter-spacing:0;text-transform:none;font-family:inherit}
@@ -532,7 +532,7 @@ tr:hover td{background:var(--bg)}
 .bsc-summary{font-size:11.5px;color:var(--dark);line-height:1.6;padding-left:11px;border-left:2px solid var(--border)}
 .bsc-actions{display:flex;justify-content:space-between;align-items:center}
 .bsc-analyzed{font-size:10px;color:var(--light)}
-.bsc-btn{height:30px;padding:0 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--mid);font-family:'Inter',sans-serif;transition:all .13s}
+.bsc-btn{height:30px;padding:0 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--mid);font-family:'Geist',-apple-system,sans-serif;transition:all .13s}
 .bsc-btn:hover{border-color:var(--light);color:var(--dark)}
 .bsc-btn.added{background:var(--bsc-pos-bg);border-color:transparent;color:var(--bsc-pos);cursor:default}
 /* ── DGM 三軸評分卡（沿用 .bsc- 結構＋三軸配色）── */
@@ -576,7 +576,7 @@ tr:hover td{background:var(--bg)}
 .sector-stock-item:last-child{border-bottom:none}
 .sector-stock-item:hover{background:var(--accent)}
 .sector-stock-left{display:flex;flex-direction:column;flex:1;min-width:0}
-.sector-stock-ticker{font-size:13px;font-weight:800;color:var(--navy);font-family:monospace;letter-spacing:.03em}
+.sector-stock-ticker{font-size:13px;font-weight:800;color:var(--navy);font-family:'Geist Mono',monospace;letter-spacing:.03em}
 .sector-stock-name{font-size:11px;color:var(--mid);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
 .sector-stock-meta{font-size:10px;color:var(--light);margin-top:4px;line-height:1.5}
 .sector-stock-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
@@ -592,13 +592,13 @@ tr:hover td{background:var(--bg)}
 .val-wrap:hover .val-tip{opacity:1}
 /* ── 估值燈號 2.0：三維綜合 ──────────────────────────────── */
 .vc-anchor{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--blue-lt);border-radius:8px;font-size:12px;margin-bottom:12px;flex-wrap:wrap}
-.vc-anchor b{font-weight:800;font-family:'SF Mono',monospace}
+.vc-anchor b{font-weight:800;font-family:'Geist Mono','SF Mono',monospace}
 .vc-anchor .vc-atag{margin-left:auto;font-size:10px;color:var(--mid)}
 .vc-legend{font-size:11px;color:var(--mid);line-height:1.6;margin-bottom:10px}
 .vc-h{padding:12px 0;border-bottom:1px solid var(--border)}
 .vc-h:last-child{border-bottom:none}
 .vc-htop{display:flex;align-items:center;gap:9px}
-.vc-sym{font-size:13px;font-weight:800;font-family:'SF Mono',monospace;color:var(--blue)}
+.vc-sym{font-size:13px;font-weight:800;font-family:'Geist Mono','SF Mono',monospace;color:var(--blue)}
 .vc-name{font-size:11px;color:var(--mid);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vc-verdict{font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap}
 .vc-verdict.green{background:var(--green-lt);color:var(--green)}
@@ -609,7 +609,7 @@ tr:hover td{background:var(--bg)}
 .vc-dim{flex:1;min-width:92px;border:1px solid var(--border);border-radius:8px;padding:6px 9px;border-left-width:3px}
 .vc-dim.green{border-left-color:var(--green)}.vc-dim.yellow{border-left-color:var(--amber)}.vc-dim.red{border-left-color:var(--red)}.vc-dim.gray{border-left-color:var(--light)}
 .vc-dimk{font-size:10px;color:var(--mid);font-weight:600}
-.vc-dimv{font-size:12px;font-weight:700;margin-top:2px;font-family:'SF Mono',monospace}
+.vc-dimv{font-size:12px;font-weight:700;margin-top:2px;font-family:'Geist Mono','SF Mono',monospace}
 .vc-dimsub{font-size:10px;color:var(--mid);margin-top:1px}
 .vc-flag{margin-top:8px;font-size:10.5px;border-radius:6px;padding:6px 9px;line-height:1.5;background:var(--amber-lt);color:var(--amber)}
 .vc-flag.info{background:var(--accent);color:var(--mid)}
@@ -624,13 +624,13 @@ tr:hover td{background:var(--bg)}
 .hm-top{display:flex;align-items:center;gap:9px}
 .hm-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .hm-dot.green{background:var(--green)}.hm-dot.amber{background:var(--amber)}.hm-dot.red{background:var(--red)}.hm-dot.gray{background:var(--light)}
-.hm-sym{font-size:13px;font-weight:800;font-family:'SF Mono',monospace;color:var(--blue)}
+.hm-sym{font-size:13px;font-weight:800;font-family:'Geist Mono','SF Mono',monospace;color:var(--blue)}
 .hm-name{font-size:11.5px;color:var(--mid);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hm-badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap}
 .hm-badge.green{background:var(--green-lt);color:var(--green)}.hm-badge.amber{background:var(--amber-lt);color:var(--amber)}.hm-badge.red{background:var(--red-lt);color:var(--red)}.hm-badge.gray{background:var(--bg);color:var(--mid)}
 .hm-metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;margin-top:10px}
 .hm-m{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;border-bottom:1px dashed var(--border);padding-bottom:4px}
-.hm-mv{font-weight:700;font-family:'SF Mono',monospace}
+.hm-mv{font-weight:700;font-family:'Geist Mono','SF Mono',monospace}
 .hm-tr{font-size:10.5px;font-weight:700;margin-left:5px}
 .hm-up{color:var(--green)}.hm-down{color:var(--red)}.hm-flat{color:var(--light)}
 .hm-flag{margin-top:10px;font-size:11.5px;border-radius:7px;padding:8px 11px;line-height:1.55;background:var(--red-lt);color:#991B1B}
@@ -657,7 +657,7 @@ tr:hover td{background:var(--bg)}
 .sb-tbl td{padding:9px 8px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .sb-tbl td:nth-child(1),.sb-tbl td:nth-child(2){text-align:left}
 .sb-tbl tr:last-child td{border-bottom:none}
-.sb-sym{font-weight:800;font-family:'SF Mono',monospace;color:var(--blue)}
+.sb-sym{font-weight:800;font-family:'Geist Mono','SF Mono',monospace;color:var(--blue)}
 .sb-score{display:inline-block;min-width:30px;text-align:center;padding:1px 6px;border-radius:5px;font-weight:800;font-size:11px;background:var(--green-lt);color:var(--green)}
 .sb-pos{color:var(--green);font-weight:700}.sb-neg{color:var(--red);font-weight:700}.sb-mut{color:var(--mid)}
 .sb-foot{padding:12px 16px;font-size:10px;color:var(--mid);line-height:1.7;background:#FCFCFD;border-radius:0 0 var(--radius) var(--radius)}
@@ -703,7 +703,7 @@ tr:hover td{background:var(--bg)}
 
 /* ── SYMBOLS INPUT ──────────────────────── */
 .sym-input-wrap{display:flex;gap:8px;align-items:center;flex:1}
-.sym-input{flex:1;max-width:460px;height:32px;padding:0 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--dark);background:var(--bg);outline:none;font-family:'SF Mono','Fira Code',monospace;transition:border-color .13s}
+.sym-input{flex:1;max-width:460px;height:32px;padding:0 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--dark);background:var(--bg);outline:none;font-family:'Geist Mono','Geist Mono','SF Mono',monospace;transition:border-color .13s}
 .sym-input:focus{border-color:var(--blue);background:var(--white)}
 .sym-hint{font-size:11px;color:var(--light);margin-top:6px}
 </style>
@@ -2833,11 +2833,11 @@ async function loadTechnical(symbol, period) {
     </div>
     <div class="alloc-item">
       <div class="alloc-name">20日均線<div style="font-size:10px;color:var(--mid);font-weight:400">近20天平均買入價格</div></div>
-      <div style="font-weight:600;font-family:monospace">${cs}${lastSMA20?.toFixed(2)??'—'}</div>
+      <div style="font-weight:600;font-family:'Geist Mono',monospace">${cs}${lastSMA20?.toFixed(2)??'—'}</div>
     </div>
     <div class="alloc-item">
       <div class="alloc-name">50日均線<div style="font-size:10px;color:var(--mid);font-weight:400">近50天平均買入價格，代表中期趨勢</div></div>
-      <div style="font-weight:600;font-family:monospace">${cs}${lastSMA50?.toFixed(2)??'—'}</div>
+      <div style="font-weight:600;font-family:'Geist Mono',monospace">${cs}${lastSMA50?.toFixed(2)??'—'}</div>
     </div>
     <div class="alloc-item">
       <div class="alloc-name">現價 vs 均線<div style="font-size:10px;color:var(--mid);font-weight:400">在均線上方代表短期偏強</div></div>
@@ -2852,23 +2852,23 @@ async function loadTechnical(symbol, period) {
   document.getElementById('techLevels').innerHTML=`
     <div class="alloc-item">
       <div class="alloc-name">目前股價</div>
-      <div style="font-weight:700;font-family:monospace;font-size:15px">${cs}${cur.toFixed(2)}</div>
+      <div style="font-weight:700;font-family:'Geist Mono',monospace;font-size:15px">${cs}${cur.toFixed(2)}</div>
     </div>
     <div class="alloc-item">
       <div class="alloc-name">${PTITLE}最高<div style="font-size:10px;color:var(--mid);font-weight:400">${PNAME}最貴，現在距離 ${distHi}%</div></div>
-      <div style="color:var(--red);font-weight:600;font-family:monospace">${cs}${hi.toFixed(2)}</div>
+      <div style="color:var(--red);font-weight:600;font-family:'Geist Mono',monospace">${cs}${hi.toFixed(2)}</div>
     </div>
     <div class="alloc-item">
       <div class="alloc-name">${PTITLE}最低<div style="font-size:10px;color:var(--mid);font-weight:400">${PNAME}最便宜，現在距離 +${distLo}%</div></div>
-      <div style="color:var(--green);font-weight:600;font-family:monospace">${cs}${lo.toFixed(2)}</div>
+      <div style="color:var(--green);font-weight:600;font-family:'Geist Mono',monospace">${cs}${lo.toFixed(2)}</div>
     </div>
     <div class="alloc-item">
       <div class="alloc-name">壓力位（上方阻力）<div style="font-size:10px;color:var(--mid);font-weight:400">${resistance?`近 6 週高點，約 ${resDist}% 處可能遇阻`:'已突破近期高點，上方暫無明顯壓力'}</div></div>
-      <div style="color:var(--red);font-weight:600;font-family:monospace">${resistance?cs+resistance.toFixed(2):'—'}</div>
+      <div style="color:var(--red);font-weight:600;font-family:'Geist Mono',monospace">${resistance?cs+resistance.toFixed(2):'—'}</div>
     </div>
     <div class="alloc-item">
       <div class="alloc-name">支撐位（下方支撐）<div style="font-size:10px;color:var(--mid);font-weight:400">${support?`近 6 週低點，約 ${supDist}% 處可能止跌`:'已跌破近期低點，下方暫無明顯支撐'}</div></div>
-      <div style="color:var(--green);font-weight:600;font-family:monospace">${support?cs+support.toFixed(2):'—'}</div>
+      <div style="color:var(--green);font-weight:600;font-family:'Geist Mono',monospace">${support?cs+support.toFixed(2):'—'}</div>
     </div>`;
   // 決定白話結論（中性事實描述，指標僅供粗篩參考、不當買賣訊號）
   let sigColor, sigBg, sigTitle, sigText;
@@ -3644,7 +3644,7 @@ function renderWatchlist(){
       <td><div class="co-name">${w.name||w.symbol}</div></td>
       <td><strong>${formatMoneyDec(w.current_price||0, cur)}</strong></td>
       <td style="color:${up?'var(--green)':'var(--red)'}">${up?'+':''}${(w.change_pct||0).toFixed(2)}%</td>
-      <td style="font-family:monospace;font-size:12px;color:var(--mid)">${w.fifty_two_week_high?formatMoneyDec(w.fifty_two_week_high, cur):'—'} / ${w.fifty_two_week_low?formatMoneyDec(w.fifty_two_week_low, cur):'—'}</td>
+      <td style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--mid)">${w.fifty_two_week_high?formatMoneyDec(w.fifty_two_week_high, cur):'—'} / ${w.fifty_two_week_low?formatMoneyDec(w.fifty_two_week_low, cur):'—'}</td>
       <td>${w.pe_ratio?w.pe_ratio.toFixed(1):'—'}</td>
       <td style="color:var(--blue);font-weight:600">${w.target_price?formatMoneyDec(w.target_price, cur):'—'}</td>
       <td>${w.upside_pct!=null?`<span class="tag tag-green">${w.upside_pct>=0?'+':''}${w.upside_pct.toFixed(1)}%</span>`:'—'}</td>
