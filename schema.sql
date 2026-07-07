@@ -213,6 +213,26 @@ CREATE TABLE IF NOT EXISTS bos_analysis (
 );
 ALTER TABLE bos_analysis ENABLE ROW LEVEL SECURITY;
 
+-- ── DGM 股息成長 · 軸三 AI 定性分析（Claude Opus 慢速結果持久化）─────────────
+-- 比照 bos_analysis：股息安全性/護城河/定價權的 Claude 判斷存這裡，1–3 年才重評一次；
+-- 重開/換 session 直接讀這張、不重付費（只有「護城河重評」才重跑 Opus）。
+-- RLS 開、不加 anon policy → 只有後端 service_role 能存取（與 bos_analysis 一致）。
+CREATE TABLE IF NOT EXISTS dgm_analysis (
+  symbol            TEXT PRIMARY KEY,       -- 解析後代號（.TW→.TWO 已處理）
+  name              TEXT,
+  market            TEXT,                   -- 'us' | 'tw'
+  cut_risk          TEXT,                   -- 砍息風險：低/中/高（=高 時建議降級為「繼續觀察」）
+  cut_risk_reason   TEXT,
+  moat_strength     TEXT,                   -- 護城河：強/中/弱
+  moat_reason       TEXT,
+  pricing_power     TEXT,                   -- 定價權：強/中/弱
+  pricing_reason    TEXT,
+  summary           TEXT,                   -- 一句話總評
+  financial_period  TEXT,                   -- 分析當下最新財報年（如 "2025"）
+  analyzed_at       TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE dgm_analysis ENABLE ROW LEVEL SECURITY;
+
 -- ── 範例初始資料（可選）────────────────────────────────────────
 -- 貼入後你可以在 Dashboard 立刻看到資料，確認系統正常運作
 INSERT INTO holdings (symbol, shares, avg_cost) VALUES
