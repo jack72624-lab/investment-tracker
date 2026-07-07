@@ -186,6 +186,11 @@ body{font-family:'Geist',-apple-system,BlinkMacSystemFont,'PingFang TC','Noto Sa
 .stat-change{font-size:12px;font-weight:500;margin-top:8px;display:flex;align-items:center;gap:4px}
 .stat-change.up{color:var(--green)}.stat-change.down{color:var(--red)}
 .stat-sub{font-size:11px;color:var(--light);margin-top:2px}
+/* ── 互動狀態（redesign S2）：按下回饋＋鍵盤 focus ring＋平滑捲動 ── */
+html{scroll-behavior:smooth}
+button:active,.nav-item:active,.stock-chip:active,.rec-card:active,.screener-tab:active{transform:translateY(1px)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.nav-item:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 /* CARD */
 .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
