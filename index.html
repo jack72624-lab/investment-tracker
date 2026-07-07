@@ -1008,7 +1008,7 @@ tr:hover td{background:var(--bg)}
       </div>
     </div>
 
-    <!-- 投入預算（本金）· 台幣計價：已投入本金 principal_twd vs 總預算 -->
+    <!-- 投入預算 · 台幣：已投入＝已部署到持股的成本（不含閒置現金）vs 總預算 -->
     <div class="goal-card" id="goalCard">
       <div class="goal-header">
         <div class="goal-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:5px"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>投入預算</div>
@@ -4369,10 +4369,13 @@ async function loadDividends() {
 // ══════════════════════════════════════════════════════════════
 // 投資目標
 // ══════════════════════════════════════════════════════════════
-// 投入預算（本金）· 台幣：已投入本金 principal_twd（後端算好的淨入金折台幣）vs 你設的總預算
+// 投入預算 · 台幣：已投入＝已部署到持股的成本（台股成本 + 美股成本×匯率，不含閒置現金）vs 你設的總預算
 const _ntd = v => 'NT$' + Math.round(v || 0).toLocaleString('en');
 function loadGoal(summary) {
-  const invested = (summary && summary.cash && summary.cash.principal_twd) || 0;
+  const fx = (summary && summary.usdtwd) || window._usdtwd || 0;
+  const usCost = (summary && summary.us && summary.us.total_cost) || 0;   // 美股持股成本（USD）
+  const twCost = (summary && summary.tw && summary.tw.total_cost) || 0;   // 台股持股成本（TWD）
+  const invested = twCost + usCost * fx;                                  // 折台幣後的已部署成本
   window._investedTwd = invested;   // saveGoal 就地重算時取用
   const budget = parseFloat(localStorage.getItem('investBudgetTwd') || '0');
   if (!budget) return;
