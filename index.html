@@ -3843,7 +3843,7 @@ function renderBosScorecard(s) {
 
   const top = `<div class="bsc-top">
     <div style="min-width:0">
-      <div class="bsc-sym">${s.symbol}${mkt ? `<span class="bsc-mkt">${mkt}</span>` : ''}</div>
+      <div class="bsc-sym">${s.symbol}${mkt ? `<span class="bsc-mkt">${mkt}</span>` : ''}<button class="dgm-pin ${_bosPins.has(s.symbol)?'on':''}" title="${_bosPins.has(s.symbol)?'取消釘選':'釘選（常駐頁面）'}" onclick="bosTogglePin('${s.symbol}')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 3v2l-1 1v4l3 3v2h-5v5l-1 1-1-1v-5H5v-2l3-3V6L7 5V3z"/></svg></button></div>
       <div class="bsc-nm">${_esc(s.name)}${s.sector ? ' · ' + _esc(s.sector) : ''}</div>
       <div class="bsc-src">${s.data_source || ''} · ${s.data_years || '?'} 年資料</div>
     </div>
@@ -3929,6 +3929,8 @@ function renderBosScorecard(s) {
 
 // 單卡就地替換（覆寫分類/主用法/核可、重算後）
 function _bscReplace(sym, data) {
+  const i = _bosResults.findIndex(r => r.symbol === sym);   // 同步結果陣列，讓釘選重排用最新資料
+  if (i >= 0 && data) _bosResults[i] = data;
   const el = document.getElementById('bsc-' + sym);
   if (el && data) el.outerHTML = renderBosScorecard(data);
 }
@@ -3992,6 +3994,22 @@ const DEMO_BOS = [
     summary:'會員制護城河深厚、EPS 十年穩健翻倍的優質成長股', analyzed_at:'2026-07-06', stale_financials:false },
 ];
 
+// ── BOS 釘選（比照 DGM；資料本體在 Supabase，取消釘選不刪資料）──
+let _bosPins = new Set(JSON.parse(localStorage.getItem('bos_pins') || '[]'));
+let _bosResults = [];
+function bosTogglePin(sym){
+  if (_bosPins.has(sym)) _bosPins.delete(sym); else _bosPins.add(sym);
+  localStorage.setItem('bos_pins', JSON.stringify([..._bosPins]));
+  _bosRenderGrid();
+}
+function _bosRenderGrid(){
+  const grid = document.getElementById('bosGrid');
+  if (!grid) return;
+  const list = _bosResults.slice().sort((a,b) => (_bosPins.has(a.symbol)?0:1) - (_bosPins.has(b.symbol)?0:1));  // 釘選浮頂
+  grid.innerHTML = list.length ? list.map(renderBosScorecard).join('')
+    : '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--light)">沒有找到結果</div>';
+}
+
 async function runBosScreen() {
   _showBosTableView();
   const raw     = document.getElementById('bos-symbols').value.trim();
@@ -4008,7 +4026,7 @@ async function runBosScreen() {
     if (DEMO_MODE) {
       await new Promise(r => setTimeout(r, 1000));
       const filtered = symbols.length ? DEMO_BOS.filter(d => symbols.includes(d.symbol)) : DEMO_BOS;
-      grid.innerHTML = filtered.map(renderBosScorecard).join('');
+      _bosResults = filtered; _bosRenderGrid();
       count.textContent = `${filtered.length} 支 · 總分 ≥7 才投資`;
     } else {
       const sym_param = symbols.length ? `?symbols=${symbols.join(',')}` : '';
@@ -4016,9 +4034,9 @@ async function runBosScreen() {
       if (!data || !data.results) throw new Error('No results');
       count.textContent = `${data.results.length} 支 · 總分 ≥7 才投資` + _staleSuffix(data);
       if (data.results.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--light)">沒有找到結果，請輸入有效的股票代號</div>';
+        _bosResults = []; grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--light)">沒有找到結果，請輸入有效的股票代號</div>';
       } else {
-        grid.innerHTML = data.results.map(renderBosScorecard).join('');
+        _bosResults = data.results; _bosRenderGrid();
       }
     }
   } catch(e) {
@@ -4031,6 +4049,7 @@ async function runBosScreen() {
 
 function resetBosScreen() {
   document.getElementById('bos-symbols').value = '';
+  _bosResults = [];
   document.getElementById('bosGrid').innerHTML = '';
   document.getElementById('bosCount').textContent = '—';
   document.getElementById('bosSectorView').innerHTML = '';
