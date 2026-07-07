@@ -175,10 +175,12 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;background:var(
 /* STATS */
 .stats-section{margin-bottom:20px}
 .stats-section .stats-grid{margin-bottom:0}
-.stats-section-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;padding-left:2px}
+.stats-section-label{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:11px;padding:5px 12px;border-radius:10px;background:var(--accent);color:var(--mid)}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin-bottom:20px}
-.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);transition:transform .16s ease,box-shadow .16s ease}
+.stat-card{background:var(--white);border:1.5px solid #d8d6cf;border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);transition:transform .16s ease,box-shadow .16s ease}
 .stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover)}
+.stat-card.tone-gain{border-color:var(--green)}.stat-card.tone-loss{border-color:var(--red)}.stat-card.tone-neutral{border-color:#d8d6cf}
+.stat-card.tone-gain .stat-label{color:var(--green)}.stat-card.tone-loss .stat-label{color:var(--red)}
 .stat-label{font-size:10px;color:var(--mid);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
 .stat-value{font-size:24px;font-weight:700;color:var(--dark);letter-spacing:-.6px;line-height:1;font-family:var(--mono);font-variant-numeric:tabular-nums}
 .stat-change{font-size:12px;font-weight:500;margin-top:8px;display:flex;align-items:center;gap:4px}
@@ -987,7 +989,7 @@ tr:hover td{background:var(--bg)}
     <div id="staleWarn" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:10px;background:#FFF4E5;border:1px solid #FFD8A8;color:#8A5300;font-size:13px;line-height:1.5"></div>
     <!-- 美股統計列 -->
     <div class="stats-section" id="stats-us-section">
-      <div class="stats-section-label" style="color:var(--mid)">美股 <span style="font-weight:400">USD</span></div>
+      <div class="stats-section-label" style="background:var(--blue-lt);color:var(--blue)">美股 <span style="font-weight:400">USD</span></div>
       <div class="stats-grid" id="summaryStats">
         <div class="stat-card"><div class="stat-label">Total Net Worth</div><div class="stat-value" id="s-totalMv">—</div><div class="stat-change" id="s-pnl">Loading...</div><div class="stat-sub">Unrealized P&L</div></div>
         <div class="stat-card"><div class="stat-label">Total Cost Basis</div><div class="stat-value" id="s-cost">—</div><div class="stat-change" id="s-ret">—</div><div class="stat-sub">Return</div></div>
@@ -999,14 +1001,14 @@ tr:hover td{background:var(--bg)}
     </div>
     <!-- 台股統計列（有台股持倉時顯示） -->
     <div class="stats-section" id="stats-tw-section" style="display:none">
-      <div class="stats-section-label" style="color:#ae3f3a">台股 <span style="font-weight:400">TWD</span></div>
+      <div class="stats-section-label" style="background:var(--amber-lt);color:var(--amber)">台股 <span style="font-weight:400">TWD</span></div>
       <div class="stats-grid">
-        <div class="stat-card" style="border-top:3px solid #ae3f3a"><div class="stat-label">台股淨值</div><div class="stat-value" id="tw-s-totalMv">—</div><div class="stat-change" id="tw-s-pnl"></div><div class="stat-sub">Unrealized P&L</div></div>
-        <div class="stat-card" style="border-top:3px solid #ae3f3a"><div class="stat-label">台股成本</div><div class="stat-value" id="tw-s-cost">—</div><div class="stat-change" id="tw-s-ret"></div><div class="stat-sub">Return</div></div>
-        <div class="stat-card" style="border-top:3px solid #ae3f3a"><div class="stat-label">今日變動</div><div class="stat-value" id="tw-s-dayChg">—</div><div class="stat-change" id="tw-s-dayPct"></div><div class="stat-sub">Today's P&L</div></div>
-        <div class="stat-card" style="border-top:3px solid #ae3f3a"><div class="stat-label">台股持倉數</div><div class="stat-value" id="tw-s-count">—</div><div class="stat-change" style="color:var(--mid)">Active holdings</div><div class="stat-sub">&nbsp;</div></div>
-        <div class="stat-card" style="border-top:3px solid #ae3f3a"><div class="stat-label">年化股息收益</div><div class="stat-value" id="tw-s-divIncome" style="color:var(--green)">—</div><div class="stat-change" id="tw-s-divYield" style="color:var(--green)">—</div><div class="stat-sub">Portfolio yield</div></div>
-        <div class="stat-card" style="border-top:3px solid #ae3f3a"><div class="stat-label">年化報酬率 IRR</div><div class="stat-value" id="tw-s-irr">—</div><div class="stat-change" id="tw-s-irrLabel" style="color:var(--mid)">—</div><div class="stat-sub">依交易記錄計算</div></div>
+        <div class="stat-card"><div class="stat-label">台股淨值</div><div class="stat-value" id="tw-s-totalMv">—</div><div class="stat-change" id="tw-s-pnl"></div><div class="stat-sub">Unrealized P&L</div></div>
+        <div class="stat-card"><div class="stat-label">台股成本</div><div class="stat-value" id="tw-s-cost">—</div><div class="stat-change" id="tw-s-ret"></div><div class="stat-sub">Return</div></div>
+        <div class="stat-card"><div class="stat-label">今日變動</div><div class="stat-value" id="tw-s-dayChg">—</div><div class="stat-change" id="tw-s-dayPct"></div><div class="stat-sub">Today's P&L</div></div>
+        <div class="stat-card"><div class="stat-label">台股持倉數</div><div class="stat-value" id="tw-s-count">—</div><div class="stat-change" style="color:var(--mid)">Active holdings</div><div class="stat-sub">&nbsp;</div></div>
+        <div class="stat-card"><div class="stat-label">年化股息收益</div><div class="stat-value" id="tw-s-divIncome" style="color:var(--green)">—</div><div class="stat-change" id="tw-s-divYield" style="color:var(--green)">—</div><div class="stat-sub">Portfolio yield</div></div>
+        <div class="stat-card"><div class="stat-label">年化報酬率 IRR</div><div class="stat-value" id="tw-s-irr">—</div><div class="stat-change" id="tw-s-irrLabel" style="color:var(--mid)">—</div><div class="stat-sub">依交易記錄計算</div></div>
       </div>
     </div>
 
@@ -1385,7 +1387,7 @@ tr:hover td{background:var(--bg)}
   <div class="page" id="page-risk">
     <!-- 美股風險 -->
     <div class="stats-section">
-      <div class="stats-section-label" style="color:var(--mid)">美股風險 <span style="font-weight:400">USD</span></div>
+      <div class="stats-section-label" style="background:var(--blue-lt);color:var(--blue)">美股風險 <span style="font-weight:400">USD</span></div>
       <div class="stats-grid mb-20">
         <div class="stat-card risk-card-wrap">
           <div class="stat-label">Portfolio Beta <span class="risk-tip-icon">?</span></div>
@@ -1424,30 +1426,30 @@ tr:hover td{background:var(--bg)}
 
     <!-- 台股風險（有台股持倉時顯示） -->
     <div class="stats-section" id="stats-tw-risk-section" style="display:none">
-      <div class="stats-section-label" style="color:#ae3f3a">台股風險 <span style="font-weight:400">TWD</span></div>
+      <div class="stats-section-label" style="background:var(--amber-lt);color:var(--amber)">台股風險 <span style="font-weight:400">TWD</span></div>
       <div class="stats-grid mb-20">
-        <div class="stat-card risk-card-wrap" style="border-top:3px solid #ae3f3a">
+        <div class="stat-card risk-card-wrap">
           <div class="stat-label">Portfolio Beta <span class="risk-tip-icon">?</span></div>
           <div class="stat-value" id="tw-r-beta">—</div>
           <div class="stat-change" id="tw-r-betaLabel" style="color:var(--amber)">—</div>
           <div class="stat-sub">vs. 台灣加權指數</div>
           <div class="risk-tooltip">📊 衡量組合相對大盤的波動性。<br>• Beta = 1：跟大盤同步<br>• Beta &gt; 1：比大盤波動更大（漲更多也跌更多）<br>• Beta &lt; 1：比大盤穩定</div>
         </div>
-        <div class="stat-card risk-card-wrap" style="border-top:3px solid #ae3f3a">
+        <div class="stat-card risk-card-wrap">
           <div class="stat-label">夏普比率 <span class="risk-tip-icon">?</span></div>
           <div class="stat-value" id="tw-r-sharpe" style="color:var(--blue)">—</div>
           <div class="stat-change up" id="tw-r-sharpeLabel">—</div>
           <div class="stat-sub">風險調整後報酬</div>
           <div class="risk-tooltip">📈 每承擔一單位風險所獲得的超額報酬。<br>• &gt; 1：優秀<br>• 0.5–1：良好，風險補償合理<br>• &lt; 0.5：風險補償不足<br>數字越高代表在同樣風險下賺得更多。</div>
         </div>
-        <div class="stat-card risk-card-wrap" style="border-top:3px solid #ae3f3a">
+        <div class="stat-card risk-card-wrap">
           <div class="stat-label">最大回撤 <span class="risk-tip-icon">?</span></div>
           <div class="stat-value" id="tw-r-dd" style="color:var(--red)">—</div>
           <div class="stat-change down">歷史最大跌幅</div>
           <div class="stat-sub">&nbsp;</div>
           <div class="risk-tooltip">📉 從歷史最高點到最低點的最大跌幅。<br>例如 -8.9% 代表組合曾從高峰下跌 8.9%。<br>此數值越接近 0 代表組合越抗跌，心理壓力越小。</div>
         </div>
-        <div class="stat-card risk-card-wrap" style="border-top:3px solid #ae3f3a">
+        <div class="stat-card risk-card-wrap">
           <div class="stat-label">年化波動率 <span class="risk-tip-icon">?</span></div>
           <div class="stat-value" id="tw-r-vol">—</div>
           <div class="stat-change" style="color:var(--amber)">12 個月滾動計算</div>
@@ -1737,6 +1739,35 @@ const PAGE_META = {
   calculator:    ['DCA 計算器','Calculator'],
   rebalance:     ['再平衡建議','Rebalancing'],
 };
+// ── 統計卡依漲跌上色（B 樣式：白底＋同色邊框）。讀 .stat-change 的 up/down 或 inline 綠/紅判方向；
+//    掛 MutationObserver 自動重套（免逐一改每個 render 函式）。防迴圈：tone 已正確就不寫 DOM。 ──
+function applyStatTones(){
+  document.querySelectorAll('.stat-card').forEach(function(card){
+    var t='neutral';
+    var ch=card.querySelector('.stat-change');
+    if(ch && ch.classList.contains('up')) t='gain';
+    else if(ch && ch.classList.contains('down')) t='loss';
+    else{
+      var v=card.querySelector('.stat-value');
+      var s=((ch&&ch.getAttribute('style'))||'')+' '+((v&&v.getAttribute('style'))||'');
+      if(s.indexOf('--green')>=0) t='gain';
+      else if(s.indexOf('--red')>=0) t='loss';
+    }
+    var cls='tone-'+t;
+    if(card.classList.contains(cls)) return;   // 已正確 → 不動 DOM（避免 observer 迴圈）
+    card.classList.remove('tone-gain','tone-loss','tone-neutral');
+    card.classList.add(cls);
+  });
+}
+var _toneTimer;
+function _scheduleTones(){ clearTimeout(_toneTimer); _toneTimer=setTimeout(applyStatTones,60); }
+function _initStatTones(){
+  applyStatTones();
+  var root=document.querySelector('.main')||document.body;
+  new MutationObserver(_scheduleTones).observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_initStatTones); else _initStatTones();
+
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -5019,12 +5050,12 @@ function renderCash(d, s) {
 
   document.getElementById('cashPools').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-      <div class="stat-card" style="border-top:3px solid var(--red)">
+      <div class="stat-card">
         <div class="stat-label">台幣帳戶</div>
         <div class="stat-value">${ntd(twd)}</div>
         <div class="stat-sub">≈ ${usc(twdInUsd)}（折美金）</div>
       </div>
-      <div class="stat-card" style="border-top:3px solid var(--blue)">
+      <div class="stat-card">
         <div class="stat-label">美金帳戶</div>
         <div class="stat-value">${usc(usd)}</div>
         <div class="stat-sub">≈ ${ntd(usdInTwd)}（折台幣）</div>
@@ -5455,8 +5486,8 @@ function renderSectorCards(sectors) {
       </div>`;
     }).join('');
     return `<div class="sector-card">
-      <div class="sector-card-hdr" style="border-top:3px solid ${color}">
-        <span class="sector-card-title">${sec.sector_label}</span>
+      <div class="sector-card-hdr">
+        <span class="sector-card-title" style="color:${color}">${sec.sector_label}</span>
         <span style="font-size:10px;color:var(--light)">${(sec.stocks||[]).length} 支</span>
       </div>
       ${items}
@@ -5530,8 +5561,8 @@ function renderDgmSectorCards(sectors){
           <button class="sector-add-btn" onclick="event.stopPropagation();addToWatchlist('${s.symbol}','${nameEsc}',this,'DGM')">+ 加入觀察</button></div>
       </div>`;
     }).join('');
-    return `<div class="sector-card"><div class="sector-card-hdr" style="border-top:3px solid var(--green)">
-      <span class="sector-card-title">${sec.sector_label}</span><span style="font-size:10px;color:var(--light)">${(sec.stocks||[]).length} 支</span></div>${items}</div>`;
+    return `<div class="sector-card"><div class="sector-card-hdr">
+      <span class="sector-card-title" style="color:var(--green)">${sec.sector_label}</span><span style="font-size:10px;color:var(--light)">${(sec.stocks||[]).length} 支</span></div>${items}</div>`;
   }).join('')}</div>`;
 }
 
