@@ -1008,22 +1008,22 @@ tr:hover td{background:var(--bg)}
       </div>
     </div>
 
-    <!-- 投資目標 -->
+    <!-- 投入預算（本金）· 台幣計價：已投入本金 principal_twd vs 總預算 -->
     <div class="goal-card" id="goalCard">
       <div class="goal-header">
-        <div class="goal-title">🎯 投資目標</div>
+        <div class="goal-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:5px"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>投入預算</div>
         <span style="font-size:11px;color:var(--mid)" id="goalReachDate"></span>
       </div>
       <div class="goal-progress-wrap">
         <div class="goal-progress-bar"><div class="goal-progress-fill" id="goalFill" style="width:0%"></div></div>
         <div class="goal-meta">
-          <span id="goalCurrentLabel">現值 —</span>
+          <span id="goalCurrentLabel">已投入 —</span>
           <span id="goalPctLabel">0%</span>
-          <span id="goalTargetLabel">目標 —</span>
+          <span id="goalTargetLabel">總預算 —</span>
         </div>
       </div>
       <div class="goal-set-row">
-        <input class="goal-input" id="goalInput" type="number" placeholder="設定目標金額（USD）" min="1">
+        <input class="goal-input" id="goalInput" type="number" placeholder="設定總預算（台幣）" min="1">
         <button class="btn btn-primary" style="height:34px" onclick="saveGoal()">設定</button>
         <button class="btn btn-ghost" style="height:34px" onclick="clearGoal()">清除</button>
       </div>
@@ -1912,7 +1912,7 @@ async function loadOverview() {
     renderHoldings(holdings);
     renderSectorChart(summary.sector_allocation_combined || summary.sector_allocation);
     renderAiInsight(summary);
-    loadGoal(totalUsd);
+    loadGoal(summary);   // 投入預算：吃 summary.cash.principal_twd（已投入本金，台幣）
 
     // 其餘區塊全部並行載入：原本 loadPortfolioPage→risk→watchlist→dividends 是一個接一個 await（時間累加），
     // 改成同時發、只等最慢那個。淨值圖/績效/IRR 各自 fire-and-forget，畫好各自區塊即可。
@@ -4369,52 +4369,40 @@ async function loadDividends() {
 // ══════════════════════════════════════════════════════════════
 // 投資目標
 // ══════════════════════════════════════════════════════════════
-function loadGoal(currentValue) {
-  const goal = parseFloat(localStorage.getItem('investGoal') || '0');
-  if (!goal) return;
-  document.getElementById('goalInput').value = goal;
-  _updateGoalDisplay(currentValue, goal);
+// 投入預算（本金）· 台幣：已投入本金 principal_twd（後端算好的淨入金折台幣）vs 你設的總預算
+const _ntd = v => 'NT$' + Math.round(v || 0).toLocaleString('en');
+function loadGoal(summary) {
+  const invested = (summary && summary.cash && summary.cash.principal_twd) || 0;
+  window._investedTwd = invested;   // saveGoal 就地重算時取用
+  const budget = parseFloat(localStorage.getItem('investBudgetTwd') || '0');
+  if (!budget) return;
+  document.getElementById('goalInput').value = budget;
+  _updateGoalDisplay(invested, budget);
 }
-function _updateGoalDisplay(current, goal) {
-  const pct = Math.min(100, (current / goal) * 100);
+function _updateGoalDisplay(invested, budget) {
+  const pct = Math.min(100, budget > 0 ? (invested / budget) * 100 : 0);
   document.getElementById('goalFill').style.width = pct.toFixed(1) + '%';
-  document.getElementById('goalCurrentLabel').textContent = '現值 ' + fmtMoney(current, 0);
-  document.getElementById('goalTargetLabel').textContent = '目標 ' + fmtMoney(goal, 0);
+  document.getElementById('goalCurrentLabel').textContent = '已投入 ' + _ntd(invested);
+  document.getElementById('goalTargetLabel').textContent = '總預算 ' + _ntd(budget);
   document.getElementById('goalPctLabel').textContent = pct.toFixed(1) + '%';
-  // 預估達標時間（假設每月 DCA 500 + 7% 年化）
-  const monthly = parseFloat(localStorage.getItem('goalMonthly') || '500');
-  const rate = 0.07 / 12;
-  let val = current, months = 0;
-  while (val < goal && months < 600) {
-    val = val * (1 + rate) + monthly;
-    months++;
-  }
-  const yrs = Math.floor(months / 12), mos = months % 12;
-  let reachText;
-  if (current >= goal) {
-    reachText = '目標已達成！';
-  } else if (val >= goal) {
-    const parts = `${yrs > 0 ? yrs + '年' : ''}${mos > 0 ? mos + '個月' : ''}`;
-    reachText = `預計 ${parts || '不到 1 個月'} 後達標`;
-  } else {
-    reachText = '以目前速度 50 年內難達標';
-  }
-  document.getElementById('goalReachDate').textContent = reachText;
+  // 右上角：還可投入（＝預算 − 已投入）；本金是累加不複利，不估時間
+  const remain = budget - invested;
+  document.getElementById('goalReachDate').textContent =
+    remain <= 0 ? '預算已投滿！' : '還可投入 ' + _ntd(remain);
 }
 function saveGoal() {
   const v = parseFloat(document.getElementById('goalInput').value);
-  if (!v || v <= 0) return showToast('請輸入有效目標金額', 'error');
-  localStorage.setItem('investGoal', v);
-  const cur = parseFloat((document.getElementById('s-totalMv').textContent||'0').replace(/[^0-9.]/g,'')) || 0;
-  _updateGoalDisplay(cur, v);
-  showToast('目標已設定！');
+  if (!v || v <= 0) return showToast('請輸入有效預算金額', 'error');
+  localStorage.setItem('investBudgetTwd', v);
+  _updateGoalDisplay(window._investedTwd || 0, v);   // 沿用最近一次 loadGoal 帶入的已投入本金
+  showToast('總預算已設定！');
 }
 function clearGoal() {
-  localStorage.removeItem('investGoal');
+  localStorage.removeItem('investBudgetTwd');
   document.getElementById('goalInput').value = '';
   document.getElementById('goalFill').style.width = '0%';
-  document.getElementById('goalCurrentLabel').textContent = '現值 —';
-  document.getElementById('goalTargetLabel').textContent = '目標 —';
+  document.getElementById('goalCurrentLabel').textContent = '已投入 —';
+  document.getElementById('goalTargetLabel').textContent = '總預算 —';
   document.getElementById('goalPctLabel').textContent = '0%';
   document.getElementById('goalReachDate').textContent = '';
 }
