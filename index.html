@@ -13,7 +13,8 @@
   --light:#a3a29d; --border:#e8e6e0; --bg:#f8f7f3; --white:#FFFFFF;
   --green:#337c53; --green-lt:#e7f3ea; --red:#ae3f3a; --red-lt:#f6ebe8;
   --amber:#ae792c; --amber-lt:#f4eddf; --purple:#7C3AED; --purple-lt:#EDE9FE;
-  --radius:10px;
+  --radius:16px;
+  --mono:'SF Mono',ui-monospace,'SFMono-Regular','Menlo',monospace;
   /* 下列變數原本只在 coinbase/revolut/wise 變體檔定義，但共用 CSS
      （.sector-card-hdr / .perf-compare / .target-input 等）有引用，
      預設檔補齊以免未定義變數導致背景/文字色失效。 */
@@ -176,9 +177,10 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;background:var(
 .stats-section .stats-grid{margin-bottom:0}
 .stats-section-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;padding-left:2px}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin-bottom:20px}
-.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);transition:transform .16s ease,box-shadow .16s ease}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover)}
 .stat-label{font-size:10px;color:var(--mid);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
-.stat-value{font-size:24px;font-weight:700;color:var(--dark);letter-spacing:-.6px;line-height:1}
+.stat-value{font-size:24px;font-weight:700;color:var(--dark);letter-spacing:-.6px;line-height:1;font-family:var(--mono);font-variant-numeric:tabular-nums}
 .stat-change{font-size:12px;font-weight:500;margin-top:8px;display:flex;align-items:center;gap:4px}
 .stat-change.up{color:var(--green)}.stat-change.down{color:var(--red)}
 .stat-sub{font-size:11px;color:var(--light);margin-top:2px}
@@ -1915,7 +1917,7 @@ function _setRevalidating(on) {
     if (!pill) {
       pill = document.createElement('div');
       pill.id = 'revalidatePill';
-      pill.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:9999;background:var(--card,#fff);color:var(--mid,#6b7280);border:1px solid var(--border,#e5e7eb);border-radius:999px;padding:6px 12px;font-size:12px;box-shadow:0 4px 12px rgba(0,0,0,.08);display:inline-flex;align-items:center;gap:7px';
+      pill.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:9999;background:var(--card,#fff);color:var(--mid,#6b7280);border:1px solid var(--border,#e8e6e0);border-radius:999px;padding:6px 12px;font-size:12px;box-shadow:0 4px 12px rgba(0,0,0,.08);display:inline-flex;align-items:center;gap:7px';
       pill.innerHTML = '<div class="loading-spinner" style="width:12px;height:12px;margin:0"></div>更新中…';
       document.body.appendChild(pill);
     }
@@ -3445,7 +3447,7 @@ function renderPerStockRebalance(holdings){
     const sp=_rb2.split[G.m]||0, gTarget=budget*sp/100, gCur=g.reduce((a,e)=>a+e.curTwd,0);
     const gPctSum=g.reduce((a,e)=>a+(_rb2.pct[e.sym]||0),0);
     rowsHtml+=`<tr class="rb2-grp ${G.m==='tw'?'tw':''}">
-      <td><span class="rb2-tag">${G.tag}</span>${G.label} <span style="font-weight:400;color:#9aa1ab;font-size:11px">（組內合計 ${gPctSum}%）</span></td>
+      <td><span class="rb2-tag">${G.tag}</span>${G.label} <span style="font-weight:400;color:#a3a29d;font-size:11px">（組內合計 ${gPctSum}%）</span></td>
       <td>${sp}%</td><td>${rb2Money(gTarget,G.m,fx)}</td><td>${rb2Money(gCur,G.m,fx)}</td><td colspan="3"></td></tr>`;
     g.forEach(e=>{
       const p=_rb2.pct[e.sym]||0, target=gTarget*p/100, gap=target-e.curTwd, v=rb2Val(e.sym);
@@ -3455,9 +3457,9 @@ function renderPerStockRebalance(holdings){
       else pill=`<span class="rb2-pill over">超 NT$${nf(-gap)}</span>`;
       rowsHtml+=`<tr>
         <td class="rb2-name">${e.sym}${e.wish?' <span class="wl-tag">想買</span>':''} <small>${e.name}</small></td>
-        <td><input class="rb2-pct-in" type="number" min="0" value="${p}" onchange="rb2SetPct('${e.sym}',this.value)"><span style="color:#9aa1ab;font-size:11px"> %</span></td>
+        <td><input class="rb2-pct-in" type="number" min="0" value="${p}" onchange="rb2SetPct('${e.sym}',this.value)"><span style="color:#a3a29d;font-size:11px"> %</span></td>
         <td>${rb2Money(target,e.mkt,fx)}</td>
-        <td>${e.curTwd? rb2Money(e.curTwd,e.mkt,fx) : '<span style="color:#9aa1ab">—</span>'}</td>
+        <td>${e.curTwd? rb2Money(e.curTwd,e.mkt,fx) : '<span style="color:#a3a29d">—</span>'}</td>
         <td>${pill}</td>
         <td><span class="rb2-val ${v.tone}">${v.txt}</span></td>
         <td class="rb2-act">${rb2Act(gap,v.tone,budget)}</td></tr>`;
@@ -3482,7 +3484,7 @@ function renderPerStockRebalance(holdings){
     <div class="rb2-card rb2-scroll">
       <table class="rb2-tbl">
         <thead><tr><th>標的</th><th>佔比</th><th>目標金額</th><th>現況</th><th>還要加碼</th><th>估值</th><th style="text-align:left">動作</th></tr></thead>
-        <tbody>${rowsHtml || '<tr><td colspan="7" style="padding:24px;text-align:center;color:#9aa1ab">尚無持股</td></tr>'}</tbody>
+        <tbody>${rowsHtml || '<tr><td colspan="7" style="padding:24px;text-align:center;color:#a3a29d">尚無持股</td></tr>'}</tbody>
         <tfoot><tr><td>核心合計</td><td>${splitSum}%</td><td>${rb2Money(totTarget,'tw',fx)}</td><td>${rb2Money(totCur,'tw',fx)}</td>
           <td><span class="rb2-pill ${netGap>=0?'buy':'over'}">${netGap>=0?'缺口 +':'超 '}NT$${nf(Math.abs(netGap))}</span></td><td colspan="2"></td></tr></tfoot>
       </table>
