@@ -111,7 +111,7 @@ body{font-family:'Geist',-apple-system,BlinkMacSystemFont,'PingFang TC','Noto Sa
   /* ── 手機版內容適配（2026-06-18）：上面只處理側欄抽屜，這裡補內容區 ── */
   /* 內距收緊 */
   .topbar{padding:0 12px;height:52px}
-  .topbar-title{font-size:15px}
+  .topbar-title{font-size:17px}
   .content{padding:14px 12px}
   /* 多欄排版收成單欄 */
   .grid-2,.grid-3,.grid-7030,.risk-grid,.bos-lists,.calc-result-grid{grid-template-columns:1fr!important}
@@ -162,7 +162,7 @@ body{font-family:'Geist',-apple-system,BlinkMacSystemFont,'PingFang TC','Noto Sa
 .topbar-menu-btn:hover{background:var(--bg);color:var(--dark)}
 .topbar{background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
 .page-breadcrumb{font-size:10px;color:var(--light);text-transform:uppercase;letter-spacing:.08em}
-.topbar-title{font-size:16px;font-weight:700;letter-spacing:-.3px}
+.topbar-title{font-size:20px;font-weight:700;letter-spacing:-.5px}
 .topbar-right{display:flex;align-items:center;gap:8px}
 .btn{height:34px;padding:0 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:all .13s;font-family:'Geist',-apple-system,sans-serif}
 .btn-primary{background:var(--blue);color:#fff}
@@ -195,7 +195,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 /* CARD */
 .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
 .card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.card-title{font-size:13px;font-weight:700;letter-spacing:-.2px}
+.card-title{font-size:14px;font-weight:700;letter-spacing:-.3px}
 .card-sub{font-size:11px;color:var(--light);margin-top:2px}
 .card-body{padding:18px 20px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -884,7 +884,7 @@ tr:hover td{background:var(--bg)}
 </div>
 
 <!-- SIDEBAR -->
-<aside class="sidebar" id="sidebar">
+<aside class="sidebar" id="sidebar" aria-label="主選單導覽">
   <div class="sidebar-logo">
     <div class="logo-mark">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -3698,7 +3698,7 @@ async function setWantBuy(id, val, view){
     await api(`/api/watchlist/${id}`, 'PUT', { want_buy: val });
     _wlSyncLocal(id, {want_buy: val});   // 就地更新兩邊快取
     _wlRerender(view);                    // 只重繪，不重抓 → 秒切
-  }catch(e){ alert('切換「想買」失敗：'+(e.message||'請稍後再試')); }
+  }catch(e){ showToast('切換「想買」失敗：'+(e.message||'請稍後再試'), 'error'); }
 }
 
 async function setTargetPrice(id, view, val){
@@ -3709,7 +3709,7 @@ async function setTargetPrice(id, view, val){
     await api(`/api/watchlist/${id}`, 'PUT', { target_price: num });
     _wlSyncLocal(id, {target_price: num});   // 不強制重繪，避免打斷輸入；下次重整反映
     showToast('目標價已存');
-  }catch(e){ alert('儲存目標價失敗：'+(e.message||'請稍後再試')); }
+  }catch(e){ showToast('儲存目標價失敗：'+(e.message||'請稍後再試'), 'error'); }
 }
 
 // ── HOLDING MODAL ──────────────────────────────────────────────
@@ -3786,7 +3786,7 @@ async function deleteHolding(id, symbol) {
     await api(`/api/portfolio/${id}`, 'DELETE');
     await refreshPortfolio();
   } catch(e) {
-    alert('刪除失敗：' + (e.message || '未知錯誤'));
+    showToast('刪除失敗：' + (e.message || '未知錯誤'), 'error');
   }
 }
 
@@ -3804,7 +3804,7 @@ async function refreshPortfolio() {
   }
 }
 
-function showAddWatchlist(){ alert('串接後端後，此按鈕將開啟觀察清單新增表單，呼叫 POST /api/watchlist'); }
+function showAddWatchlist(){ showToast('串接後端後，此按鈕將開啟觀察清單新增表單，呼叫 POST /api/watchlist', 'warn'); }
 
 // ── 篩選器內嵌觀察清單 ───────────────────────────────────────
 let _screenerWatchlistDemo = [];
@@ -4191,7 +4191,7 @@ async function bosReanalyze(sym) {   // 護城河重評（Claude，會花費）
   try {
     const d = await api(`/api/screener/bos/analyze?symbols=${sym}`, 'POST');
     if (d && d.results && d.results[0]) _bscReplace(sym, d.results[0]);
-  } catch (e) { console.error(e); alert('護城河重評失敗：' + e.message); }
+  } catch (e) { console.error(e); showToast('護城河重評失敗：' + e.message, 'error'); }
   finally { const e2 = document.getElementById('bsc-' + sym); if (e2) e2.style.opacity = ''; }
 }
 async function bosRefresh(sym) {     // 財報重抓（免費，不叫 Claude）
@@ -4200,7 +4200,7 @@ async function bosRefresh(sym) {     // 財報重抓（免費，不叫 Claude）
   try {
     const d = await api(`/api/screener/bos/refresh?symbols=${sym}`, 'POST');
     if (d && d.results && d.results[0]) _bscReplace(sym, d.results[0]);
-  } catch (e) { console.error(e); alert('重抓失敗：' + e.message); }
+  } catch (e) { console.error(e); showToast('重抓失敗：' + e.message, 'error'); }
   finally { const e2 = document.getElementById('bsc-' + sym); if (e2) e2.style.opacity = ''; }
 }
 
@@ -4497,7 +4497,7 @@ async function dgmReanalyze(sym){   // 護城河重評（Claude，會花費）
   try {
     const d = await api(`/api/screener/dgm/analyze?symbols=${sym}`, 'POST');
     if (d && d.results && d.results[0]) _dgmReplaceOne(sym, d.results[0]);
-  } catch(e){ console.error(e); alert('分析失敗：' + e.message); }
+  } catch(e){ console.error(e); showToast('分析失敗：' + e.message, 'error'); }
   finally { const e2 = document.getElementById('dgm-' + sym); if (e2) e2.style.opacity = ''; }
 }
 async function dgmRefresh(sym){     // 財報重抓（免費，不叫 Claude）
@@ -4505,7 +4505,7 @@ async function dgmRefresh(sym){     // 財報重抓（免費，不叫 Claude）
   try {
     const d = await api(`/api/screener/dgm/refresh?symbols=${sym}`, 'POST');
     if (d && d.results && d.results[0]) _dgmReplaceOne(sym, d.results[0]);
-  } catch(e){ console.error(e); alert('重抓失敗：' + e.message); }
+  } catch(e){ console.error(e); showToast('重抓失敗：' + e.message, 'error'); }
   finally { const e2 = document.getElementById('dgm-' + sym); if (e2) e2.style.opacity = ''; }
 }
 
@@ -4852,7 +4852,7 @@ async function deleteTransaction(id) {
     await loadTransactionsPage();   // 刷新交易列表
     await refreshPortfolio();       // 刷新持倉（已連動）
   } catch(e) {
-    alert('刪除失敗：' + (e.message || '未知錯誤'));
+    showToast('刪除失敗：' + (e.message || '未知錯誤'), 'error');
   }
 }
 
@@ -5036,7 +5036,7 @@ function renderPendingDividends(el, pending) {
 async function confirmDividend(symbol, currency, exDate, btn) {
   const inp = document.getElementById(`divamt-${symbol}-${exDate}`);
   const amount = parseFloat(inp && inp.value);
-  if (!amount || amount <= 0) { alert('請輸入實際到帳金額'); return; }
+  if (!amount || amount <= 0) { showToast('請輸入實際到帳金額', 'warn'); return; }
   if (DEMO_MODE) { showToast(`${symbol} 股息已入帳（示範）`); return; }
   if (btn) { btn.disabled = true; btn.textContent = '處理中...'; }   // 防連點重複入帳
   try {
@@ -5044,7 +5044,7 @@ async function confirmDividend(symbol, currency, exDate, btn) {
     showToast(`${symbol} 股息已入帳`);
     await loadCashPage();   // 刷新現金池與待確認（已入帳的會消失）
   } catch(e) {
-    alert('入帳失敗：' + (e.message || '未知錯誤'));
+    showToast('入帳失敗：' + (e.message || '未知錯誤'), 'error');
     if (btn) { btn.disabled = false; btn.textContent = '確認入帳'; }
   }
 }
@@ -5198,7 +5198,7 @@ async function deleteCashFlow(id) {
     if (!DEMO_MODE) await api('/api/portfolio/cash-flows/'+id, 'DELETE');
     showToast('已刪除，餘額已重算');
     await loadCashPage();
-  } catch(e) { alert('刪除失敗：' + (e.message||'未知錯誤')); }
+  } catch(e) { showToast('刪除失敗：' + (e.message||'未知錯誤'), 'error'); }
 }
 async function seedCashFromCost() {
   if (!confirm('以持股成本初始化\n\n依你目前的交易，每幣別建立一筆入金（＝該幣別買進成本），讓現金歸零、本金＝持股成本。\n適合一開始用；之後有閒置現金或實際換匯，再自己補／調整。\n\n要繼續嗎？')) return;
@@ -5206,7 +5206,7 @@ async function seedCashFromCost() {
     const r = DEMO_MODE ? {count:2} : await api('/api/portfolio/cash/seed-from-cost', 'POST', {});
     showToast('已用持股成本初始化（建立 ' + (r.count||0) + ' 筆入金）');
     await loadCashPage();
-  } catch(e) { alert(e.message || '初始化失敗'); }
+  } catch(e) { showToast(e.message || '初始化失敗', 'error'); }
 }
 
 // ══════════════════════════════════════════════════════════════
