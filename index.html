@@ -353,6 +353,14 @@ tr:hover td{background:var(--bg)}
 /* LOADING */
 .loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* ── 載入骨架（redesign S3）：shimmer 取代「載入中…」置中文字 ── */
+.skeleton{background:linear-gradient(90deg,#efece6 25%,#f6f4f0 37%,#efece6 63%);background-size:200% 100%;animation:sk-shimmer 1.4s ease-in-out infinite;border-radius:7px}
+@keyframes sk-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.skeleton{animation:none}}
+.sk-load{padding:22px}
+.sk-load .skeleton{height:11px;margin-bottom:9px}
+.sk-load .skeleton:first-child{height:13px;width:38%;margin-bottom:14px}
+.sk-load .skeleton:last-child{margin-bottom:0}
 .loading-overlay{position:absolute;inset:0;background:rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center;border-radius:var(--radius);z-index:10;gap:8px;font-size:13px;color:var(--mid)}
 
 /* SETUP MODAL */
@@ -1050,7 +1058,7 @@ tr:hover td{background:var(--bg)}
         </div>
       </div>
       <div class="card-body" id="perfContent" style="padding:0">
-        <div style="text-align:center;padding:24px;color:var(--mid)">載入中...</div>
+        <div class="sk-load"><div class="skeleton"></div><div class="skeleton" style="width:82%"></div><div class="skeleton" style="width:68%"></div><div class="skeleton" style="width:74%"></div></div>
       </div>
     </div>
 
@@ -1476,7 +1484,7 @@ tr:hover td{background:var(--bg)}
         <div><div class="card-title">持倉體質監控</div><div class="card-sub">每月檢查持倉公司基本面，體質轉弱主動提醒</div></div>
         <div id="healthChk" style="font-size:10px;color:var(--light);text-align:right;line-height:1.5"></div>
       </div>
-      <div id="healthBody"><div style="text-align:center;padding:30px;color:var(--mid)">載入中...</div></div>
+      <div id="healthBody"><div class="sk-load"><div class="skeleton"></div><div class="skeleton" style="width:82%"></div><div class="skeleton" style="width:68%"></div><div class="skeleton" style="width:74%"></div></div></div>
     </div>
   </div>
 
@@ -1484,7 +1492,7 @@ tr:hover td{background:var(--bg)}
   <div class="page" id="page-signals">
     <div class="card">
       <div class="card-header"><div><div class="card-title">訊號計分板</div><div class="card-sub">評分訊號發出後到底準不準 · 每週自動記錄、跟大盤比</div></div></div>
-      <div id="signalsBody"><div style="text-align:center;padding:30px;color:var(--mid)">載入中...</div></div>
+      <div id="signalsBody"><div class="sk-load"><div class="skeleton"></div><div class="skeleton" style="width:82%"></div><div class="skeleton" style="width:68%"></div><div class="skeleton" style="width:74%"></div></div></div>
     </div>
   </div>
 
@@ -1641,7 +1649,7 @@ tr:hover td{background:var(--bg)}
     </style>
     <!-- 合併個股目標（永遠列全部持股、TWD 基準，不受市場切換影響）-->
     <div id="rebalCombined">
-      <div style="text-align:center;padding:24px;color:var(--mid)">載入中...</div>
+      <div class="sk-load"><div class="skeleton"></div><div class="skeleton" style="width:82%"></div><div class="skeleton" style="width:68%"></div><div class="skeleton" style="width:74%"></div></div>
     </div>
     <!-- 市場切換：只影響下方「估值燈號 / 股息再投資」 -->
     <div style="display:flex;align-items:center;gap:10px;margin:24px 0 20px">
@@ -1653,7 +1661,7 @@ tr:hover td{background:var(--bg)}
       <span style="font-size:11px;color:var(--mid)">切換只影響下方「估值燈號 / 股息再投資」（各市場以自身幣別基準）</span>
     </div>
     <div id="rebalContent">
-      <div style="text-align:center;padding:24px;color:var(--mid)">載入中...</div>
+      <div class="sk-load"><div class="skeleton"></div><div class="skeleton" style="width:82%"></div><div class="skeleton" style="width:68%"></div><div class="skeleton" style="width:74%"></div></div>
     </div>
   </div>
 
@@ -3166,7 +3174,7 @@ function rebalMarketBlockHtml(m) {
   ${showHd ? `<div class="rebal-mkt-section-hd">${MKT_NAME[m]}<span class="rebal-cur">幣別 ${MKT_CUR[m]}</span></div>` : ''}
   <div class="card mb-20">
     <div class="card-header"><div><div class="card-title">估值燈號</div><div class="card-sub">水位 × 利率 × 成長 三維綜合（${MKT_NAME[m]}）</div></div></div>
-    <div class="card-body" id="rebalValuation_${m}"><div style="text-align:center;padding:24px;color:var(--mid)">載入中...</div></div>
+    <div class="card-body" id="rebalValuation_${m}"><div class="sk-load"><div class="skeleton"></div><div class="skeleton" style="width:82%"></div><div class="skeleton" style="width:68%"></div><div class="skeleton" style="width:74%"></div></div></div>
   </div>
   <div class="card${showHd ? ' mb-20' : ''}">
     <div class="card-header"><div class="card-title">股息再投資建議</div><div class="card-sub">將本月預估股息投入至低配板塊，加速複利</div></div>
