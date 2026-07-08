@@ -22,8 +22,8 @@
   --shadow:0 1px 2px rgba(20,20,19,.04),0 8px 30px rgba(20,20,19,.05);
   --shadow-hover:0 10px 34px rgba(20,20,19,.09),0 2px 8px rgba(20,20,19,.05);
   /* BOS 評分卡：精緻單色＋兩個低飽和點綴（森林綠/陶紅）＋組成條雙色（財報綠/護城河藍灰）*/
-  --bsc-pos:#3f6b57; --bsc-pos-bg:#eef2ef; --bsc-neg:#9a4a42; --bsc-neg-bg:#f4ece9;
-  --bsc-seg-a:#3f6b57; --bsc-seg-b:#5a6a8c; --bsc-soft:#f4f3f0;
+  --bsc-pos:#1f7a54; --bsc-pos-bg:#e4f1ea; --bsc-neg:#c0392b; --bsc-neg-bg:#f7e9e6;
+  --bsc-seg-a:#1f7a54; --bsc-seg-b:#7d7468; --bsc-soft:#ece7e1;
 }
 /* ── 主題切換：原 index-coinbase/revolut/wise.html 已整併為下列 data-theme 覆蓋，
    3 份重複檔已刪除。切換方式：document.documentElement.dataset.theme = 'coinbase'。
@@ -306,7 +306,7 @@ tr:hover td{background:var(--bg)}
 .rec-target{font-size:11px;color:var(--mid);margin-top:2px}
 
 /* ALERT */
-.alert-block{border-radius:8px;padding:12px 14px;border-left:3px solid;margin-bottom:8px}
+.alert-block{border-radius:var(--r);padding:12px 14px;margin-bottom:8px}
 .alert-block:last-child{margin-bottom:0}
 .alert-title{font-weight:700;font-size:12px;margin-bottom:3px}
 .alert-text{font-size:12px;color:var(--dark)}
@@ -472,7 +472,7 @@ tr:hover td{background:var(--bg)}
 .bos-list-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
 .bos-list-title.strength{color:var(--green)}.bos-list-title.risk{color:var(--red)}
 .bos-list-item{font-size:11px;color:var(--dark);padding:2px 0;display:flex;gap:4px;align-items:flex-start;line-height:1.4;word-break:break-word;overflow-wrap:anywhere}
-.bos-summary{background:var(--blue-lt);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--dark);border-left:3px solid var(--blue);line-height:1.5}
+.bos-summary{background:var(--blue-lt);border-radius:var(--r);padding:8px 10px;font-size:12px;color:var(--dark);line-height:1.5}
 /* ── BOS SCORECARD（精緻單色版 v3）─── 全部 bsc- 前綴避免與全域 CSS 撞名 ── */
 .bsc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(392px,100%),1fr));gap:20px;padding:4px 0;font-variant-numeric:tabular-nums}
 .bsc{background:var(--white);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;transition:box-shadow .16s,transform .16s}
@@ -542,7 +542,7 @@ tr:hover td{background:var(--bg)}
 .bsc-gatecut{margin:14px 20px 18px;padding:13px;border-radius:11px;background:var(--bsc-neg-bg);color:var(--bsc-neg);font-size:12px;font-weight:500;text-align:center;line-height:1.5}
 .bsc-stale{margin:0 20px 4px;font-size:11px;font-weight:500;color:var(--mid);background:var(--bsc-soft);padding:7px 11px;border-radius:9px;cursor:pointer}
 .bsc-foot{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:11px}
-.bsc-summary{font-size:11.5px;color:var(--dark);line-height:1.6;padding-left:11px;border-left:2px solid var(--border)}
+.bsc-summary{font-size:11.5px;color:var(--dark);line-height:1.6}
 .bsc-actions{display:flex;justify-content:space-between;align-items:center}
 .bsc-analyzed{font-size:10px;color:var(--light)}
 .bsc-btn{height:30px;padding:0 15px;border-radius:var(--radius-pill);font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--mid);font-family:'Inter Tight',-apple-system,sans-serif;transition:all .13s}
@@ -557,9 +557,9 @@ tr:hover td{background:var(--bg)}
 .dgm-pin.on{color:var(--bsc-pos)}
 .dgm-pin svg{width:14px;height:14px}
 .dgm-axis{margin:14px 20px 0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.dgm-axis.q{border-left:3px solid var(--bsc-seg-a)}
-.dgm-axis.t{border-left:3px solid var(--bsc-seg-b)}
-.dgm-axis.ai{border-left:3px solid #7a6aa0}
+.dgm-axis.q{}
+.dgm-axis.t{}
+.dgm-axis.ai{}
 .dgm-ah{display:flex;justify-content:space-between;align-items:center;padding:9px 13px}
 .dgm-axis.q .dgm-ah{background:var(--bsc-pos-bg)}
 .dgm-axis.t .dgm-ah{background:rgba(90,106,140,.10)}
@@ -619,8 +619,8 @@ tr:hover td{background:var(--bg)}
 .vc-verdict.red{background:var(--red-lt);color:var(--red)}
 .vc-verdict.gray{background:var(--accent);color:var(--mid)}
 .vc-dims{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
-.vc-dim{flex:1;min-width:92px;border:1px solid var(--border);border-radius:8px;padding:6px 9px;border-left-width:3px}
-.vc-dim.green{border-left-color:var(--green)}.vc-dim.yellow{border-left-color:var(--amber)}.vc-dim.red{border-left-color:var(--red)}.vc-dim.gray{border-left-color:var(--light)}
+.vc-dim{flex:1;min-width:92px;border:1px solid var(--border);border-radius:8px;padding:6px 9px}
+.vc-dim.green .vc-dimv{color:var(--green)}.vc-dim.yellow .vc-dimv{color:var(--amber)}.vc-dim.red .vc-dimv{color:var(--red)}.vc-dim.gray .vc-dimv{color:var(--light)}
 .vc-dimk{font-size:10px;color:var(--mid);font-weight:600}
 .vc-dimv{font-size:12px;font-weight:700;margin-top:2px;font-family:'Geist Mono','SF Mono',monospace}
 .vc-dimsub{font-size:10px;color:var(--mid);margin-top:1px}
@@ -2903,7 +2903,7 @@ async function loadTechnical(symbol, period) {
     sigText=`目前均線呈死亡交叉（短期弱於中期），RSI ${lastRSI?.toFixed(0)} 在正常範圍。`;
   }
   document.getElementById('techSignals').innerHTML=`
-    <div style="margin-bottom:12px;padding:13px 14px;background:${sigBg};border-radius:7px;border-left:3px solid ${sigColor}">
+    <div style="margin-bottom:12px;padding:13px 14px;background:${sigBg};border-radius:7px">
       <div style="font-size:12px;font-weight:700;color:${sigColor};margin-bottom:5px">${sigTitle}</div>
       <div style="font-size:12px;color:var(--text);line-height:1.65">${sigText}</div>
     </div>
@@ -3342,10 +3342,10 @@ function renderPerStockRebalance(holdings){
     return {sym:h.symbol, dev, buy:deltaNative>0, amt:mktMoney(mkt, Math.abs(deltaNative),0), wish:h._wish};
   }).filter(Boolean).sort((a,b)=>Math.abs(b.dev)-Math.abs(a.dev));
   const adviceHtml = advice.length ? advice.map(a=>`
-    <div style="margin-bottom:8px;padding:9px 12px;background:${a.buy?'#ece7e1':'#f7e9e6'};border-radius:6px;border-left:3px solid ${a.buy?'var(--blue)':'var(--red)'}">
+    <div style="margin-bottom:8px;padding:9px 12px;background:${a.buy?'#ece7e1':'#f7e9e6'};border-radius:6px">
       <span style="font-size:12px;color:var(--dark)"><strong>${a.sym}</strong>${a.wish?' <span class="wl-tag">想買</span>':''} ${a.buy?(a.wish?'新進場':'低配'):'超配'} ${a.dev>0?'+':''}${a.dev.toFixed(1)}% → ${a.buy?'加碼':'減碼'} ~ ${a.amt}</span>
     </div>`).join('')
-    : `<div style="padding:12px;background:#e4f1ea;border-radius:6px;border-left:3px solid var(--green);font-size:12px;color:var(--dark)">${!hasPortfolio?'尚無持倉，設定目標後先入金/建倉即可開始配置。':(tgtSum>0?'各標的都在目標附近（偏離 <3%），續按計畫投入即可。':'請在上表填入各標的目標 %，再按「儲存目標」。')}</div>`;
+    : `<div style="padding:12px;background:#e4f1ea;border-radius:6px;font-size:12px;color:var(--dark)">${!hasPortfolio?'尚無持倉，設定目標後先入金/建倉即可開始配置。':(tgtSum>0?'各標的都在目標附近（偏離 <3%），續按計畫投入即可。':'請在上表填入各標的目標 %，再按「儲存目標」。')}</div>`;
 
   el.innerHTML = `
   <div class="card mb-20">
@@ -3600,7 +3600,7 @@ function renderDividendReinvest(market, divData, sectorAlloc, holdings) {
       <div style="font-size:26px;font-weight:800;color:var(--green)">${amt}</div>
       <div style="font-size:10px;color:var(--light)">年化 ${mktMoney(market, divData.total_annual_dividend||0)}</div>
     </div>
-    <div style="flex:1;min-width:200px;padding:12px 14px;background:#e4f1ea;border-radius:6px;border-left:3px solid var(--green);font-size:12px;color:var(--dark);line-height:1.6">${msg}</div>
+    <div style="flex:1;min-width:200px;padding:12px 14px;background:#e4f1ea;border-radius:6px;font-size:12px;color:var(--dark);line-height:1.6">${msg}</div>
   </div>`;
 }
 
@@ -4710,7 +4710,7 @@ function renderHealth(data) {
   let alert;
   if (weak.length) alert = `<div class="hm-alert"><b>${weak.length} 支體質轉弱</b>：${weak.map(h=>h.symbol+' '+(h.name||'')).join('、')} — 建議重看基本面。</div>`;
   else if (stocks.some(h=>h.metrics.length)) alert = `<div class="hm-alert ok">持倉個股體質目前都正常。</div>`;
-  else alert = `<div class="hm-alert ok" style="background:var(--bg);border-left-color:var(--light);color:var(--mid)">資料蒐集中：第一次快照後開始顯示，趨勢箭頭從第二個月起出現。</div>`;
+  else alert = `<div class="hm-alert ok" style="background:var(--bg);color:var(--mid)">資料蒐集中：第一次快照後開始顯示，趨勢箭頭從第二個月起出現。</div>`;
 
   const card = h => {
     const head = `<div class="hm-top"><span class="hm-dot ${h.verdict.level}"></span><span class="hm-sym">${h.symbol}</span><span class="hm-name">${h.name||''}</span><span class="hm-badge ${h.verdict.level}">${h.verdict.label}</span></div>`;
@@ -5029,7 +5029,7 @@ function renderPendingDividends(el, pending) {
       <span style="font-size:12px;color:var(--mid)">${p.currency}</span>
       <button class="btn btn-primary" style="height:30px;font-size:12px" onclick="confirmDividend('${p.symbol}','${p.currency}','${p.ex_date}',this)">確認入帳</button>
     </div>`).join('');
-  el.innerHTML = `<div class="card" style="margin-bottom:12px;border-left:3px solid var(--green)">
+  el.innerHTML = `<div class="card" style="margin-bottom:12px">
     <div class="card-header"><div><div class="card-title">股息待確認 <span style="font-size:12px;color:var(--green)">${pending.length}</span></div><div class="card-sub">近期除息、尚未入帳。美股金額已預填「扣 30% 預扣稅」的估計、台股為毛額——請一律改成實際到帳金額再確認</div></div></div>
     <div>${rows}</div></div>`;
 }
