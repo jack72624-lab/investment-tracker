@@ -379,18 +379,16 @@ tr:hover td{background:var(--lifted,var(--bg))}
 .wl-chip{padding:6px 13px;border-radius:999px;font-size:13px;border:1px solid var(--border);background:var(--white);color:var(--mid);cursor:pointer;transition:.13s}
 .wl-chip.active{background:var(--dark);color:var(--white);border-color:var(--dark)}
 /* 觀察｜想買 分段切換 */
-.wl-seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-pill);overflow:hidden;font-size:12px;white-space:nowrap}
-.wl-seg button{border:none;background:var(--white);color:var(--mid);cursor:pointer;padding:5px 12px;font-size:12px;font-family:inherit;transition:.12s}
-.wl-seg button:first-child{border-right:1px solid var(--border)}
-.wl-seg button.on-watch{background:var(--mid);color:#fff;font-weight:600}
+.wl-seg{display:inline-flex;gap:2px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-pill);padding:4px;box-shadow:var(--shadow);font-size:12px;white-space:nowrap}
+.wl-seg button{border:none;background:none;color:var(--mid);cursor:pointer;padding:5px 13px;font-size:12px;font-weight:600;border-radius:var(--radius-pill);font-family:inherit;transition:.12s}
+.wl-seg button.on-watch{background:var(--mid);color:#fff}
 .wl-seg button.on-buy{background:#8f6f86;color:#fff;font-weight:700}
-.wl-seg button:not(.on-watch):not(.on-buy):hover{background:var(--blue-lt);color:var(--dark)}
+.wl-seg button:not(.on-watch):not(.on-buy):hover{color:var(--dark)}
 /* 淨值走勢｜配置歷史 切換（Net Worth Trend 卡） */
-.trend-seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-pill);overflow:hidden;font-size:12.5px}
-.trend-seg button{border:none;background:var(--white);color:var(--mid);cursor:pointer;padding:5px 13px;font-weight:600;font-family:inherit;transition:.12s}
-.trend-seg button:first-child{border-right:1px solid var(--border)}
+.trend-seg{display:inline-flex;gap:2px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-pill);padding:4px;box-shadow:var(--shadow);font-size:12.5px}
+.trend-seg button{border:none;background:none;color:var(--mid);cursor:pointer;padding:6px 14px;font-weight:600;border-radius:var(--radius-pill);font-family:inherit;transition:.12s}
 .trend-seg button.on{background:var(--blue);color:#fff}
-.trend-seg button:not(.on):hover{background:var(--blue-lt);color:var(--dark)}
+.trend-seg button:not(.on):hover{color:var(--dark)}
 /* 想買標的的目標價輸入（晨報到價提醒用） */
 .wl-tp{width:92px;padding:4px 7px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;text-align:right;font-variant-numeric:tabular-nums;color:var(--dark);background:var(--white);outline:none}
 .wl-tp:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-lt)}
@@ -1271,9 +1269,8 @@ tr:hover td{background:var(--lifted,var(--bg))}
 
   <style>
     /* 組合配置多視圖切換（Part 1） */
-    .alloc-lens-seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--border);border-radius:var(--radius-pill);overflow:hidden;margin-bottom:10px}
-    .alloc-lens-seg button{padding:7px 13px;font-size:12px;border:none;border-right:1px solid var(--border);background:#fff;color:var(--mid);cursor:pointer;font-family:inherit}
-    .alloc-lens-seg button:last-child{border-right:none}
+    .alloc-lens-seg{display:inline-flex;flex-wrap:wrap;gap:2px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-pill);padding:4px;box-shadow:var(--shadow);margin-bottom:10px}
+    .alloc-lens-seg button{padding:6px 13px;font-size:12px;border:none;background:none;color:var(--mid);cursor:pointer;border-radius:var(--radius-pill);font-family:inherit;transition:.12s}
     .alloc-lens-seg button.on{background:var(--dark);color:#fff;font-weight:700}
     .alloc-catsub{margin:0 0 12px}
     .alloc-catsub-label{font-size:11px;color:var(--mid);margin-right:6px}
