@@ -4293,17 +4293,21 @@ async function runBosScreen() {
     if (DEMO_MODE) {
       await new Promise(r => setTimeout(r, 1000));
       const filtered = symbols.length ? DEMO_BOS.filter(d => symbols.includes(d.symbol)) : DEMO_BOS;
-      _bosResults = filtered; _bosRenderGrid();
-      count.textContent = `${filtered.length} 支 · 總分 ≥7 才投資`;
+      const keep = _bosResults.filter(r => _bosPins.has(r.symbol) && !filtered.some(n => n.symbol === r.symbol)); // 釘選常駐：保留不在本次結果的釘選卡
+      _bosResults = [...filtered, ...keep]; _bosRenderGrid();
+      count.textContent = `${filtered.length} 支 · 總分 ≥7 才投資` + (keep.length ? `（+${keep.length} 已釘選）` : '');
     } else {
       const sym_param = symbols.length ? `?symbols=${symbols.join(',')}` : '';
       const data = await api(`/api/screener/bos${sym_param}`);
       if (!data || !data.results) throw new Error('No results');
-      count.textContent = `${data.results.length} 支 · 總分 ≥7 才投資` + _staleSuffix(data);
       if (data.results.length === 0) {
-        _bosResults = []; grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--light)">沒有找到結果，請輸入有效的股票代號</div>';
+        const keep = _bosResults.filter(r => _bosPins.has(r.symbol)); // 釘選常駐：查無新結果也保留釘選卡
+        if (keep.length) { _bosResults = keep; _bosRenderGrid(); count.textContent = `${keep.length} 支（已釘選）· 查無新結果` + _staleSuffix(data); }
+        else { _bosResults = []; count.textContent = '0 支'; grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--light)">沒有找到結果，請輸入有效的股票代號</div>'; }
       } else {
-        _bosResults = data.results; _bosRenderGrid();
+        const keep = _bosResults.filter(r => _bosPins.has(r.symbol) && !data.results.some(n => n.symbol === r.symbol)); // 釘選常駐：保留不在本次結果的釘選卡
+        _bosResults = [...data.results, ...keep]; _bosRenderGrid();
+        count.textContent = `${data.results.length} 支 · 總分 ≥7 才投資` + (keep.length ? `（+${keep.length} 已釘選）` : '') + _staleSuffix(data);
       }
     }
   } catch(e) {
@@ -4551,12 +4555,15 @@ async function runDgmScreen(){
   try {
     if (DEMO_MODE) {
       await new Promise(r => setTimeout(r, 700));
-      _dgmResults = DEMO_DGM.filter(r => !symbols.length || symbols.includes(r.symbol));
+      const _new = DEMO_DGM.filter(r => !symbols.length || symbols.includes(r.symbol));
+      const keep = _dgmResults.filter(r => _dgmPins.has(r.symbol) && !_new.some(n => n.symbol === r.symbol)); // 釘選常駐
+      _dgmResults = [..._new, ...keep];
     } else {
       const sym_param = symbols.length ? `?symbols=${symbols.join(',')}` : '';
       const data = await api(`/api/screener/dgm${sym_param}`);
       if (!data || !data.results) throw new Error('No results');
-      _dgmResults = data.results;
+      const keep = _dgmResults.filter(r => _dgmPins.has(r.symbol) && !data.results.some(n => n.symbol === r.symbol)); // 釘選常駐：保留不在本次結果的釘選卡
+      _dgmResults = [...data.results, ...keep];
     }
     _dgmRenderGrid();
   } catch(e){
