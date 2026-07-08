@@ -177,10 +177,10 @@ body{font-family:'Inter Tight',-apple-system,BlinkMacSystemFont,'PingFang TC','N
 .stats-section .stats-grid{margin-bottom:0}
 .stats-section-label{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:11px;padding:5px 12px;border-radius:10px;background:var(--accent);color:var(--mid)}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin-bottom:20px}
-.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);transition:transform .16s ease,box-shadow .16s ease}
+.stat-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);transition:transform .16s ease,box-shadow .16s ease}
 .stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover)}
-/* 統計卡一律中性淨白邊（Mastercard 乾淨卡）；漲跌訊號改由數字色/膠囊表達，不再靠外框，全站卡片一致 */
-.stat-card.tone-gain,.stat-card.tone-loss,.stat-card.tone-neutral{border-color:var(--border)}
+/* 統計卡彩色外框依漲跌（賺→綠框、賠→紅框、中性→灰框），全站由 applyStatTones 一致套用 */
+.stat-card.tone-gain{border-color:var(--green)}.stat-card.tone-loss{border-color:var(--red)}.stat-card.tone-neutral{border-color:var(--border)}
 .stat-label{font-size:10px;color:var(--mid);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
 .stat-value{font-size:24px;font-weight:700;color:var(--dark);letter-spacing:-.6px;line-height:1;font-family:var(--mono);font-variant-numeric:tabular-nums}
 .stat-change{font-size:12px;font-weight:500;margin-top:8px;display:flex;align-items:center;gap:4px}
