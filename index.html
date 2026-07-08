@@ -12,7 +12,7 @@
   --blue:#141413; --blue-lt:#ece7e1; --dark:#141413; --mid:#696969;
   --light:#9a9691; --border:#e4e0dc; --bg:#f3f0ee; --white:#FFFFFF;
   --green:#1f7a54; --green-lt:#e4f1ea; --red:#c0392b; --red-lt:#f7e9e6;
-  --amber:#cf4500; --amber-lt:#fbe9dd; --purple:#7a6aa0; --purple-lt:#eceaf2;
+  --amber:#cf4500; --amber-lt:#fbe9dd; --purple:#8f6f86; --purple-lt:#f0e9ee;
   --radius:26px; --radius-pill:9999px;
   --mono:'Geist Mono','SF Mono',ui-monospace,'SFMono-Regular','Menlo',monospace;
   /* 下列變數原本只在 coinbase/revolut/wise 變體檔定義，但共用 CSS
@@ -281,7 +281,7 @@ tr:hover td{background:var(--bg)}
 .tf-btn.active{background:var(--blue-lt);color:var(--blue)}
 
 /* INSIGHT */
-.insight-box{background:#eef2f9;border:1px solid #d3dcee;border-radius:var(--radius);padding:14px 18px;margin-bottom:16px}
+.insight-box{background:#faf4ee;border:1px solid #ece1d4;border-radius:var(--radius);padding:14px 18px;margin-bottom:16px}
 .insight-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .insight-title{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.05em}
 .insight-text{font-size:13px;color:var(--dark);line-height:1.65}
@@ -333,7 +333,7 @@ tr:hover td{background:var(--bg)}
 .goal-title{font-size:13px;font-weight:700;color:var(--dark)}
 .goal-progress-wrap{margin-bottom:10px}
 .goal-progress-bar{height:10px;background:var(--border);border-radius:6px;overflow:hidden;margin-bottom:6px}
-.goal-progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--blue),#5f8bcf);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.goal-progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--green),#3fa876);transition:width .6s cubic-bezier(.4,0,.2,1)}
 .goal-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--mid)}
 .goal-set-row{display:flex;gap:8px;margin-top:10px}
 .goal-input{flex:1;height:34px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;font-family:'Inter Tight',-apple-system,sans-serif;outline:none;color:var(--dark)}
@@ -364,7 +364,7 @@ tr:hover td{background:var(--bg)}
 .loading-overlay{position:absolute;inset:0;background:rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center;border-radius:var(--radius);z-index:10;gap:8px;font-size:13px;color:var(--mid)}
 
 /* SETUP MODAL */
-.modal-backdrop{position:fixed;inset:0;background:rgba(17,24,39,.5);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(20,20,19,.5);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .modal{background:var(--white);border-radius:14px;padding:32px;width:480px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .modal-title{font-size:18px;font-weight:700;letter-spacing:-.4px;margin-bottom:6px}
 .modal-sub{font-size:13px;color:var(--mid);margin-bottom:24px;line-height:1.6}
@@ -382,7 +382,7 @@ tr:hover td{background:var(--bg)}
 .wl-seg button{border:none;background:var(--white);color:var(--mid);cursor:pointer;padding:5px 12px;font-size:12px;font-family:inherit;transition:.12s}
 .wl-seg button:first-child{border-right:1px solid var(--border)}
 .wl-seg button.on-watch{background:var(--mid);color:#fff;font-weight:600}
-.wl-seg button.on-buy{background:#7a6aa0;color:#fff;font-weight:700}
+.wl-seg button.on-buy{background:#8f6f86;color:#fff;font-weight:700}
 .wl-seg button:not(.on-watch):not(.on-buy):hover{background:var(--blue-lt);color:var(--dark)}
 /* 淨值走勢｜配置歷史 切換（Net Worth Trend 卡） */
 .trend-seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-pill);overflow:hidden;font-size:12.5px}
@@ -394,7 +394,7 @@ tr:hover td{background:var(--bg)}
 .wl-tp{width:92px;padding:4px 7px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;text-align:right;font-variant-numeric:tabular-nums;color:var(--dark);background:var(--white);outline:none}
 .wl-tp:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-lt)}
 .wl-tp::-webkit-outer-spin-button,.wl-tp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.wl-tag{display:inline-block;padding:1px 8px;border-radius:var(--radius-pill);font-size:11px;font-weight:700;background:#eceaf2;color:#7a6aa0;margin-left:6px;vertical-align:middle}
+.wl-tag{display:inline-block;padding:1px 8px;border-radius:var(--radius-pill);font-size:11px;font-weight:700;background:#f0e9ee;color:#8f6f86;margin-left:6px;vertical-align:middle}
 /* 隱藏 number input 的上下箭頭，維持乾淨外觀 */
 .sym-target-input::-webkit-outer-spin-button,.sym-target-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .sym-target-input{-moz-appearance:textfield}
@@ -562,18 +562,18 @@ tr:hover td{background:var(--bg)}
 .dgm-axis.ai{}
 .dgm-ah{display:flex;justify-content:space-between;align-items:center;padding:9px 13px}
 .dgm-axis.q .dgm-ah{background:var(--bsc-pos-bg)}
-.dgm-axis.t .dgm-ah{background:rgba(90,106,140,.10)}
-.dgm-axis.ai .dgm-ah{background:rgba(122,106,160,.12)}
+.dgm-axis.t .dgm-ah{background:rgba(125,116,104,.10)}
+.dgm-axis.ai .dgm-ah{background:rgba(143,111,134,.12)}
 .dgm-chip{font-size:11.5px;font-weight:700;color:#fff;padding:3px 11px;border-radius:var(--radius-pill)}
 .dgm-axis.q .dgm-chip{background:var(--bsc-seg-a)}
 .dgm-axis.t .dgm-chip{background:var(--bsc-seg-b)}
-.dgm-axis.ai .dgm-chip{background:#7a6aa0}
+.dgm-axis.ai .dgm-chip{background:#8f6f86}
 .dgm-chip .n{font-weight:500;opacity:.85;font-size:10px}
 .dgm-ascore{font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px}
 .dgm-abody{padding:1px 13px 5px}
 .dgm-banner{margin:0 20px 8px;padding:8px 12px;border-radius:9px;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px}
 .dgm-banner.fin{background:var(--bsc-pos-bg);color:var(--bsc-pos)}
-.dgm-banner.moat{background:rgba(122,106,160,.14);color:#7a6aa0}
+.dgm-banner.moat{background:rgba(143,111,134,.14);color:#8f6f86}
 .dgm-banner .cost{margin-left:auto;font-size:9.5px;font-weight:700;padding:1px 7px;border-radius:5px;background:var(--bsc-soft)}
 .dgm-ai-flag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:6px}
 .dgm-real{margin:14px 20px 0;padding:11px 14px;border:1px dashed var(--border);border-radius:11px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
@@ -673,7 +673,7 @@ tr:hover td{background:var(--bg)}
 .sb-sym{font-weight:800;font-family:'Geist Mono','SF Mono',monospace;color:var(--blue)}
 .sb-score{display:inline-block;min-width:30px;text-align:center;padding:1px 6px;border-radius:5px;font-weight:800;font-size:11px;background:var(--green-lt);color:var(--green)}
 .sb-pos{color:var(--green);font-weight:700}.sb-neg{color:var(--red);font-weight:700}.sb-mut{color:var(--mid)}
-.sb-foot{padding:12px 16px;font-size:10px;color:var(--mid);line-height:1.7;background:#FCFCFD;border-radius:0 0 var(--radius) var(--radius)}
+.sb-foot{padding:12px 16px;font-size:10px;color:var(--mid);line-height:1.7;background:#f6f4f0;border-radius:0 0 var(--radius) var(--radius)}
 .sb-foot b{color:var(--dark)}
 .sb-empty{padding:30px 16px;text-align:center;color:var(--mid);font-size:13px;line-height:1.7}
 /* ── 績效對比大盤 ─────────────────────────────────────────── */
@@ -690,7 +690,7 @@ tr:hover td{background:var(--bg)}
 .rebal-table td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle}
 .rebal-table tr:last-child td{border-bottom:none}
 .target-input{width:60px;height:28px;border:1px solid var(--border);border-radius:3px;font-size:12px;text-align:center;padding:0 4px;color:var(--text);background:var(--white)}
-.target-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(0,115,187,.12)}
+.target-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(20,20,19,.12)}
 
 /* ── DGM TABLE ──────────────────────────── */
 .dgm-score-wrap{display:flex;align-items:center;gap:6px}
@@ -1609,7 +1609,7 @@ tr:hover td{background:var(--bg)}
       .rb2-add input{font:inherit;font-size:12px;border:1px solid #e4e0dc;border-radius:8px;padding:7px 10px;background:#fff;color:#141413;outline:none;width:170px;text-transform:uppercase}
       .rb2-add input:focus{border-color:#141413}
       .rb2-add button{height:32px;font-size:12px;padding:0 14px;background:#fff;color:#141413;border:1px solid #141413;border-radius:8px;font-weight:700;cursor:pointer}
-      .rb2-card{background:#fff;border:1px solid #e4e0dc;border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(42,46,53,.04)}
+      .rb2-card{background:#fff;border:1px solid #e4e0dc;border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(20,20,19,.04)}
       .rb2-scroll{overflow-x:auto}
       .rb2-tbl{border-collapse:collapse;width:100%;min-width:720px;font-size:13.5px}
       .rb2-tbl thead th{background:#141413;color:#ece7e1;font-weight:600;text-align:right;padding:11px 12px;font-size:12px;white-space:nowrap}
@@ -2151,7 +2151,7 @@ function renderHoldings(holdings) {
 
 function renderSectorChart(allocation) {
   const labels=Object.keys(allocation), values=Object.values(allocation);
-  const colors=['#141413','#1f7a54','#7a6aa0','#cf4500','#c0392b','#4f8a8a'];
+  const colors=['#141413','#1f7a54','#8f6f86','#cf4500','#c0392b','#bb8a45'];
   const ctx=document.getElementById('sectorChart').getContext('2d');
   if(secChart) secChart.destroy();
   secChart=new Chart(ctx,{type:'doughnut',data:{labels:labels.map((k,i)=>`${k} ${values[i]}%`),datasets:[{data:values,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8,color:'#696969'}}}}});
@@ -2186,7 +2186,7 @@ async function renderNetWorthChart(period) {
 
   document.getElementById('trendSub').textContent=`${dates[0]} — ${dates[dates.length-1]}`;
   const _grad=ctx.createLinearGradient(0,0,0,(ctx.canvas&&ctx.canvas.height)||260);
-  _grad.addColorStop(0,'rgba(0,111,255,0.30)'); _grad.addColorStop(1,'rgba(0,111,255,0)');
+  _grad.addColorStop(0,'rgba(207,69,0,0.30)'); _grad.addColorStop(1,'rgba(207,69,0,0)');
   const _lastIdx=prices.length-1;
   nwChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'Portfolio',data:prices,borderColor:'#141413',backgroundColor:_grad,fill:true,tension:0.4,borderWidth:2.4,pointRadius:prices.map((_,i)=>i===_lastIdx?4.5:0),pointHoverRadius:5,pointBackgroundColor:'#141413',pointBorderColor:'#fff',pointBorderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1100,easing:'easeOutQuart'},interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},crosshair:true,tooltip:{displayColors:false,callbacks:{label:c=>'$'+Math.round(c.raw).toLocaleString('en')}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:7,font:{size:11},color:'#9a9691'}},y:{grid:{color:'#ece7e1'},ticks:{callback:v=>v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'K':'$'+Math.round(v),font:{size:11},color:'#9a9691'}}}}});
   document.getElementById('trendLoading').style.display='none';
@@ -2273,7 +2273,7 @@ function _drawAllocSVG(data){
   // 網格 + y 標籤
   [0,25,50,75,100].forEach(g=>{
     const y=Y(g);
-    svg.appendChild(el('line',{x1:P.l,y1:y,x2:P.l+plotW,y2:y,stroke:'#eef1f5','stroke-width':1}));
+    svg.appendChild(el('line',{x1:P.l,y1:y,x2:P.l+plotW,y2:y,stroke:'#efeae4','stroke-width':1}));
     const t=el('text',{x:P.l-8,y:y+4,'text-anchor':'end','font-size':11,fill:'#9a9691'}); t.textContent=g+'%'; svg.appendChild(t);
   });
   // 每層堆疊面積
@@ -2329,7 +2329,7 @@ function renderAiInsight(summary) {
 
 // ── PORTFOLIO PAGE ────────────────────────────────────────────
 let allocChart, allocChartTW;
-const ALLOC_COLORS=['#141413','#7a6aa0','#1f7a54','#cf4500','#c0392b','#4f8a8a','#b5623a','#7d8a45','#9a9691'];
+const ALLOC_COLORS=['#141413','#8f6f86','#1f7a54','#cf4500','#c0392b','#bb8a45','#b5623a','#7d8a45','#9a9691'];
 
 // 渲染單一幣別群組的配置圖 + 持倉明細列表，回傳 Chart 實例供下次刷新時 destroy
 function renderAllocGroup(canvasId, listId, holdings, total, prevChart) {
@@ -2807,13 +2807,13 @@ async function loadTechnical(symbol, period) {
   }
   const ctx=document.getElementById('priceChart').getContext('2d');
   if(pChart) pChart.destroy();
-  pChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'股價',data:prices,borderColor:'#141413',backgroundColor:'rgba(0,111,255,0.05)',fill:true,tension:0.3,pointRadius:(c)=>c.dataIndex===prices.length-1?4:0,pointBackgroundColor:'#141413',pointBorderColor:'#fff',pointBorderWidth:1.5,borderWidth:2},{label:'20日均線',data:sma20,borderColor:'#cf4500',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},{label:'50日均線',data:sma50,borderColor:'#c0392b',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#696969'}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${cs}${c.raw?.toFixed(2)??'—'}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9a9691'}},y:{grid:{color:'#ece7e1'},ticks:{callback:v=>cs+v.toFixed(0),font:{size:11},color:'#9a9691'}}}}});
+  pChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'股價',data:prices,borderColor:'#141413',backgroundColor:'rgba(207,69,0,0.05)',fill:true,tension:0.3,pointRadius:(c)=>c.dataIndex===prices.length-1?4:0,pointBackgroundColor:'#141413',pointBorderColor:'#fff',pointBorderWidth:1.5,borderWidth:2},{label:'20日均線',data:sma20,borderColor:'#cf4500',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},{label:'50日均線',data:sma50,borderColor:'#c0392b',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#696969'}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${cs}${c.raw?.toFixed(2)??'—'}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9a9691'}},y:{grid:{color:'#ece7e1'},ticks:{callback:v=>cs+v.toFixed(0),font:{size:11},color:'#9a9691'}}}}});
 
   const ctx2=document.getElementById('rsiChart').getContext('2d');
   if(rChart) rChart.destroy();
-  rChart=new Chart(ctx2,{type:'line',data:{labels:dates,datasets:[{label:'RSI',data:rsi,borderColor:'#141413',fill:false,tension:0.3,pointRadius:0,borderWidth:2},{label:'超買線(70)',data:Array(dates.length).fill(70),borderColor:'rgba(220,38,38,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1},{label:'超賣線(30)',data:Array(dates.length).fill(30),borderColor:'rgba(22,163,74,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#696969'}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9a9691'}},y:{min:0,max:100,grid:{color:'#ece7e1'},ticks:{font:{size:11},color:'#9a9691'}}}}});
+  rChart=new Chart(ctx2,{type:'line',data:{labels:dates,datasets:[{label:'RSI',data:rsi,borderColor:'#141413',fill:false,tension:0.3,pointRadius:0,borderWidth:2},{label:'超買線(70)',data:Array(dates.length).fill(70),borderColor:'rgba(192,57,43,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1},{label:'超賣線(30)',data:Array(dates.length).fill(30),borderColor:'rgba(31,122,84,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#696969'}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9a9691'}},y:{min:0,max:100,grid:{color:'#ece7e1'},ticks:{font:{size:11},color:'#9a9691'}}}}});
 
-  const volColors=prices.map((p,i)=>i===0?'rgba(0,111,255,.6)':p>=prices[i-1]?'rgba(22,163,74,.65)':'rgba(220,38,38,.65)');
+  const volColors=prices.map((p,i)=>i===0?'rgba(207,69,0,.6)':p>=prices[i-1]?'rgba(31,122,84,.65)':'rgba(192,57,43,.65)');
   const ctx3=document.getElementById('volumeChart').getContext('2d');
   if(vChart) vChart.destroy();
   vChart=new Chart(ctx3,{type:'bar',data:{labels:dates,datasets:[{label:'Volume',data:volumes,backgroundColor:volColors}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9a9691'}},y:{grid:{color:'#ece7e1'},ticks:{callback:v=>(v/1e6).toFixed(0)+'M',font:{size:11},color:'#9a9691'}}}}});
@@ -2898,7 +2898,7 @@ async function loadTechnical(symbol, period) {
     sigTitle='短期均線在中期均線之上';
     sigText=`20日均線在50日均線之上（黃金交叉），代表短期走勢比中期強。RSI ${lastRSI?.toFixed(0)} 在正常範圍，沒有明顯超買。`;
   } else {
-    sigColor='var(--amber)'; sigBg='#FFFBEB';
+    sigColor='var(--amber)'; sigBg='#fbe9dd';
     sigTitle='短期均線在中期均線之下';
     sigText=`目前均線呈死亡交叉（短期弱於中期），RSI ${lastRSI?.toFixed(0)} 在正常範圍。`;
   }
@@ -3312,7 +3312,7 @@ function renderPerStockRebalance(holdings){
           : `<span class="tag tag-red" style="font-size:10px">減碼 ~ ${mktMoney(mkt, Math.abs(deltaNative), 0)}</span>`;
       } else actHtml = `<span style="color:var(--mid);font-size:11px">均衡</span>`;
     }
-    return `<tr${h._wish?' style="background:#f4f2f7"':''}>
+    return `<tr${h._wish?' style="background:#f3edf0"':''}>
       <td><strong>${sym}</strong>${wishTag}<div style="font-size:10px;color:var(--mid)">${h.name||''}</div></td>
       <td>${h._wish?'<span style="color:var(--mid)">0.0%</span>':curPct.toFixed(1)+'%'}</td>
       <td><input class="sym-target-input" data-sym="${sym}" type="number" placeholder="%" min="0" max="100" step="1" value="${tgt??''}"></td>
@@ -3350,7 +3350,7 @@ function renderPerStockRebalance(holdings){
   el.innerHTML = `
   <div class="card mb-20">
     <div class="card-header">
-      <div><div class="card-title">目標配置（按個股・跨市場合併）</div><div class="card-sub">單一目標來源；市場 / 大類由此自動換算。基準 TWD，建議金額用原幣。<span style="color:#7a6aa0">紫列＝想買</span>（觀察清單標記、未持有）</div></div>
+      <div><div class="card-title">目標配置（按個股・跨市場合併）</div><div class="card-sub">單一目標來源；市場 / 大類由此自動換算。基準 TWD，建議金額用原幣。<span style="color:#8f6f86">紫列＝想買</span>（觀察清單標記、未持有）</div></div>
       <button class="btn btn-primary" style="height:30px;font-size:11px" onclick="saveSymbolTargets()">儲存目標</button>
     </div>
     <div class="card-body" style="padding:0">
@@ -4359,13 +4359,13 @@ function _dgmAxis(cls, chip, sub, total, max, items, accent) {
 
 const _DGM_RECBG = {
   '建議購買':'background:var(--bsc-pos-bg);color:var(--bsc-pos)',
-  '潛力股':'background:rgba(90,106,140,.16);color:var(--bsc-seg-b)',
+  '潛力股':'background:rgba(125,116,104,.16);color:var(--bsc-seg-b)',
   '繼續觀察':'background:var(--bsc-soft);color:var(--mid)',
 };
 
 function renderDgmScorecard(s) {
   _screenerDataStore[s.symbol] = { source: 'DGM', data: s };
-  const qC = 'var(--bsc-seg-a)', tC = 'var(--bsc-seg-b)', aiC = '#7a6aa0';
+  const qC = 'var(--bsc-seg-a)', tC = 'var(--bsc-seg-b)', aiC = '#8f6f86';
   const mkt = (s.market || '').toUpperCase();
   const fb = s.freebirds || {items:[],total:0,max:13}, tm = s.timing || {items:[],total:0,max:10};
   const nameEsc = (s.name || s.symbol).replace(/'/g,"\\'").replace(/"/g,'\\"');
@@ -4395,7 +4395,7 @@ function renderDgmScorecard(s) {
   let axisAI;
   if (s.ai) {
     const ai = s.ai;
-    const flag = (lab, val, reason) => `<div class="bsc-row"><div class="bsc-k"><b>${lab}</b><span class="bsc-why">${_esc(reason||'')}</span></div><span class="dgm-ai-flag" style="background:rgba(122,106,160,.14);color:${aiC}">${val||'—'}</span></div>`;
+    const flag = (lab, val, reason) => `<div class="bsc-row"><div class="bsc-k"><b>${lab}</b><span class="bsc-why">${_esc(reason||'')}</span></div><span class="dgm-ai-flag" style="background:rgba(143,111,134,.14);color:${aiC}">${val||'—'}</span></div>`;
     axisAI = `<div class="dgm-axis ai"><div class="dgm-ah"><span class="dgm-chip">軸三 <span class="n">AI 定性 · Claude</span></span><span class="dgm-ascore" style="color:${aiC};font-size:10px;font-weight:600">${s.analyzed_at?String(s.analyzed_at).slice(0,10):''}</span></div><div class="dgm-abody">
       ${flag('股息安全性 · 砍息風險', ai.cut_risk?ai.cut_risk+'風險':'', ai.cut_risk_reason)}
       ${flag('護城河', ai.moat_strength, ai.moat_reason)}
@@ -5248,7 +5248,7 @@ function runCalculator() {
     data:{
       labels,
       datasets:[
-        {label:'帳戶價值',data:values,borderColor:'#141413',backgroundColor:'rgba(0,111,255,0.08)',fill:true,tension:0.4,pointRadius:3,borderWidth:2},
+        {label:'帳戶價值',data:values,borderColor:'#141413',backgroundColor:'rgba(207,69,0,0.08)',fill:true,tension:0.4,pointRadius:3,borderWidth:2},
         {label:'總投入',  data:invested,borderColor:'#9a9691',backgroundColor:'transparent',fill:false,tension:0.4,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},
       ]
     },
@@ -5389,8 +5389,8 @@ async function runBosDiscover() {
 // ── BOS 分領域 AI 推薦 ─────────────────────────────────────────
 
 const SECTOR_COLORS = {
-  tech:'#7a6aa0', healthcare:'#1f7a54', finance:'#141413',
-  food:'#cf4500', defense:'#6f7280', energy:'#c0392b',
+  tech:'#8f6f86', healthcare:'#1f7a54', finance:'#141413',
+  food:'#cf4500', defense:'#6e6862', energy:'#c0392b',
 };
 
 const DEMO_BOS_SECTOR_DISCOVER = [
@@ -5453,7 +5453,7 @@ function openBosDetail(symbol) {
   const tags = (arr, cls) => (arr && arr.length)
     ? arr.map(x => `<span class="tag ${cls}" style="margin:2px 4px 2px 0;display:inline-block">${x}</span>`).join('') : '';
   const row = (k, v) => (v == null || v === '') ? '' :
-    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F0F1F3"><span style="color:var(--mid)">${k}</span><span style="font-weight:600">${v}</span></div>`;
+    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e8e3dd"><span style="color:var(--mid)">${k}</span><span style="font-weight:600">${v}</span></div>`;
   const bd = document.createElement('div');
   bd.className = 'modal-backdrop'; bd.style.display = 'flex';
   bd.onclick = (e) => { if (e.target === bd) bd.remove(); };
@@ -5654,10 +5654,10 @@ applyMobileTableLabels();
         if(!act.length) return;
         const {ctx,chartArea}=chart, x=act[0].element.x, y=act[0].element.y;
         ctx.save();
-        ctx.strokeStyle='rgba(0,111,255,0.35)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+        ctx.strokeStyle='rgba(207,69,0,0.35)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
         ctx.beginPath(); ctx.moveTo(x,chartArea.top); ctx.lineTo(x,chartArea.bottom); ctx.stroke();
         ctx.setLineDash([]);
-        ctx.fillStyle='rgba(0,111,255,0.16)'; ctx.beginPath(); ctx.arc(x,y,9,0,6.2832); ctx.fill();
+        ctx.fillStyle='rgba(207,69,0,0.16)'; ctx.beginPath(); ctx.arc(x,y,9,0,6.2832); ctx.fill();
         ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x,y,4.5,0,6.2832); ctx.fill();
         ctx.fillStyle='#141413'; ctx.beginPath(); ctx.arc(x,y,3,0,6.2832); ctx.fill();
         ctx.restore();
