@@ -13,7 +13,7 @@
   --light:#9a9691; --border:#e4e0dc; --bg:#f3f0ee; --white:#FFFFFF;
   --green:#1f7a54; --green-lt:#e4f1ea; --red:#c0392b; --red-lt:#f7e9e6;
   --amber:#cf4500; --amber-lt:#fbe9dd; --purple:#8f6f86; --purple-lt:#f0e9ee;
-  --radius:26px; --radius-pill:9999px;
+  --radius:28px; --radius-pill:9999px; --lifted:#fcfbfa;
   --mono:'Geist Mono','SF Mono',ui-monospace,'SFMono-Regular','Menlo',monospace;
   /* 下列變數原本只在 coinbase/revolut/wise 變體檔定義，但共用 CSS
      （.sector-card-hdr / .perf-compare / .target-input 等）有引用，
@@ -182,7 +182,7 @@ body{font-family:'Inter Tight',-apple-system,BlinkMacSystemFont,'PingFang TC','N
 /* 統計卡＝乾淨白卡（比照 Mastercard 樣板，不上彩色外框）；漲跌由數字色表達 */
 .stat-card.tone-gain,.stat-card.tone-loss,.stat-card.tone-neutral{border-color:var(--border)}
 .stat-label{font-size:11px;color:var(--mid);font-weight:700;margin-bottom:14px;text-transform:uppercase;letter-spacing:.06em}
-.stat-value{font-size:28px;font-weight:600;color:var(--dark);letter-spacing:-.8px;line-height:1;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.stat-value{font-size:29px;font-weight:600;color:var(--dark);letter-spacing:-.9px;line-height:1;font-family:var(--mono);font-variant-numeric:tabular-nums}
 .stat-change{font-size:12px;font-weight:500;margin-top:8px;display:flex;align-items:center;gap:4px}
 .stat-change.up{color:var(--green)}.stat-change.down{color:var(--red)}
 .stat-sub{font-size:11px;color:var(--light);margin-top:2px}
@@ -216,7 +216,7 @@ th{text-align:left;padding:9px 14px;background:var(--bg);border-bottom:1px solid
 th:hover{color:var(--blue)}
 td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:var(--bg)}
+tr:hover td{background:var(--lifted,var(--bg))}
 .ticker{font-weight:700;color:var(--blue);font-family:'Geist Mono','Geist Mono','SF Mono',monospace;font-size:13px}
 .co-name{font-weight:500;font-size:13px}.co-sector{font-size:11px;color:var(--light)}
 
@@ -281,11 +281,12 @@ tr:hover td{background:var(--bg)}
 .tf-btn.active{background:var(--blue-lt);color:var(--blue)}
 
 /* INSIGHT */
-.insight-box{background:#faf4ee;border:1px solid #ece1d4;border-radius:var(--radius);padding:14px 18px;margin-bottom:16px}
-.insight-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.insight-title{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.05em}
-.insight-text{font-size:13px;color:var(--dark);line-height:1.65}
-.insight-text strong{color:var(--blue);font-weight:600}
+.insight-box{position:relative;overflow:hidden;background:#141413;color:#fff;border-radius:var(--radius);padding:24px;margin-bottom:16px}
+.insight-box::after{content:"";position:absolute;right:-40px;bottom:-40px;width:150px;height:150px;border-radius:50%;background:#cf4500;opacity:.32;filter:blur(8px);pointer-events:none}
+.insight-header{display:flex;align-items:center;gap:8px;margin-bottom:13px;position:relative;z-index:1}
+.insight-title{font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.4px}
+.insight-text{font-size:14.5px;color:#e8e6e3;line-height:1.6;position:relative;z-index:1}
+.insight-text strong{color:#fff;font-weight:600}
 
 /* CARD TABS */
 .card-tabs{display:flex;padding:0 20px;border-bottom:1px solid var(--border)}
@@ -1113,9 +1114,9 @@ tr:hover td{background:var(--bg)}
 
     <div class="insight-box" id="aiInsight" style="display:none">
       <div class="insight-header">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5.5" x2="8" y2="8.5"/><circle cx="8" cy="11" r=".6" fill="var(--blue)" stroke="none"/></svg>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#f37338" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5.5" x2="8" y2="8.5"/><circle cx="8" cy="11" r=".6" fill="#f37338" stroke="none"/></svg>
         <span class="insight-title">AI Insight</span>
-        <span class="tag tag-gray" style="margin-left:auto;font-size:10px" id="insightDate"></span>
+        <span style="margin-left:auto;font-size:10px;font-weight:600;color:#e8e6e3;background:rgba(255,255,255,.1);padding:2px 9px;border-radius:9999px" id="insightDate"></span>
       </div>
       <div class="insight-text" id="insightText"></div>
     </div>
