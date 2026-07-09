@@ -4229,10 +4229,11 @@ function renderBosScorecard(s) {
     ${edItems}
   </div>`;
 
-  // 閘門淘汰：只到財報層
+  // 閘門淘汰：只到財報層（但給一顆「仍要分析」按鈕，讓使用者手動決定是否叫 Claude）
   if (s.gate_failed) {
     return `<div class="bsc" id="bsc-${s.symbol}">${top}${_bscComp(s)}${edfriSec}
       <div class="bsc-gatecut">財報 ${s.edfri.total} / 5 ＜ 3，體質未過閘門 → 淘汰，省下 Claude 分析</div>
+      <div class="bsc-confirm">仍想看 Claude 怎麼評護城河/風險？<button onclick="bosAnalyzeAnyway('${s.symbol}')">仍要用 Claude 分析</button></div>
       ${_bscFoot(s)}</div>`;
   }
   // 尚未做 Claude 分析
@@ -4291,7 +4292,11 @@ function renderBosScorecard(s) {
     ${methodRows}${gauge}
   </div>`;
 
-  return `<div class="bsc" id="bsc-${s.symbol}">${top}${_bscComp(s)}${stale}${edfriSec}${moatSec}${riskSec}${verdict}${valSec}${_bscFoot(s)}</div>`;
+  // 財報未過閘門、你手動要求仍分析 → 頂部留警示，避免弱財報股被誤當乾淨標的
+  const gateWarn = s.gate_overridden
+    ? `<div style="margin:2px 0 0;padding:7px 11px;background:var(--red-lt);color:var(--red);font-size:12px;font-weight:600;border-radius:8px">⚠ 財報未過閘門（${s.edfri?.total}/5 ＜ 3）· 此為你手動要求的分析例外</div>`
+    : '';
+  return `<div class="bsc" id="bsc-${s.symbol}">${top}${gateWarn}${_bscComp(s)}${stale}${edfriSec}${moatSec}${riskSec}${verdict}${valSec}${_bscFoot(s)}</div>`;
 }
 
 // 單卡就地替換（覆寫分類/主用法/核可、重算後）
@@ -4329,6 +4334,15 @@ async function bosRefresh(sym) {     // 財報重抓（免費，不叫 Claude）
     const d = await api(`/api/screener/bos/refresh?symbols=${sym}`, 'POST');
     if (d && d.results && d.results[0]) _bscReplace(sym, d.results[0]);
   } catch (e) { console.error(e); showToast('重抓失敗：' + e.message, 'error'); }
+  finally { const e2 = document.getElementById('bsc-' + sym); if (e2) e2.style.opacity = ''; }
+}
+async function bosAnalyzeAnyway(sym) {   // 未過閘門仍手動分析（override_gate，會花 Claude）
+  const el = document.getElementById('bsc-' + sym);
+  if (el) el.style.opacity = '.5';
+  try {
+    const d = await api(`/api/screener/bos/analyze?symbols=${sym}&override_gate=true`, 'POST');
+    if (d && d.results && d.results[0]) _bscReplace(sym, d.results[0]);
+  } catch (e) { console.error(e); showToast('分析失敗：' + e.message, 'error'); }
   finally { const e2 = document.getElementById('bsc-' + sym); if (e2) e2.style.opacity = ''; }
 }
 
