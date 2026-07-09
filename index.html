@@ -3422,8 +3422,20 @@ function rb2Set(field, val){
   renderPerStockRebalance(_rebalHoldings);
 }
 function rb2SetPct(sym, val){ if(_rb2){ _rb2.pct[sym] = Math.max(0, +val||0); renderPerStockRebalance(_rebalHoldings); } }
+// 存檔前把畫面上最新輸入值（含尚未 blur/change 的那格）同步回 _rb2。
+// 為什麼要：儲存鈕改用 onmousedown 觸發（見渲染處），會在輸入框 blur→change 之前就跑，
+// 此時 onchange 還沒把值寫進 _rb2，必須直接讀 DOM 才拿得到使用者剛打的數字。
+function rb2SyncFromDom(){
+  if(!_rb2) return;
+  const b = document.querySelector('.rb2-budget'); if(b) _rb2.budget = Math.max(0, +b.value||0);
+  const sp = document.querySelectorAll('.rb2-split');
+  if(sp[0]) _rb2.split.us = Math.max(0, +sp[0].value||0);
+  if(sp[1]) _rb2.split.tw = Math.max(0, +sp[1].value||0);
+  document.querySelectorAll('.rb2-pct-in').forEach(inp=>{ const s=inp.dataset.sym; if(s) _rb2.pct[s]=Math.max(0, +inp.value||0); });
+}
 function rb2Save(){
   if(!_rb2) return;
+  rb2SyncFromDom();   // 修：先抓畫面上最新輸入（onmousedown 觸發時 change 可能還沒 fire）
   localStorage.setItem('rb2Config', JSON.stringify({budget:_rb2.budget, split:_rb2.split, pct:_rb2.pct}));
   // 每檔佔「總」% = split[mkt]% × 組內pct% / 100 → targetAllocSymbols（晨報反推沿用）
   const t = {};
@@ -3431,6 +3443,7 @@ function rb2Save(){
   localStorage.setItem('targetAllocSymbols', JSON.stringify(t));
   pushDerivedSectorTargets(_rebalHoldings, t);   // 反推各市場板塊→後端（晨報偏移續用）
   showToast('目標配置已儲存');
+  setTimeout(()=>{ if(_rb2) renderPerStockRebalance(_rebalHoldings); }, 0);   // 存完再刷新顯示
 }
 // 新增「還沒買的目標股」＝寫進觀察清單並標 want_buy=true → 重載後以想買列出現在兩層表
 async function rb2AddTarget(){
@@ -3499,7 +3512,7 @@ function renderPerStockRebalance(holdings){
       else pill=`<span class="rb2-pill over">超 NT$${nf(-gap)}</span>`;
       rowsHtml+=`<tr>
         <td class="rb2-name">${e.sym}${e.wish?' <span class="wl-tag">想買</span>':''} <small>${e.name}</small></td>
-        <td><input class="rb2-pct-in" type="number" min="0" value="${p}" onchange="rb2SetPct('${e.sym}',this.value)"><span style="color:#9a9691;font-size:11px"> %</span></td>
+        <td><input class="rb2-pct-in" data-sym="${e.sym}" type="number" min="0" value="${p}" onchange="rb2SetPct('${e.sym}',this.value)"><span style="color:#9a9691;font-size:11px"> %</span></td>
         <td>${rb2Money(target,e.mkt,fx)}</td>
         <td>${e.curTwd? rb2Money(e.curTwd,e.mkt,fx) : '<span style="color:#9a9691">—</span>'}</td>
         <td>${pill}</td>
@@ -3516,7 +3529,7 @@ function renderPerStockRebalance(holdings){
       <div class="rb2-fld"><label>國際股票 %</label><input class="rb2-split" type="number" value="${su}" onchange="rb2Set('su',this.value)"></div>
       <div class="rb2-fld"><label>台灣股票 %</label><input class="rb2-split" type="number" value="${sl}" onchange="rb2Set('sl',this.value)"></div>
       <div class="rb2-fld"><label>頂層合計</label><span class="rb2-sum ${sumCls}">${splitSum}%</span></div>
-      <div style="margin-left:auto;align-self:center"><button class="rb2-save" onclick="rb2Save()">儲存目標</button></div>
+      <div style="margin-left:auto;align-self:center"><button class="rb2-save" onmousedown="rb2Save()">儲存目標</button></div>
     </div>
     <div class="rb2-add">
       <input id="rb2AddInput" type="text" placeholder="代號（如 AMD、2454）" onkeydown="if(event.key==='Enter')rb2AddTarget()">
