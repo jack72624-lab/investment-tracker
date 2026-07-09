@@ -3002,39 +3002,138 @@ function setPerfTF(btn, tf) {
   loadPerformanceVsBenchmark(tf);
 }
 
-function _perfBlock(portName, benchName, portRet, benchRet, dates) {
+// 點陣列 → 平滑曲線的貝茲片段（Catmull-Rom→cubic Bézier，不含開頭 M）。tension<1 減少尖峰過衝。
+function _smoothSegs(P, t = 0.85) {
+  let d = '';
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[i-1] || P[i], p1 = P[i], p2 = P[i+1], p3 = P[i+2] || P[i+1];
+    const c1x = p1[0] + (p2[0]-p0[0])/6*t, c1y = p1[1] + (p2[1]-p0[1])/6*t;
+    const c2x = p2[0] - (p3[0]-p1[0])/6*t, c2y = p2[1] - (p3[1]-p1[1])/6*t;
+    d += `C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+
+// 折線圖（實為平滑曲線）：兩條累積報酬序列＋中間 Alpha 面積。回傳 SVG 字串。
+// 深線=我的組合、灰線=大盤、陰影=兩線之間(領先綠/落後紅，隨主題)。曲線與面積邊界共用同一組貝茲，才對齊。
+// preserveAspectRatio="none"：固定高度填滿寬度；vector-effect="non-scaling-stroke"：線寬恆定不隨寬度變粗。
+function _perfLineChart(portSeries, benchSeries) {
+  const N = portSeries.length;
+  const W = 320, H = 160, padL = 6, padR = 6, padT = 12, padB = 12;
+  const all = portSeries.concat(benchSeries).concat([0]);
+  let vmin = Math.min(...all), vmax = Math.max(...all);
+  if (vmax - vmin < 1e-6) { vmax += 1; vmin -= 1; }
+  const pv = (vmax - vmin) * 0.10; vmax += pv; vmin -= pv;
+  const X = i => padL + (N === 1 ? 0 : i * (W - padL - padR) / (N - 1));
+  const Y = v => padT + (vmax - v) / (vmax - vmin) * (H - padT - padB);
+  const M = p => `M${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+  const portPts  = portSeries.map((v, i) => [X(i), Y(v)]);
+  const benchPts = benchSeries.map((v, i) => [X(i), Y(v)]);
+  const benchD = M(benchPts[0]) + _smoothSegs(benchPts);
+  const portD  = M(portPts[0])  + _smoothSegs(portPts);
+  const portRev = portPts.slice().reverse();
+  // Alpha 面積：bench 平滑向前 → 接到 port 末點 → port 平滑反向 → 閉合
+  const areaD = benchD + ` L${portRev[0][0].toFixed(1)},${portRev[0][1].toFixed(1)}` + _smoothSegs(portRev) + ' Z';
+  const alpha = portSeries[N - 1] - benchSeries[N - 1];
+  const areaFill = alpha >= 0 ? 'var(--green-lt)' : 'var(--red-lt)';
+  const y0 = Y(0).toFixed(1);
+  const ve = 'vector-effect="non-scaling-stroke"';
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:clamp(180px,23vw,240px);display:block" role="img" aria-label="累積報酬曲線圖">
+    <line x1="0" y1="${y0}" x2="${W}" y2="${y0}" stroke="var(--mid)" stroke-opacity="0.3" stroke-dasharray="3 4" ${ve}/>
+    <path d="${areaD}" fill="${areaFill}"/>
+    <path d="${benchD}" fill="none" stroke="var(--mid)" stroke-width="1.5" stroke-opacity="0.85" stroke-linejoin="round" stroke-linecap="round" ${ve}/>
+    <path d="${portD}" fill="none" stroke="var(--dark)" stroke-width="1.9" stroke-opacity="0.82" stroke-linejoin="round" stroke-linecap="round" ${ve}/>
+  </svg>`;
+}
+
+// portData/benchData 可為 Array（累積報酬序列→畫折線）或 Number（終點純量→退回舊三行數字，DEMO/序列不足時用）。
+function _perfBlock(portName, benchName, portData, benchData, dates) {
+  const isSeries = Array.isArray(portData) && Array.isArray(benchData)
+    && portData.length > 1 && benchData.length === portData.length;
+  const portRet  = isSeries ? portData[portData.length - 1]  : portData;
+  const benchRet = isSeries ? benchData[benchData.length - 1] : benchData;
   if (portRet == null || benchRet == null)
     return `<div style="padding:10px 4px;color:var(--mid);font-size:12px">${portName}：資料不足（此市場持倉歷史不足或無大盤資料）</div>`;
   const alpha = portRet - benchRet;
   const c = v => v>=0?'var(--green)':'var(--red)';
   const sg = v => (v>=0?'+':'')+v.toFixed(2)+'%';
-  const row = (label, val, bg='') => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 11px;${bg}"><span style="color:var(--dark)">${label}</span><span style="font-size:18px;font-weight:800;color:${c(val)}">${sg(val)}</span></div>`;
   const rng = dates && dates.length ? `（${dates[0]} ~ ${dates[dates.length-1]}）` : '';
-  return `
-    <div style="border:1px solid #e4e0dc;border-radius:10px;overflow:hidden">
-      <div style="padding:8px 11px;background:#ece7e1;font-weight:700;font-size:13px">${portName} vs ${benchName}<span style="font-size:11px;color:var(--mid);font-weight:400">${rng}</span></div>
+  const header = `<div style="padding:8px 11px;background:#ece7e1;font-weight:700;font-size:13px">${portName} vs ${benchName}<span style="font-size:11px;color:var(--mid);font-weight:400">${rng}</span></div>`;
+  if (!isSeries) {
+    const row = (label, val, bg='') => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 11px;${bg}"><span style="color:var(--dark)">${label}</span><span style="font-size:18px;font-weight:800;color:${c(val)}">${sg(val)}</span></div>`;
+    return `<div style="border:1px solid #e4e0dc;border-radius:10px;overflow:hidden">${header}
       ${row('我的'+portName+'（時間加權）', portRet)}
       ${row(benchName, benchRet)}
-      ${row('超越大盤 Alpha（'+(alpha>=0?'跑贏':'跑輸')+'）', alpha, 'background:var(--accent)')}
-    </div>`;
+      ${row('超越大盤 Alpha（'+(alpha>=0?'跑贏':'跑輸')+'）', alpha, 'background:var(--accent)')}</div>`;
+  }
+  const leg = (color, label, val) => `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--dark)"><span style="width:18px;height:0;border-top:3px solid ${color};border-radius:2px"></span>${label} <b style="font-weight:800;color:${c(val)}">${sg(val)}</b></span>`;
+  // 時間軸：圖下方 HTML 日期標籤（起點/中點/終點），不進 SVG 免被 none 拉伸。長區間顯 YYYY/MM、短區間(≤80天)顯 MM/DD。
+  let axis = '';
+  if (dates && dates.length > 1) {
+    const days = (new Date(dates[dates.length-1]) - new Date(dates[0])) / 86400000;
+    const fmtD = days <= 80 ? (d => d.slice(5).replace('-','/')) : (d => d.slice(0,7).replace('-','/'));
+    const mid = dates[Math.floor((dates.length-1)/2)];
+    axis = `<div style="display:flex;justify-content:space-between;margin-top:5px;font-size:10.5px;color:var(--mid);font-variant-numeric:tabular-nums"><span>${fmtD(dates[0])}</span><span>${fmtD(mid)}</span><span>${fmtD(dates[dates.length-1])}</span></div>`;
+  }
+  return `<div style="border:1px solid #e4e0dc;border-radius:10px;overflow:hidden">${header}
+    <div style="padding:10px 11px 12px">${_perfLineChart(portData, benchData)}${axis}
+      <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:8px">${leg('var(--dark)','我的'+portName, portRet)}${leg('var(--mid)', benchName, benchRet)}</div>
+      <div style="margin-top:10px;padding:8px 12px;border-radius:9px;background:${alpha>=0?'var(--green-lt)':'var(--red-lt)'};display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800;color:${alpha>=0?'var(--green)':'var(--red)'}">${sg(alpha)}<span style="font-weight:500;color:var(--mid)">超越大盤 Alpha（${alpha>=0?'跑贏':'跑輸'}）· 圖中陰影</span></div>
+    </div></div>`;
 }
 
 // 匯率歸因：前面的 sleeve 對比都是「原幣」，看不出台幣計價報酬裡匯率佔多少。這塊補上。
-function _fxBlock(fx, usW) {
+// 匯率歸因：把「原幣報酬 → 換回台幣後實際到手」畫成疊加橋接，讓匯率對報酬的影響一眼可見。
+// usRet=美股 sleeve 原幣 TWR(%)。缺 usRet（無美股）時退回舊的兩行數字。
+function _fxBlock(fx, usW, usRet) {
   if (!fx || fx.change_pct == null) return '';
   const c  = v => v>=0?'var(--green)':'var(--red)';
   const sg = v => (v>=0?'+':'')+v.toFixed(2)+'%';
   const dir = fx.change_pct>=0 ? '台幣貶值' : '台幣升值';   // USD/TWD 上升＝台幣貶
-  const impact = (usW!=null) ? fx.change_pct*usW : null;     // 對總報酬的估計影響 ≈ 匯率變動 × 美股持股佔比
+  const impact = (usW!=null) ? fx.change_pct*usW : null;     // 對總報酬估計影響 ≈ 匯率變動 × 美股佔比
   const rng = (fx.from&&fx.to) ? `（${fx.from} ~ ${fx.to}）` : '';
-  const row = (label,val,bg='') => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 11px;${bg}"><span style="color:var(--dark)">${label}</span><span style="font-size:18px;font-weight:800;color:${c(val)}">${sg(val)}</span></div>`;
-  return `
-    <div style="border:1px solid #e4e0dc;border-radius:10px;overflow:hidden">
-      <div style="padding:8px 11px;background:#ece7e1;font-weight:700;font-size:13px">匯率貢獻 USD/TWD（對台幣計價）<span style="font-size:11px;color:var(--mid);font-weight:400">${rng}</span></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 11px"><span style="color:var(--dark)">${dir}</span><span style="font-size:14px;font-weight:700;color:var(--dark)">${fx.start!=null?fx.start.toFixed(3):'—'} → ${fx.end!=null?fx.end.toFixed(3):'—'}</span></div>
-      ${row('匯率變動', fx.change_pct)}
-      ${impact!=null ? row(`估對總報酬影響（×美股持股佔比 ${(usW*100).toFixed(0)}%）`, impact, 'background:var(--accent)') : ''}
+  const header = `<div style="padding:8px 11px;background:#ece7e1;font-weight:700;font-size:13px">匯率貢獻 USD/TWD（對台幣計價）<span style="font-size:11px;color:var(--mid);font-weight:400">${rng}</span></div>`;
+  const rateLine = `<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;font-size:15px;font-weight:700"><span>${fx.start!=null?fx.start.toFixed(3):'—'}</span><span style="color:var(--mid)">→</span><span style="color:var(--red)">${fx.end!=null?fx.end.toFixed(3):'—'}</span><span style="font-size:12px;font-weight:500;color:var(--mid)">${dir} ${Math.abs(fx.change_pct).toFixed(2)}%</span></div>`;
+  const foot = impact!=null ? `<div style="font-size:11.5px;color:var(--mid);padding:2px 12px 11px;line-height:1.55">拉到整個組合（美股佔 ${(usW*100).toFixed(0)}%），匯率對<b>總報酬</b>貢獻約 <b style="color:${c(impact)}">${sg(impact)}</b>。</div>` : '';
+
+  // 缺 usRet：退回舊兩行數字（仍加上新的 rateLine 與 foot）
+  if (usRet == null) {
+    const row = (label,val,bg='') => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 11px;${bg}"><span style="color:var(--dark)">${label}</span><span style="font-size:18px;font-weight:800;color:${c(val)}">${sg(val)}</span></div>`;
+    return `<div style="border:1px solid #e4e0dc;border-radius:10px;overflow:hidden">${header}${rateLine}${row('匯率變動', fx.change_pct)}${foot}</div>`;
+  }
+
+  const twdRet = ((1+usRet/100)*(1+fx.change_pct/100) - 1) * 100;  // 台幣計價實際報酬
+  const fxPP = twdRet - usRet;                                     // 匯率貢獻（百分點）
+  // 疊加橋接只在「原幣≥0 且 匯率貢獻≥0 且 台幣實際>0」成立（乾淨兩段正向）。否則退回符號永遠正確的緊湊 bridge。
+  const cleanStack = usRet >= 0 && fxPP >= 0 && twdRet > 0;
+  let body;
+  if (cleanStack) {
+    const wBase = Math.max(3, usRet / twdRet * 100);
+    const wFx   = Math.max(3, fxPP  / twdRet * 100);
+    body = `<div style="padding:4px 12px 12px">
+      <div style="font-size:13.5px;color:var(--mid);margin:8px 0 9px">你的美股，換回台幣後實際到手 <b style="font-size:15px;color:var(--green)">${sg(twdRet)}</b></div>
+      <div style="display:flex;height:40px;border-radius:9px;overflow:hidden;background:var(--accent)">
+        <div style="width:${wBase.toFixed(1)}%;background:var(--green);display:flex;align-items:center;justify-content:center;min-width:0"><span style="font-size:12px;font-weight:800;color:#fff;white-space:nowrap;padding:0 5px;overflow:hidden;text-overflow:ellipsis">${sg(usRet)}</span></div>
+        <div style="width:${wFx.toFixed(1)}%;background:repeating-linear-gradient(135deg,#3f9c72,#3f9c72 8px,#348a63 8px,#348a63 16px);display:flex;align-items:center;justify-content:center;min-width:0"><span style="font-size:12px;font-weight:800;color:#fff;white-space:nowrap;padding:0 5px;overflow:hidden;text-overflow:ellipsis">匯率加值 +${fxPP.toFixed(2)}%p</span></div>
+      </div>
+      <div style="display:flex;margin-top:6px">
+        <div style="width:${wBase.toFixed(1)}%;font-size:11px;color:var(--mid);text-align:center;padding:0 4px">原幣報酬</div>
+        <div style="width:${wFx.toFixed(1)}%;font-size:11px;color:var(--mid);text-align:center;padding:0 4px">${dir}帶來</div>
+      </div>
+      <div style="margin-top:11px;font-size:13.5px;font-weight:600">＝ 台幣計價實際到手 <b style="font-size:16px;color:var(--green)">${sg(twdRet)}</b></div>
+      <div style="font-size:11.5px;color:var(--mid);margin-top:8px;line-height:1.55">原幣本身 ${sg(usRet)}，主要是${dir}把它推到 ${sg(twdRet)}。</div>
     </div>`;
+  } else {
+    body = `<div style="padding:6px 12px 12px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0">
+        <span style="font-size:12px;color:var(--mid)">原幣 <b style="font-size:16px;color:${c(usRet)}">${sg(usRet)}</b></span>
+        <span style="font-size:12px;font-weight:600;color:${c(fxPP)}">──匯率 ${(fxPP>=0?'+':'')+fxPP.toFixed(2)}%p──▶</span>
+        <span style="font-size:12px;color:var(--mid)">台幣實際 <b style="font-size:16px;color:${c(twdRet)}">${sg(twdRet)}</b></span>
+      </div>
+      <div style="font-size:11.5px;color:var(--mid);line-height:1.55">${dir}讓美股台幣計價報酬從 ${sg(usRet)} 變成 ${sg(twdRet)}。</div>
+    </div>`;
+  }
+  return `<div style="border:1px solid #e4e0dc;border-radius:10px;overflow:hidden">${header}${rateLine}${body}${foot}</div>`;
 }
 
 async function loadPerformanceVsBenchmark(period = '1y') {
@@ -3043,29 +3142,47 @@ async function loadPerformanceVsBenchmark(period = '1y') {
   const periodMap = { '1y':'1y', '6mo':'6mo', '3mo':'3mo', '1mo':'1m' };
   try {
     if (DEMO_MODE) {
-      el.innerHTML = _perfBlock('美股組合', 'VOO 標普500', 8.8, 6.2, ['2025-06-27','2026-06-25'])
+      const dP = [0,1.5,0.8,3.2,2.1,4.6,3.8,5.5,8.8], dB = [0,0.9,2.1,1.6,3.0,2.4,4.1,5.2,6.2];
+      const dD = ['2025-06-27','2025-12-26','2026-06-25'];
+      el.innerHTML = _perfBlock('美股組合', 'VOO 標普500', dP, dB, dD)
         + '<div style="height:14px"></div>'
-        + _fxBlock({start:32.1, end:29.4, change_pct:-8.41, from:'2025-06-27', to:'2026-06-25'}, 0.62);
+        + _fxBlock({start:29.4, end:31.3, change_pct:6.46, from:'2025-06-27', to:'2026-06-25'}, 0.62, 8.8);
       return;
     }
     const vh = await api(`/api/portfolio/value-history?period=${periodMap[period]||'1m'}`);
-    // 大盤在「組合序列的日期窗」內的報酬：取窗起點(含)後第一筆價、窗終點(含)前最後一筆價
-    const benchReturn = (bd, sd, ed) => {
-      const D = bd.dates_iso || bd.dates || [], P = bd.prices || [];
-      let sp=null, ep=null;
-      for (let i=0;i<D.length;i++){ if(P[i]==null) continue; if(D[i]>=sd && sp==null) sp=P[i]; if(D[i]<=ed) ep=P[i]; }
-      return (sp!=null && ep!=null && sp>0) ? (ep/sp-1)*100 : null;
-    };
     const blocks = [];
+    // 大盤日價 → 對齊到組合日期、以窗起點價正規化為 0% 的累積報酬序列（缺日以最近前一交易日前向填補）
+    const benchSeriesOn = (bd, dates) => {
+      const D = bd.dates_iso || bd.dates || [], P = bd.prices || [];
+      const m = {}; for (let i=0;i<D.length;i++) if (P[i]!=null) m[D[i]] = P[i];
+      const days = Object.keys(m).sort();
+      if (!days.length || !dates.length) return null;
+      let p0 = null; const start = dates[0];
+      for (const dd of days) { if (dd >= start) { p0 = m[dd]; break; } }   // 窗起點(含)後第一筆價
+      if (p0 == null || p0 <= 0) return null;
+      const out = []; let last = p0;
+      for (const d of dates) {
+        if (m[d] != null) last = m[d];
+        else for (let i=days.length-1;i>=0;i--){ if (days[i] <= d) { last = m[days[i]]; break; } }
+        out.push((last / p0 - 1) * 100);
+      }
+      return out;
+    };
+    // 組合逐日累積報酬線 vs 大盤逐日累積報酬線；序列對不齊時退回終點純量（舊行為，畫成三行數字）
+    const pushPerf = (portName, benchName, sleeve, benchData) => {
+      const bs = benchSeriesOn(benchData, sleeve.dates), ps = sleeve.twr_series;
+      if (bs && ps && ps.length === bs.length && ps.length > 1)
+        blocks.push(_perfBlock(portName, benchName, ps, bs, sleeve.dates));
+      else
+        blocks.push(_perfBlock(portName, benchName, sleeve.twr, bs ? bs[bs.length-1] : null, sleeve.dates));
+    };
     if (vh.us && vh.us.dates.length > 1) {
       const voo = await api(`/api/stocks/history/VOO?period=${period}`);
-      const br = benchReturn(voo, vh.us.dates[0], vh.us.dates[vh.us.dates.length-1]);
-      blocks.push(_perfBlock('美股組合', 'VOO 標普500', vh.us.twr, br, vh.us.dates));
+      pushPerf('美股組合', 'VOO 標普500', vh.us, voo);
     }
     if (vh.tw && vh.tw.dates.length > 1) {
       const t50 = await api(`/api/stocks/history/0050.TW?period=${period}`);
-      const br = benchReturn(t50, vh.tw.dates[0], vh.tw.dates[vh.tw.dates.length-1]);
-      blocks.push(_perfBlock('台股組合', '0050 台灣50', vh.tw.twr, br, vh.tw.dates));
+      pushPerf('台股組合', '0050 台灣50', vh.tw, t50);
     }
     // 匯率歸因：美股持股佔比 = 美股 sleeve 現值(USD) / 合併現值(USD)。
     // 兩者取「合併序列的最後一天」同一天的值（美股/合併終點可能因台股連休而不同天，直接拿各自最後一筆會混到不同日）。
@@ -3073,7 +3190,7 @@ async function loadPerformanceVsBenchmark(period = '1y') {
     const ud = (vh.us && vh.us.dates) || [], uv = (vh.us && vh.us.values) || [];
     const ui = cd.length ? ud.indexOf(cd[cd.length-1]) : -1;
     const usW = (ui >= 0 && cv[cv.length-1] > 0) ? uv[ui] / cv[cv.length-1] : null;
-    const fxHtml = _fxBlock(vh.attribution && vh.attribution.fx, usW);
+    const fxHtml = _fxBlock(vh.attribution && vh.attribution.fx, usW, (vh.us && vh.us.twr!=null) ? vh.us.twr : null);
     if (fxHtml) blocks.push(fxHtml);
     if (!blocks.length) {
       el.innerHTML = '<div style="padding:16px;color:var(--mid);text-align:center">資料不足，請確認持倉設定正確</div>';
