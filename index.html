@@ -1668,7 +1668,8 @@ tr:hover td{background:var(--lifted,var(--bg))}
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const RAILWAY_URL = 'https://api-production-03c0.up.railway.app';
+// 後端 2026-07-13 從 Railway(免費期停) 搬到 GCP Cloud Run；變數名沿用不改動以縮小 diff
+const RAILWAY_URL = 'https://investment-api-763986541172.asia-east1.run.app';
 let API_BASE = RAILWAY_URL;
 let API_KEY  = localStorage.getItem('app_password') || '';
 let DEMO_MODE = false;
