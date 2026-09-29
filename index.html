@@ -24,6 +24,13 @@
   /* BOS 評分卡：精緻單色＋兩個低飽和點綴（森林綠/陶紅）＋組成條雙色（財報綠/護城河藍灰）*/
   --bsc-pos:#1f7a54; --bsc-pos-bg:#e4f1ea; --bsc-neg:#c0392b; --bsc-neg-bg:#f7e9e6;
   --bsc-seg-a:#1f7a54; --bsc-seg-b:#7d7468; --bsc-soft:#ece7e1;
+  /* 側欄玻璃（2026-09-29 Liquid Glass 版）：淺色主題共用這組，revolut 深色另給一組
+     rail＝側欄本體毛玻璃／chip＝每顆圓鈕的玻璃泡／disc＝滑動的選取球（ink＝球上 icon 的顏色） */
+  --rail-top:rgba(255,255,255,.86); --rail-bot:rgba(255,255,255,.66); --rail-line:rgba(20,20,19,.07); --rail-shine:rgba(255,255,255,.9);
+  --chip-top:rgba(255,255,255,.95); --chip-bot:color-mix(in srgb,var(--bg) 75%,transparent);
+  --chip-ring:rgba(20,20,19,.12); --chip-ring-hover:rgba(20,20,19,.22);
+  --chip-hi:rgba(255,255,255,.95); --chip-lo:rgba(20,20,19,.06); --chip-caustic:rgba(255,255,255,.7);
+  --disc-top:#232220; --disc-bot:#0e0e0d; --disc-glow:rgba(255,255,255,.2); --disc-rim:rgba(255,255,255,.1); --disc-ink:#fff;
 }
 /* ── 主題切換：原 index-coinbase/revolut/wise.html 已整併為下列 data-theme 覆蓋，
    3 份重複檔已刪除。切換方式：document.documentElement.dataset.theme = 'coinbase'。
@@ -49,6 +56,12 @@ html[data-theme="revolut"]{
   /* BOS 評分卡：深色主題下把兩個點綴色提亮、tint 改半透明才不會變成亮色塊 */
   --bsc-pos:#6aa588; --bsc-pos-bg:rgba(106,165,136,.15); --bsc-neg:#cf7a6f; --bsc-neg-bg:rgba(207,122,111,.15);
   --bsc-seg-a:#6aa588; --bsc-seg-b:#8592b8; --bsc-soft:rgba(255,255,255,.05);
+  /* 側欄玻璃深色版：圓鈕改成暗玻璃、高光調淡；球反過來變白、球上 icon 變黑（黑球放黑底會看不見） */
+  --rail-top:rgba(22,24,26,.86); --rail-bot:rgba(22,24,26,.66); --rail-line:rgba(255,255,255,.08); --rail-shine:rgba(255,255,255,.04);
+  --chip-top:rgba(255,255,255,.12); --chip-bot:rgba(255,255,255,.04);
+  --chip-ring:rgba(255,255,255,.1); --chip-ring-hover:rgba(255,255,255,.24);
+  --chip-hi:rgba(255,255,255,.18); --chip-lo:rgba(0,0,0,.35); --chip-caustic:rgba(255,255,255,.06);
+  --disc-top:#f4f4f5; --disc-bot:#d4d5d8; --disc-glow:rgba(255,255,255,.5); --disc-rim:rgba(255,255,255,.6); --disc-ink:#000;
 }
 html[data-theme="wise"]{
   --blue:#38C8FF; --blue-lt:#DEF7FF; --dark:#0E0F0C; --mid:#454745;
@@ -62,51 +75,78 @@ html[data-theme="wise"]{
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter Tight',-apple-system,BlinkMacSystemFont,'PingFang TC','Noto Sans TC',sans-serif;font-size:14px;background:var(--bg);color:var(--dark);-webkit-font-smoothing:antialiased;display:flex;min-height:100vh}
 
-/* SIDEBAR */
-.sidebar{width:216px;min-width:216px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;transition:width .22s cubic-bezier(.4,0,.2,1);overflow:hidden}
-.sidebar-logo{padding:18px 14px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;position:relative;flex-shrink:0}
+/* SIDEBAR：只有圖示的玻璃圓鈕欄＋滑動黑球（2026-09-29 改版；定稿樣板＝側欄icon-A版-樣板.html）
+   Jack 定的：只留圖示不要文字、黑球、一點 macOS 27 Liquid Glass 感、不要任何外陰影、球左上不要灰灰的
+   macOS 27 側欄貼齊視窗邊、不浮起來 → 側欄本體＝貼邊毛玻璃；玻璃感主要放在「圓鈕」和「球」上
+   疊層：圓鈕的玻璃身體（.nav-icon::before，第 0 層）＜ 球 .nav-disc（第 1 層）＜ icon svg（第 2 層）
+   原本的「收折側欄」拿掉了：只剩圖示後已經是最窄的樣子，沒東西可收 */
+.sidebar{width:64px;min-width:64px;display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;
+  background:linear-gradient(180deg,var(--rail-top),var(--rail-bot));
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);backdrop-filter:blur(20px) saturate(1.4);
+  border-right:1px solid var(--rail-line);
+  box-shadow:inset -1px 0 0 var(--rail-shine)}   /* 右緣一條亮邊＝玻璃的切邊 */
+.sidebar-logo{padding:16px 0 12px;display:flex;justify-content:center;flex-shrink:0}
 .logo-mark{width:30px;height:30px;min-width:30px;background:var(--dark);border-radius:7px;display:flex;align-items:center;justify-content:center}
-.logo-text{font-size:14px;font-weight:700;color:var(--dark);letter-spacing:-.3px}
-.logo-sub{font-size:10px;color:var(--light);margin-top:1px;letter-spacing:.02em;text-transform:uppercase}
-.logo-text-wrap{overflow:hidden;white-space:nowrap;transition:opacity .15s}
-.sidebar-toggle{margin-left:auto;width:26px;height:26px;min-width:26px;border-radius:7px;border:1px solid var(--border);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--light);transition:all .13s;flex-shrink:0}
-.sidebar-toggle:hover{background:var(--bg);color:var(--dark);border-color:var(--dark)}
-.sidebar-toggle svg{transition:transform .22s}
-.nav-section{padding:14px 10px 6px;overflow:hidden}
-.nav-label{font-size:10px;font-weight:600;color:var(--light);text-transform:uppercase;letter-spacing:.08em;padding:0 8px 8px;white-space:nowrap;overflow:hidden;transition:opacity .15s,height .15s}
-.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:500;color:var(--mid);transition:all .13s;margin-bottom:1px;position:relative;white-space:nowrap}
-.nav-item:hover{background:var(--bg);color:var(--dark)}
-.nav-item.active{background:var(--blue-lt);color:var(--blue)}
-.nav-item.active .nav-icon,.nav-item:hover .nav-icon{color:inherit}
-.nav-icon{color:var(--light);transition:color .13s;flex-shrink:0}
-.nav-item-text{overflow:hidden;transition:opacity .15s}
-.sidebar-footer{margin-top:auto;padding:14px 16px;border-top:1px solid var(--border);overflow:hidden;transition:padding .22s}
-.sidebar-footer-text{overflow:hidden;white-space:nowrap;transition:opacity .15s}
-/* collapsed state */
-.sidebar.collapsed{width:52px;min-width:52px}
-.sidebar.collapsed .logo-text-wrap,.sidebar.collapsed .nav-label,.sidebar.collapsed .nav-item-text,.sidebar.collapsed .sidebar-footer-text{opacity:0;width:0;height:0;overflow:hidden}
-.sidebar.collapsed .nav-item{justify-content:center;padding:9px}
-.sidebar.collapsed .sidebar-logo{justify-content:center;padding:18px 0 14px;gap:0}
-.sidebar.collapsed .sidebar-toggle{margin-left:0}
-.sidebar.collapsed .sidebar-toggle svg{transform:rotate(180deg)}
-.sidebar.collapsed .sidebar-footer{padding:10px 0;display:flex;flex-direction:column;align-items:center}
-/* tooltip on hover when collapsed */
-.sidebar.collapsed .nav-item::after{content:attr(data-label);position:absolute;left:54px;top:50%;transform:translateY(-50%);background:var(--dark);color:#fff;font-size:11px;font-weight:600;padding:4px 9px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;z-index:200;transition:opacity .1s;box-shadow:0 2px 8px rgba(0,0,0,.18)}
-.sidebar.collapsed .nav-item:hover::after{opacity:1}
+/* 圓鈕欄：直排、垂直置中；nav-section 開自己的疊層（z-index:0），讓圓鈕／球／icon 三層排在同一疊 */
+.nav-section{position:relative;z-index:0;margin:auto 0;padding:8px 0;display:flex;flex-direction:column;align-items:center;gap:10px}
+.nav-item{position:relative;border-radius:50%;cursor:pointer}
+/* 頁名不刪，改成畫面上看不到、但螢幕報讀器念得到（圖示沒有字，這是它唯一的名字） */
+.nav-item-text{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* 圓鈕＝一顆小玻璃泡：上亮下透、左上一條高光邊、右下一條暗邊、底部透光；沒有外陰影
+   （Liquid Glass 的光是「沿著邊緣的高光」，不是 2000 年 Aqua 那種大片果凍反光，所以高光都用 1px 的內陰影做）
+   .sidebar-logout 是底部的登出鈕，外觀跟頁面圓鈕一樣，所以跟 .nav-icon 共用規則 */
+.nav-icon,.sidebar-logout{position:relative;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--mid);transition:color .25s}
+.nav-icon::before,.sidebar-logout::before{content:"";position:absolute;inset:0;border-radius:50%;z-index:0;
+  background:linear-gradient(180deg,var(--chip-top),var(--chip-bot));
+  box-shadow:
+    0 0 0 .5px var(--chip-ring),              /* 外緣細線：淺底上才看得出泡泡的邊 */
+    inset 1px 1.5px 0 var(--chip-hi),         /* 左上高光邊 */
+    inset -1px -1.5px 1px var(--chip-lo),     /* 右下暗邊 */
+    inset 0 -5px 8px var(--chip-caustic);     /* 底部透光：光穿過玻璃聚在下緣 */
+  transition:box-shadow .2s,transform .15s}
+.nav-icon svg,.sidebar-logout svg{position:relative;z-index:2;width:15px;height:15px}
+.nav-item:hover .nav-icon,.sidebar-logout:hover{color:var(--dark)}
+.nav-item:not(.active):hover .nav-icon::before,.sidebar-logout:hover::before{
+  box-shadow:0 0 0 .5px var(--chip-ring-hover),inset 1px 1.5px 0 var(--chip-hi),inset -1px -1.5px 1px var(--chip-lo),inset 0 -5px 8px var(--chip-caustic)}
+.nav-item.active .nav-icon::before{box-shadow:none}   /* 選中那顆：底下圓鈕的邊線藏起來，不然球外會多一圈淡灰線 */
+.nav-item.active .nav-icon{color:var(--disc-ink);transition-delay:.2s}   /* 等球快到才反白，不然白色 icon 會先浮在淺色圓鈕上看不見 */
+/* 按下去：只把圓鈕壓小一點。全站的「按下去往下 1px」在這裡關掉——transform 會把 icon 關進自己的疊層、被球蓋住 */
+.nav-item:active,.sidebar-logout:active{transform:none}
+.nav-item:active .nav-icon::before,.sidebar-logout:active::before{transform:scale(.9)}
+.sidebar-logout{border:0;background:none;padding:0;cursor:pointer;font:inherit}
+
+/* 球：近純黑＋底部聚光（深色主題由 --disc-* 換成白球）
+   位置用 translate 屬性（不是 transform），JS 另外用 scale 屬性做「液體拉長」，兩個互不干擾
+   慢起慢停 .46s（中段最快），拉長的最高點才對得上速度最快的那一刻；數值是詮釋值，A 原作沒有動態 */
+.nav-disc{position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(70% 45% at 50% 100%,var(--disc-glow),transparent 70%),   /* 底部聚光 */
+    linear-gradient(180deg,var(--disc-top) 0%,var(--disc-bot) 100%);
+  box-shadow:inset 0 -1px 0 var(--disc-rim);   /* 只留下緣一條很淡的亮邊 */
+  transition:translate .46s cubic-bezier(.5,0,.2,1)}
+.nav-disc.no-anim{transition:none}
+
+/* 滑鼠停在圖示上 → 右邊跳出頁名（沒有文字之後，這是唯一看得到頁名的地方）；深色毛玻璃膠囊、不要外陰影 */
+.nav-item::after,.sidebar-logout::after{content:attr(data-label);position:absolute;left:calc(100% + 16px);top:50%;transform:translate(-4px,-50%);
+  background:color-mix(in srgb,var(--dark) 80%,transparent);-webkit-backdrop-filter:blur(12px) saturate(1.4);backdrop-filter:blur(12px) saturate(1.4);
+  color:var(--white);font-size:12px;font-weight:600;padding:6px 11px;border-radius:var(--radius-pill);white-space:nowrap;pointer-events:none;
+  opacity:0;z-index:200;transition:opacity .15s,transform .15s;box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+.nav-item:hover::after,.sidebar-logout:hover::after{opacity:1;transform:translate(0,-50%)}
+/* 觸控裝置沒有滑鼠停留：不顯示頁名提示；改成側欄可以上下捲（橫放手機高度不夠放 11 顆） */
+@media(hover:none){.nav-item::after,.sidebar-logout::after{display:none}.sidebar{overflow-y:auto}}
+
+/* 底部：連線綠點＋登出鈕，直排置中。「已連接」和資料來源的字收掉（JS 還會寫進去，所以元素留著） */
+.sidebar-footer{margin-top:auto;padding:14px 0 18px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.sync-row span,.footer-source{display:none}
 /* mobile */
 @media(max-width:768px){
-  .sidebar{transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1);width:216px!important;min-width:216px!important}
+  .sidebar{transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1)}   /* 一樣是左邊滑出來的抽屜，寬度跟桌機同為 64px 圖示欄 */
   .sidebar.mobile-open{transform:translateX(0)}
-  .sidebar.collapsed .logo-text-wrap,.sidebar.collapsed .nav-label,.sidebar.collapsed .nav-item-text,.sidebar.collapsed .sidebar-footer-text{opacity:1;width:auto;height:auto}
-  .sidebar.collapsed .nav-item{justify-content:flex-start;padding:8px 10px}
-  .sidebar.collapsed .sidebar-logo{justify-content:flex-start;padding:18px 14px 14px;gap:10px}
-  .sidebar.collapsed .sidebar-footer{padding:14px 16px;align-items:flex-start}
-  .sidebar.collapsed .nav-item::after{display:none}
   .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:99;backdrop-filter:blur(1px)}
   .sidebar-backdrop.show{display:block}
   .main{margin-left:0!important}
   .topbar-menu-btn{display:flex!important}
-  .sidebar-toggle{display:none}
 
   /* ── 手機版內容適配（2026-06-18）：上面只處理側欄抽屜，這裡補內容區 ── */
   /* 內距收緊 */
@@ -150,14 +190,13 @@ body{font-family:'Inter Tight',-apple-system,BlinkMacSystemFont,'PingFang TC','N
   /* rebal-table 沿用同一套卡片化 */
   .rebal-table th{display:none}
 }
-.sync-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mid);margin-bottom:5px}
+.sync-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mid)}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2.4s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .footer-source{font-size:11px;color:var(--light)}
 
 /* MAIN */
-.main{margin-left:216px;flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left .22s cubic-bezier(.4,0,.2,1)}
-.main.sidebar-collapsed{margin-left:52px}
+.main{margin-left:64px;flex:1;display:flex;flex-direction:column;min-height:100vh}
 .topbar-menu-btn{display:none;align-items:center;justify-content:center;width:34px;height:34px;border-radius:7px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--mid);margin-right:8px;flex-shrink:0}
 .topbar-menu-btn:hover{background:var(--bg);color:var(--dark)}
 .topbar{background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
@@ -188,7 +227,7 @@ body{font-family:'Inter Tight',-apple-system,BlinkMacSystemFont,'PingFang TC','N
 .stat-sub{font-size:11px;color:var(--light);margin-top:2px}
 /* ── 互動狀態（redesign S2）：按下回饋＋鍵盤 focus ring＋平滑捲動 ── */
 html{scroll-behavior:smooth}
-button:active,.nav-item:active,.stock-chip:active,.rec-card:active,.screener-tab:active{transform:translateY(1px)}
+button:active,.stock-chip:active,.rec-card:active,.screener-tab:active{transform:translateY(1px)}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.nav-item:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
@@ -891,18 +930,10 @@ tr:hover td{background:var(--lifted,var(--bg))}
         <circle cx="15" cy="3" r="1.5" fill="white"/>
       </svg>
     </div>
-    <div class="logo-text-wrap">
-      <div class="logo-text">Investment OS</div>
-      <div class="logo-sub">Portfolio Tracker</div>
-    </div>
-    <button class="sidebar-toggle" onclick="toggleSidebar()" title="收折側欄">
-      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="10,3 5,8 10,13"/>
-      </svg>
-    </button>
   </div>
   <div class="nav-section">
-    <div class="nav-label">Dashboard</div>
+    <!-- 滑動的選取球：跟著 .nav-item.active 移動，位置由 placeDisc() 算 -->
+    <span class="nav-disc" id="navDisc" aria-hidden="true"></span>
     <div class="nav-item active" onclick="showPage('overview')" data-label="總覽">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg></span>
       <span class="nav-item-text">總覽</span>
@@ -953,12 +984,9 @@ tr:hover td{background:var(--lifted,var(--bg))}
       <div class="sync-row"><div class="sync-dot"></div><span id="syncStatus">已連接</span></div>
       <div class="footer-source" id="footerApiUrl">yfinance · Supabase</div>
     </div>
-    <div style="margin-top:6px">
-      <button class="btn btn-ghost" style="height:26px;font-size:11px;padding:0 8px" onclick="doLogout()" title="登出">
-        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/><polyline points="10 11 14 8 10 5"/><line x1="14" y1="8" x2="6" y2="8"/></svg>
-        <span class="nav-item-text">登出</span>
-      </button>
-    </div>
+    <button class="sidebar-logout" onclick="doLogout()" data-label="登出" aria-label="登出">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/><polyline points="10 11 14 8 10 5"/><line x1="14" y1="8" x2="6" y2="8"/></svg>
+    </button>
   </div>
 </aside>
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileSidebar()"></div>
@@ -1794,18 +1822,53 @@ function showPage(id) {
   if (id === 'signals') loadSignalsPage();
   if (id === 'calculator') { runCalculator(); }
   if (id === 'rebalance') { loadRebalancePage(); }
+  placeDisc(true);
   closeMobileSidebar();
 }
 
-// ── SIDEBAR TOGGLE ─────────────────────────────────────────────
-function toggleSidebar() {
-  const sidebar = document.getElementById('sidebar');
-  const main    = document.querySelector('.main');
-  sidebar.classList.toggle('collapsed');
-  main.classList.toggle('sidebar-collapsed');
-  // persist state
-  localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
+// ── SIDEBAR：滑動選取球＋液體拉長（2026-09-29，樣板＝側欄icon-A版-樣板.html）──
+// 收折側欄功能已拿掉（只剩圖示，沒東西可收）；舊的 localStorage 'sidebarCollapsed' 沒人讀了，留著無害
+const navDisc = document.getElementById('navDisc');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let navDiscY = null;   // 球上一次停的高度，算「這次跳多遠」；null＝還沒擺過
+
+function placeDisc(animate) {
+  const item = document.querySelector('.nav-item.active');
+  if (!item || !navDisc) return;
+  if (navDiscY === null) animate = false;   // 第一次擺放不要從左上角滑進來
+  // 座標＝圓鈕框 − nav-section 框（用相減，不用 offsetLeft：offset 會捨去小數；手機抽屜的平移兩邊一起抵掉）
+  const r = item.querySelector('.nav-icon').getBoundingClientRect();
+  const s = navDisc.parentElement.getBoundingClientRect();
+  const x = r.left - s.left, y = r.top - s.top;
+  const dy = navDiscY === null ? 0 : y - navDiscY;
+  navDiscY = y;
+  // 不要動畫時掛 .no-anim 暫時關掉過場，擺好後強迫排版一次（讀 offsetWidth）再把過場還回去
+  if (!animate) navDisc.classList.add('no-anim');
+  navDisc.style.translate = `${x}px ${y}px`;
+  if (!animate) { navDisc.offsetWidth; navDisc.classList.remove('no-anim'); }
+  else if (dy && !reduceMotion) stretchDisc(dy);
 }
+
+// 液體感：球衝出去時縱向拉長、到站壓扁一下、再小彈回圓（Liquid Glass 的選取指示在移動時也會變形）
+// 用 CSS 的 scale 屬性做，跟負責位置的 translate 屬性分開，兩個動畫不會互相蓋掉
+// 數值是詮釋值、不是量來的；要調就調 0.12／0.22 這幾個倍數
+function stretchDisc(dy) {
+  const k = Math.min(1, Math.abs(dy) / 180);   // 跳越遠拉越長，約 4 格（180px）封頂
+  // 時間軸用線性、每段自己帶 easing，offset 才等於真實時間比例：
+  // 560ms 裡約 35%（~200ms）球速最快 → 拉最長；約 66%（~370ms）到站 → 壓扁
+  const ease = 'ease-in-out';
+  navDisc.animate([
+    { scale: '1 1', easing: ease },
+    { scale: `${1 - .12 * k} ${1 + .22 * k}`, offset: .35, easing: ease },   // 衝出去：變細變長
+    { scale: `${1 + .08 * k} ${1 - .10 * k}`, offset: .66, easing: ease },   // 到站：壓扁
+    { scale: `${1 - .02 * k} ${1 + .03 * k}`, offset: .84, easing: ease },   // 小回彈
+    { scale: '1 1' },
+  ], { duration: 560 });
+}
+addEventListener('resize', () => placeDisc(false));
+document.fonts?.ready.then(() => placeDisc(false));   // 字型載完版面可能微調，再貼一次
+placeDisc(false);
+
 function openMobileSidebar() {
   document.getElementById('sidebar').classList.add('mobile-open');
   document.getElementById('sidebarBackdrop').classList.add('show');
@@ -1814,13 +1877,6 @@ function closeMobileSidebar() {
   document.getElementById('sidebar').classList.remove('mobile-open');
   document.getElementById('sidebarBackdrop').classList.remove('show');
 }
-// restore sidebar state on load
-(function(){
-  if (localStorage.getItem('sidebarCollapsed') === '1') {
-    document.getElementById('sidebar')?.classList.add('collapsed');
-    document.querySelector('.main')?.classList.add('sidebar-collapsed');
-  }
-})();
 
 // ── 主題切換（整併自原 3 份變體檔；色票/圓角/陰影經 data-theme 覆蓋）──
 function setTheme(name) {
