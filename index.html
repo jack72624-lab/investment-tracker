@@ -31,6 +31,10 @@
   --chip-ring:rgba(20,20,19,.12); --chip-ring-hover:rgba(20,20,19,.22);
   --chip-hi:rgba(255,255,255,.95); --chip-lo:rgba(20,20,19,.06); --chip-caustic:rgba(255,255,255,.7);
   --disc-top:#232220; --disc-bot:#0e0e0d; --disc-glow:rgba(255,255,255,.2); --disc-rim:rgba(255,255,255,.1); --disc-ink:#fff;
+  /* 圖表色盤（2026-09-29）：圓餅、配置清單的色點都從這裡拿。第一色跟著主題的主文字色（淺色＝近黑、深色主題＝白），
+     其他色是原本 ALLOC_COLORS 的中間調，深淺底上都看得到，所以不分主題。JS 用 getComputedStyle 讀進 canvas */
+  --pal-0:var(--dark); --pal-1:#8f6f86; --pal-2:#1f7a54; --pal-3:#cf4500; --pal-4:#c0392b;
+  --pal-5:#bb8a45; --pal-6:#b5623a; --pal-7:#7d8a45; --pal-8:#9a9691;
 }
 /* ── 主題切換：原 index-coinbase/revolut/wise.html 已整併為下列 data-theme 覆蓋，
    3 份重複檔已刪除。切換方式：document.documentElement.dataset.theme = 'coinbase'。
@@ -56,6 +60,8 @@ html[data-theme="revolut"]{
   /* BOS 評分卡：深色主題下把兩個點綴色提亮、tint 改半透明才不會變成亮色塊 */
   --bsc-pos:#6aa588; --bsc-pos-bg:rgba(106,165,136,.15); --bsc-neg:#cf7a6f; --bsc-neg-bg:rgba(207,122,111,.15);
   --bsc-seg-a:#6aa588; --bsc-seg-b:#8592b8; --bsc-soft:rgba(255,255,255,.05);
+  /* 圖表色盤深色版：原本的深綠、深紫在黑底上幾乎看不見，換成這個主題自己的亮色（第 0 格已經跟著 --dark 變白） */
+  --pal-1:var(--purple); --pal-2:var(--green); --pal-3:var(--amber); --pal-4:var(--red);
   /* 側欄玻璃深色版：圓鈕改成暗玻璃、高光調淡；球反過來變白、球上 icon 變黑（黑球放黑底會看不見） */
   --rail-top:rgba(22,24,26,.86); --rail-bot:rgba(22,24,26,.66); --rail-line:rgba(255,255,255,.08); --rail-shine:rgba(255,255,255,.04);
   --chip-top:rgba(255,255,255,.12); --chip-bot:rgba(255,255,255,.04);
@@ -168,6 +174,8 @@ body{font-family:'Inter Tight',-apple-system,BlinkMacSystemFont,'PingFang TC','N
   .filter-input,.filter-select{width:100%}
   /* 膠囊/分頁列可橫向捲動，不擠爆 */
   .screener-tabs,.timeframe-row,.stock-chips{flex-wrap:wrap}
+  /* 玻璃版：軌道是一整條膠囊，折成兩行會很怪 → 手機把選股三顆的左右留白縮小、字不准斷行，塞回一行 */
+  .glass .screener-tab{padding:6px 10px;white-space:nowrap}
   /* 彈窗縮到螢幕內 */
   .modal{width:100%;max-width:420px;padding:24px 20px}
   .modal-backdrop{padding:16px}
@@ -757,9 +765,107 @@ tr:hover td{background:var(--lifted,var(--bg))}
 .sym-input{flex:1;max-width:460px;height:32px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--dark);background:var(--bg);outline:none;font-family:'Geist Mono','Geist Mono','SF Mono',monospace;transition:border-color .13s}
 .sym-input:focus{border-color:var(--blue);background:var(--white);box-shadow:0 0 0 2px rgba(20,20,19,.1)}
 .sym-hint{font-size:11px;color:var(--light);margin-top:6px}
+
+.theme-select{height:32px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--white);color:var(--mid);font-size:12px;padding:0 8px;cursor:pointer;outline:none;font-family:inherit}   /* 原本寫在 select 的 inline style；inline 會蓋掉玻璃樣式，所以搬成 class */
+
+/* ═════════════ 玻璃版：按鈕、分段切換、股票膠囊、頂欄、圖示（2026-09-29，樣板＝按鈕玻璃-樣板.html） ═════════════
+   全部包在 body.glass 底下：跟樣板驗過的權重一模一樣（拿掉前綴會跟原本規則同分、變成看先後順序）；body 拿掉 glass 這個 class 就回到舊樣子
+   2026-09-29 Jack 選 A：玻璃只給「可以按的東西」，數據卡片、表格、圖表維持白卡
+   （Apple HIG〈Materials〉：Liquid Glass 是給控制與導覽的一層，內容層別用、要省著用）
+   色票跟側欄共用同一組 --chip-*／--disc-*／--rail-*，深色主題自動換；一樣完全不用外陰影 */
+
+/* 頂欄：跟側欄同一片毛玻璃（原本寫死白色，深色主題下是一條白帶，這裡順便修掉） */
+.glass .topbar{background:linear-gradient(180deg,var(--rail-top),var(--rail-bot));
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);backdrop-filter:blur(20px) saturate(1.4);
+  border-bottom-color:var(--rail-line);box-shadow:inset 0 -1px 0 var(--rail-shine)}
+
+/* 淺色玻璃膠囊：次要按鈕、主題選單、沒選中的股票膠囊。跟側欄圓鈕同一顆玻璃泡，只是拉成長條 */
+.glass .btn-ghost:not(.active),.glass .theme-select,.glass .stock-chip:not(.active),.glass .goal-input,.glass .tech-add input{
+  background:linear-gradient(180deg,var(--chip-top),var(--chip-bot));border-color:transparent;
+  box-shadow:0 0 0 .5px var(--chip-ring),inset 1px 1.5px 0 var(--chip-hi),inset -1px -1.5px 1px var(--chip-lo),inset 0 -5px 8px var(--chip-caustic)}
+.glass .btn-ghost:not(.active):hover,.glass .theme-select:hover,.glass .stock-chip:not(.active):hover{
+  background:linear-gradient(180deg,var(--chip-top),var(--chip-bot));border-color:transparent;color:var(--dark);
+  box-shadow:0 0 0 .5px var(--chip-ring-hover),inset 1px 1.5px 0 var(--chip-hi),inset -1px -1.5px 1px var(--chip-lo),inset 0 -5px 8px var(--chip-caustic)}
+/* 輸入框也算控制項，但它要讓人看清楚打了什麼 → 只換外框、不加底部透光；focus 一樣是深色框 */
+.glass .goal-input,.glass .tech-add input{box-shadow:0 0 0 .5px var(--chip-ring),inset 1px 1.5px 0 var(--chip-hi),inset -1px -1.5px 1px var(--chip-lo)}
+.glass .goal-input:focus,.glass .tech-add input:focus{box-shadow:0 0 0 1.5px var(--blue),inset 1px 1.5px 0 var(--chip-hi)}
+
+/* 深色玻璃：主要按鈕、選中的股票膠囊、「分析」鈕。跟側欄黑球同一種：主色打底＋上亮下暗＋底部聚光
+   打底用 var(--blue)（Mastercard 主題是近黑 #141413），所以 coinbase 主題會是藍色玻璃、不會被寫死成黑 */
+.glass .btn-primary,.glass .stock-chip.active,.glass .tech-add button{
+  background:radial-gradient(60% 55% at 50% 100%,var(--disc-glow),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.08),rgba(0,0,0,.12)),var(--blue);
+  border-color:transparent;box-shadow:inset 0 -1px 0 var(--disc-rim)}
+.glass .btn-primary:hover,.glass .tech-add button:hover{
+  background:radial-gradient(60% 55% at 50% 100%,var(--disc-glow),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.16),rgba(0,0,0,.06)),var(--blue)}
+/* 圓角對齊：原本「分析」鈕和兩個輸入框是 8px 方角，玻璃版改成膠囊，跟其他按鈕一致 */
+.glass .tech-add button,.glass .tech-add input,.glass .goal-input{border-radius:var(--radius-pill)}
+.glass .tech-add input,.glass .goal-input{padding-left:14px}
+
+/* 分段切換：玻璃軌道＋一顆會滑的深色膠囊
+   跟側欄黑球同一個動作：選中的那格有顆膠囊滑過去，移動時橫向拉長、到站壓扁回彈
+   全站七種切換列共用這一段：時間區間、選股分頁、淨值／配置、組合配置視角、技術分析圖表分頁、訊號計分板、想買清單
+   （清單跟 JS 的 SEG_ROWS 是同一份，要加新的切換列兩邊都要加）
+   疊層：軌道（z0，自己開一疊）＜ 膠囊 .seg-pill（z0 裡的底）＜ 按鈕文字（z1） */
+.glass :is(.timeframe-row,.screener-tabs,.trend-seg,.alloc-lens-seg,.card-tabs,.sb-seg,.wl-seg){position:relative;z-index:0;
+  background:linear-gradient(180deg,var(--chip-top),var(--chip-bot));border:1px solid transparent;border-radius:var(--radius-pill);
+  box-shadow:0 0 0 .5px var(--chip-ring),inset 1px 1.5px 0 var(--chip-hi),inset -1px -1.5px 1px var(--chip-lo),inset 0 -5px 8px var(--chip-caustic)}
+.glass .timeframe-row{padding:3px;width:fit-content}   /* 原本沒有軌道，加一條才看得出是一組 */
+.glass .timeframe-row[style*="flex-end"]{margin-left:auto}   /* 技術分析那排原本靠右，軌道變 fit-content 後用 margin 推回右邊 */
+/* 技術分析的圖表分頁：原本是整條底線式分頁，改成跟其他切換一樣的膠囊軌道 */
+.glass .card-tabs{padding:3px;width:fit-content;margin:14px 20px 2px}
+.glass .card-tab{padding:6px 14px;border-bottom:0;margin-bottom:0;border-radius:var(--radius-pill)}
+/* 訊號計分板：原本是方角、每格有框的按鈕組，改成膠囊軌道（外距從 padding 改成 margin，軌道才不會被撐大） */
+.glass .sb-seg{padding:3px;width:fit-content;margin:12px 16px 0}
+.glass .sb-seg button{flex:none;border:0;border-radius:var(--radius-pill);padding:6px 12px}
+/* 格子本身：拿掉自己的底色，讓底下那顆膠囊透上來 */
+.glass :is(.timeframe-row,.screener-tabs,.trend-seg,.alloc-lens-seg,.card-tabs,.sb-seg,.wl-seg) > :not(.seg-pill){position:relative;z-index:1;background:transparent!important;transition:color .25s}
+.glass :is(.timeframe-row,.screener-tabs,.trend-seg,.alloc-lens-seg,.card-tabs,.sb-seg,.wl-seg) > :not(.seg-pill,.active,.on,.on-watch,.on-buy):hover{color:var(--dark)}
+/* 選中那格的字：等膠囊快到才反白（跟側欄一樣的 .15s 延遲），不然白字會先浮在淺色軌道上看不見
+   用 --disc-ink 不寫死白色：深色主題的膠囊是白的、字要黑（原版「按市場」在深色主題就是白字配白底、看不見） */
+.glass :is(.timeframe-row,.screener-tabs,.trend-seg,.alloc-lens-seg,.card-tabs,.sb-seg,.wl-seg) > :is(.active,.on,.on-watch,.on-buy){color:var(--disc-ink);transition-delay:.15s}
+.glass .screener-tab.active:is(.tab-bos,.tab-dgm),.glass .wl-seg > .on-buy{color:#fff}   /* 有自己顏色的膠囊（紫、綠）字一律白 */
+.glass :is(.timeframe-row,.screener-tabs,.trend-seg,.alloc-lens-seg,.card-tabs,.sb-seg,.wl-seg) > :active{transform:none}   /* 原本按下往下 1px，會讓字跟膠囊錯開 */
+
+.seg-pill{display:none}
+.glass .seg-pill{display:block;position:absolute;left:0;top:0;z-index:0;border-radius:var(--radius-pill);pointer-events:none;
+  background:radial-gradient(70% 45% at 50% 100%,var(--disc-glow),transparent 70%),linear-gradient(180deg,var(--disc-top),var(--disc-bot));
+  box-shadow:inset 0 -1px 0 var(--disc-rim);
+  transition:translate .42s cubic-bezier(.5,0,.2,1),width .42s cubic-bezier(.5,0,.2,1),background .3s}
+/* 有自己顏色的格子，膠囊滑到哪一格就換成那格的色：選股分頁 BOS 紫、DGM 綠；想買清單的「想買」跟 BOS 同一個紫 */
+.glass .seg-pill[data-tone="bos"]{background:radial-gradient(70% 45% at 50% 100%,rgba(255,255,255,.2),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.08),rgba(0,0,0,.1)),#8f6f86}
+.glass .seg-pill[data-tone="dgm"]{background:radial-gradient(70% 45% at 50% 100%,rgba(255,255,255,.2),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.08),rgba(0,0,0,.1)),var(--green)}
+.seg-pill.no-anim{transition:none}
+
+/* 圖示統一：線條一律 1.5px，跟側欄一樣粗
+   原本每個圖示各寫各的粗細（1.6／1.8／2／2.2），又畫在不同大小的格子裡再縮小，實際粗細從 1.2px 到 1.8px 都有
+   vector-effect 讓線寬用「螢幕上的 px」算、不跟著縮放 → 不管圖示多大多小，線條都一樣粗；新圖示只要加 class="ico" */
+.glass svg.ico{stroke-width:1.5px}
+.glass svg.ico *{vector-effect:non-scaling-stroke}
+.glass .bsc-btn{display:inline-flex;align-items:center;gap:5px}   /* 按鈕裡放了圖示，改成 flex 才對得齊 */
+.glass .bsc-btn svg,.glass .dgm-banner svg{width:12px;height:12px;flex-shrink:0}
+/* 勾勾：原本是文字「✓」，改成同一套線條畫的勾（畫在 ::before 上，產生 pill 的 JS 不用改）
+   mask 裡的線寬 2.4＝1.5px ÷ 10px 顯示大小 × 16 格 */
+.glass .bsc-pill.on::before{content:"";display:inline-block;width:10px;height:10px;margin-right:4px;vertical-align:-1px;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 8.5 6.5 12 13 4.5'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 8.5 6.5 12 13 4.5'/%3E%3C/svg%3E") center/contain no-repeat}
+.glass .chip-x svg{width:9px;height:9px}
+/* 只有圖示的小按鈕（釘選、刪除）：做成跟側欄一樣的小玻璃圓鈕
+   釘選「開著」＝變成選中的深色球（深色主題是白球），跟側欄「目前在這頁」同一個意思 */
+.glass :is(.dgm-pin,.icon-btn){position:relative;width:26px;height:26px;min-width:26px;padding:0;border:0;border-radius:50%;display:inline-grid;place-items:center;
+  color:var(--mid);cursor:pointer;background:linear-gradient(180deg,var(--chip-top),var(--chip-bot));
+  box-shadow:0 0 0 .5px var(--chip-ring),inset 1px 1.5px 0 var(--chip-hi),inset -1px -1.5px 1px var(--chip-lo),inset 0 -5px 8px var(--chip-caustic);
+  transition:box-shadow .2s,color .2s,transform .15s}
+.glass :is(.dgm-pin,.icon-btn):hover{color:var(--dark);
+  box-shadow:0 0 0 .5px var(--chip-ring-hover),inset 1px 1.5px 0 var(--chip-hi),inset -1px -1.5px 1px var(--chip-lo),inset 0 -5px 8px var(--chip-caustic)}
+.glass :is(.dgm-pin,.icon-btn) svg{width:13px;height:13px}
+.glass :is(.dgm-pin,.icon-btn):active{transform:scale(.9)}
+.glass .icon-btn.danger:hover{color:var(--red)}
+.glass .dgm-pin.on{color:var(--disc-ink);
+  background:radial-gradient(70% 45% at 50% 100%,var(--disc-glow),transparent 70%),linear-gradient(180deg,var(--disc-top),var(--disc-bot));
+  box-shadow:inset 0 -1px 0 var(--disc-rim)}
 </style>
 </head>
-<body>
+<body class="glass">
 
 <!-- SETUP MODAL -->
 <!-- LOGIN SCREEN -->
@@ -996,7 +1102,7 @@ tr:hover td{background:var(--lifted,var(--bg))}
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:8px">
       <button class="topbar-menu-btn" onclick="openMobileSidebar()" title="開啟選單">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="1" y1="4" x2="15" y2="4"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="12" x2="15" y2="12"/></svg>
+        <svg class="ico" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="1" y1="4" x2="15" y2="4"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="12" x2="15" y2="12"/></svg>
       </button>
       <div>
         <div class="page-breadcrumb" id="page-breadcrumb">Dashboard</div>
@@ -1004,18 +1110,18 @@ tr:hover td{background:var(--lifted,var(--bg))}
       </div>
     </div>
     <div class="topbar-right">
-      <select id="themeSelect" onchange="setTheme(this.value)" title="切換主題" style="height:32px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--white);color:var(--mid);font-size:12px;padding:0 8px;cursor:pointer;outline:none">
+      <select class="theme-select" id="themeSelect" onchange="setTheme(this.value)" title="切換主題">
         <option value="default">預設</option>
         <option value="coinbase">Coinbase</option>
         <option value="revolut">Revolut（深色）</option>
         <option value="wise">Wise</option>
       </select>
       <button class="btn btn-ghost" id="refreshBtn" onclick="refreshAll()">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8A6 6 0 1 1 8 2a6 6 0 0 1 4.24 1.76L14 2v4h-4"/></svg>
+        <svg class="ico" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8A6 6 0 1 1 8 2a6 6 0 0 1 4.24 1.76L14 2v4h-4"/></svg>
         Refresh
       </button>
       <button class="btn btn-primary" onclick="showAddHolding()">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+        <svg class="ico" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
         新增持倉
       </button>
     </div>
@@ -1055,7 +1161,7 @@ tr:hover td{background:var(--lifted,var(--bg))}
     <!-- 投入預算 · 台幣：已投入＝已部署到持股的成本（不含閒置現金）vs 總預算 -->
     <div class="goal-card" id="goalCard">
       <div class="goal-header">
-        <div class="goal-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:5px"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>投入預算</div>
+        <div class="goal-title"><svg class="ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:5px"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>投入預算</div>
         <span style="font-size:11px;color:var(--mid)" id="goalReachDate"></span>
       </div>
       <div class="goal-progress-wrap">
@@ -1140,7 +1246,7 @@ tr:hover td{background:var(--lifted,var(--bg))}
 
     <div class="insight-box" id="aiInsight" style="display:none">
       <div class="insight-header">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#f37338" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5.5" x2="8" y2="8.5"/><circle cx="8" cy="11" r=".6" fill="#f37338" stroke="none"/></svg>
+        <svg class="ico" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#f37338" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5.5" x2="8" y2="8.5"/><circle cx="8" cy="11" r=".6" fill="#f37338" stroke="none"/></svg>
         <span class="insight-title">AI Insight</span>
         <span style="margin-left:auto;font-size:10px;font-weight:600;color:#e8e6e3;background:rgba(255,255,255,.1);padding:2px 9px;border-radius:9999px" id="insightDate"></span>
       </div>
@@ -1154,15 +1260,15 @@ tr:hover td{background:var(--lifted,var(--bg))}
     <!-- 頂部 Tab 切換器 -->
     <div class="screener-tabs">
       <button class="screener-tab active" id="stab-general" onclick="switchScreenerTab('general')">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="1" y1="4" x2="15" y2="4"/><line x1="3" y1="8" x2="13" y2="8"/><line x1="6" y1="12" x2="10" y2="12"/></svg>
+        <svg class="ico" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="1" y1="4" x2="15" y2="4"/><line x1="3" y1="8" x2="13" y2="8"/><line x1="6" y1="12" x2="10" y2="12"/></svg>
         通用篩選
       </button>
       <button class="screener-tab tab-bos" id="stab-bos" onclick="switchScreenerTab('bos')">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6"/></svg>
+        <svg class="ico" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6"/></svg>
         BOS 價值投資
       </button>
       <button class="screener-tab tab-dgm" id="stab-dgm" onclick="switchScreenerTab('dgm')">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="1,13 5,8 8,10 11,6 15,9"/><circle cx="15" cy="5" r="1.5" fill="currentColor" stroke="none"/></svg>
+        <svg class="ico" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="1,13 5,8 8,10 11,6 15,9"/><circle cx="15" cy="5" r="1.5" fill="currentColor" stroke="none"/></svg>
         DGM 股息成長
       </button>
     </div>
@@ -1222,7 +1328,7 @@ tr:hover td{background:var(--lifted,var(--bg))}
               <input class="sym-input" id="bos-symbols" placeholder="AAPL, MSFT, GOOGL, NVDA （逗號分隔，不填使用預設清單）">
             </div>
             <button class="btn btn-primary" onclick="runBosScreen()" style="height:32px;background:var(--purple)">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 2a6 6 0 0 1 6 6 6 6 0 0 1-6 6 6 6 0 0 1-6-6 6 6 0 0 1 6-6z"/><path d="M8 6v2l1.5 1.5"/></svg>
+              <svg class="ico" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 2a6 6 0 0 1 6 6 6 6 0 0 1-6 6 6 6 0 0 1-6-6 6 6 0 0 1 6-6z"/><path d="M8 6v2l1.5 1.5"/></svg>
               AI 分析
             </button>
             <button class="btn btn-primary" onclick="runBosDiscover()" style="height:32px;background:var(--blue)">
@@ -1264,7 +1370,7 @@ tr:hover td{background:var(--lifted,var(--bg))}
               <input class="sym-input" id="dgm-symbols" placeholder="KO, JNJ, PG （逗號分隔，不填使用股息股 Universe）">
             </div>
             <button class="btn btn-primary" onclick="runDgmScreen()" style="height:32px;background:var(--green)">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1,12 5,7 9,9 15,3"/></svg>
+              <svg class="ico" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1,12 5,7 9,9 15,3"/></svg>
               DGM 評分
             </button>
             <button class="btn btn-ghost" id="dgmBuyableBtn" onclick="dgmToggleBuyable(this)" style="height:32px" title="只顯示品質≥7 且 時機≥7（現在可買）">現在可買</button>
@@ -1702,6 +1808,53 @@ let API_BASE = RAILWAY_URL;
 let API_KEY  = localStorage.getItem('app_password') || '';
 let DEMO_MODE = false;
 
+// ── 圖表跟著主題換色（2026-09-29，樣板＝按鈕玻璃-樣板.html）───────────────
+// 問題：圖表是畫在 canvas 上的，canvas 讀不到 CSS 變數，所以原本把顏色直接寫死（#141413 黑線、#fff 白邊）
+//       → 切到深色主題時，黑線畫在黑底上就不見了、格線變亮白
+// 做法：每次換主題時，從 CSS 變數把顏色讀出來放進 CT，圖表的顏色都寫成「() => CT.xxx」，讓它每次畫的時候去拿當下的顏色
+// 新圖表照這個寫：顏色一律 () => CT.ink／CT.grid…，不要再寫死色碼
+const CT = {};
+const _cx = document.createElement('canvas').getContext('2d');
+// 任何 CSS 顏色（#hex、rgb、rgba）→ 換成指定透明度的 rgba；借 canvas 幫忙把顏色格式統一
+function withAlpha(color, a) {
+  _cx.fillStyle = '#000'; _cx.fillStyle = color;
+  const v = _cx.fillStyle;   // 瀏覽器會回 '#rrggbb' 或 'rgba(r, g, b, a)'
+  if (v[0] === '#') { const n = parseInt(v.slice(1), 16); return `rgba(${n >> 16},${n >> 8 & 255},${n & 255},${a})`; }
+  const [r, g, b] = v.match(/[\d.]+/g);
+  return `rgba(${r},${g},${b},${a})`;
+}
+// 圖表色盤第 i 色：畫在 canvas 上用 CT.pal[i]；畫在 HTML／SVG 上用 palVar(i)（CSS 變數，換主題自己會變，不用重畫）
+const palVar = i => `var(--pal-${i % 9})`;
+function readChartTheme() {
+  if (!window.Chart) return;
+  const cs = getComputedStyle(document.documentElement), v = n => cs.getPropertyValue(n).trim();
+  Object.assign(CT, { ink: v('--dark'), mid: v('--mid'), soft: v('--light'), grid: v('--border'), card: v('--white'), accent: v('--amber'),
+    pal: Array.from({ length: 9 }, (_, i) => v('--pal-' + i)) });
+  Chart.defaults.color = CT.mid;   // 圖例文字這類沒特別指定顏色的字
+  // 提示框：跟側欄 hover 出來的那顆深色膠囊同一個樣子（深底、淺字、圓角、沒有小尖角）
+  Object.assign(Chart.defaults.plugins.tooltip, { backgroundColor: withAlpha(CT.ink, .86), titleColor: CT.card, bodyColor: CT.card,
+    cornerRadius: 12, padding: { x: 11, y: 7 }, displayColors: false, caretSize: 0,
+    titleFont: { weight: '600', size: 11 }, bodyFont: { weight: '600', size: 12 } });
+}
+// 換主題時叫這支：重讀顏色 → 所有圖表重畫一次（'none'＝不播動畫，直接換色）
+function refreshChartTheme() {
+  readChartTheme();
+  if (window.Chart) Object.values(Chart.instances).forEach(c => c.update('none'));
+}
+readChartTheme();
+
+// ── 圖示（2026-09-29）：原本用文字符號 ↻ ⟳ ⚠ × ✓，各字型畫出來粗細、大小都不一樣 → 換成同一套線條圖示
+// 線寬由 CSS 的 .glass svg.ico 統一成螢幕上 1.5px；尺寸通常由外層 CSS 決定，要自己指定就傳 px
+const ICO_PATHS = {
+  refresh: '<path d="M14 8A6 6 0 1 1 8 2a6 6 0 0 1 4.24 1.76L14 2v4h-4"/>',                                    // 重抓財報
+  sparkle: '<path d="M8 1.5C8.6 5.4 10.6 7.4 14.5 8 10.6 8.6 8.6 10.6 8 14.5 7.4 10.6 5.4 8.6 1.5 8 5.4 7.4 7.4 5.4 8 1.5Z"/>', // 用 Claude 重評
+  warn:    '<path d="M8 1.5 14.5 13.5H1.5Z"/><path d="M8 6v3.5"/><circle cx="8" cy="11.5" r=".6" fill="currentColor" stroke="none"/>',
+  x:       '<path d="M4 4l8 8M12 4l-8 8"/>',                                                                   // 移除／刪除
+  pin:     '<path d="M5.5 2h5M6.5 2v4L4 9.5h8L9.5 6V2M8 9.5v5"/>',                                             // 釘選
+  check:   '<polyline points="3 8.5 6.5 12 13 4.5"/>',                                                         // 跟 .bsc-pill 勾勾同一條線
+};
+const ico = (name, px) => `<svg class="ico"${px ? ` width="${px}" height="${px}"` : ''} viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO_PATHS[name]}</svg>`;
+
 // ── INIT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // ?demo：免登入預覽（走 DEMO_HOLDINGS 假資料、不打後端），方便本機 open 檔案看畫面
@@ -1869,6 +2022,75 @@ addEventListener('resize', () => placeDisc(false));
 document.fonts?.ready.then(() => placeDisc(false));   // 字型載完版面可能微調，再貼一次
 placeDisc(false);
 
+// ── 分段切換的滑動膠囊（2026-09-29，樣板＝按鈕玻璃-樣板.html）─────────────────────
+// 一支管所有分段列（清單跟 CSS 那份 :is(...) 是同一份，要加新的切換列兩邊都要加）
+// 不用去改每個按鈕的 onclick：各頁原本的函式只負責換 .active／.on，這裡看到 class 換了就把膠囊滑過去
+const SEG_ROWS = '.timeframe-row, .screener-tabs, .trend-seg, .alloc-lens-seg, .card-tabs, .sb-seg, .wl-seg';
+const SEG_ON = ':scope > :is(.active, .on, .on-watch, .on-buy)';   // 各列表示「選中」的 class 不一樣，全列在這
+const segReduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// 分頁從隱藏變顯示、視窗縮放、手機換行 → 尺寸變了就直接貼過去（不滑）；全站共用一支
+const segRO = new ResizeObserver(es => es.forEach(e => segPlace(e.target, false)));
+
+function segPlace(row, animate) {
+  const pill = row.querySelector(':scope > .seg-pill');
+  const on = row.querySelector(SEG_ON);
+  if (!pill) return;
+  if (!on || !row.offsetWidth) { pill.style.opacity = on ? '' : '0'; return; }   // 沒選中（或還沒顯示、寬 0）先藏著
+  pill.style.opacity = '';
+  // 位置＝按鈕框 − 軌道框 − 軌道邊框（膠囊是絕對定位，從軌道的邊框內側起算）；用相減保留小數，不會差半格
+  const r = on.getBoundingClientRect(), s = row.getBoundingClientRect();
+  const x = r.left - s.left - row.clientLeft, y = r.top - s.top - row.clientTop;
+  const first = pill.dataset.x === undefined;
+  const dx = first ? 0 : x - Number(pill.dataset.x);
+  pill.dataset.x = x;
+  // 有自己顏色的選項，膠囊跟著換：選股 BOS／想買＝紫、選股 DGM＝綠
+  pill.dataset.tone = on.matches('.tab-bos, .on-buy') ? 'bos' : on.matches('.tab-dgm') ? 'dgm' : '';
+  const still = first || !animate;
+  if (still) pill.classList.add('no-anim');
+  pill.style.translate = `${x}px ${y}px`;
+  pill.style.width = r.width + 'px';
+  pill.style.height = r.height + 'px';
+  if (still) { pill.offsetWidth; pill.classList.remove('no-anim'); }   // 強迫排版一次，再把過場還回去
+  else if (dx && !segReduceMotion) {
+    // 液體感：跟側欄黑球同一套，只是方向換成橫的（衝出去變長變扁 → 到站縮一下 → 小回彈）
+    const k = Math.min(1, Math.abs(dx) / 200), ease = 'ease-in-out';
+    pill.animate([
+      { scale: '1 1', easing: ease },
+      { scale: `${1 + .14 * k} ${1 - .12 * k}`, offset: .35, easing: ease },
+      { scale: `${1 - .05 * k} ${1 + .06 * k}`, offset: .66, easing: ease },
+      { scale: `${1 + .01 * k} ${1 - .01 * k}`, offset: .84, easing: ease },
+      { scale: '1 1' },
+    ], { duration: 520 });
+  }
+}
+
+function segInit(row) {
+  if (row.querySelector(':scope > .seg-pill')) return;   // 已經有膠囊（重複呼叫）就不再裝一顆
+  const pill = document.createElement('span');
+  pill.className = 'seg-pill'; pill.setAttribute('aria-hidden', 'true');
+  row.prepend(pill);
+  segRO.observe(row);
+  segPlace(row, false);
+}
+// 找出一個節點本身＋底下所有的分段列
+const segRowsIn = n => n.nodeType !== 1 ? [] : [...(n.matches(SEG_ROWS) ? [n] : []), ...n.querySelectorAll(SEG_ROWS)];
+
+// 全站只掛一支 MutationObserver（不是每列一支），因為訊號計分板、想買清單這幾列是「整塊重畫」的：
+// 點一下舊的那排直接被丟掉、換一排新的上來 → 要在新的一排出現時自動裝膠囊
+// 限制：重畫出來的是新的一排，膠囊沒有「上一個位置」可以滑，所以會直接出現在新位置（不滑）
+new MutationObserver(recs => {
+  for (const m of recs) {
+    if (m.type === 'childList') {
+      m.addedNodes.forEach(n => segRowsIn(n).forEach(segInit));
+      m.removedNodes.forEach(n => segRowsIn(n).forEach(r => segRO.unobserve(r)));
+    } else if (!m.target.classList.contains('seg-pill') && m.target.parentElement?.matches(SEG_ROWS)) {
+      segPlace(m.target.parentElement, true);   // 某列裡的按鈕換了 class → 滑過去（膠囊自己換 class 不算，不然會自己叫自己）
+    }
+  }
+}).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+document.querySelectorAll(SEG_ROWS).forEach(segInit);
+document.fonts?.ready.then(() => document.querySelectorAll(SEG_ROWS).forEach(r => segPlace(r, false)));
+
 function openMobileSidebar() {
   document.getElementById('sidebar').classList.add('mobile-open');
   document.getElementById('sidebarBackdrop').classList.add('show');
@@ -1883,6 +2105,7 @@ function setTheme(name) {
   if (name && name !== 'default') document.documentElement.dataset.theme = name;
   else document.documentElement.removeAttribute('data-theme');
   localStorage.setItem('uiTheme', name || 'default');
+  refreshChartTheme();   // 圖表畫在 canvas 上讀不到 CSS，要自己叫它重讀顏色
 }
 // 載入時套用已存主題
 (function(){
@@ -1987,7 +2210,7 @@ async function refreshAll() {
   _apiBust();   // 使用者按重新整理＝要最新資料，清掉 90 秒記憶體快取強制重打
   await loadOverview();
   btn.disabled=false;
-  btn.innerHTML='<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8A6 6 0 1 1 8 2a6 6 0 0 1 4.24 1.76L14 2v4h-4"/></svg> Refresh';
+  btn.innerHTML='<svg class="ico" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8A6 6 0 1 1 8 2a6 6 0 0 1 4.24 1.76L14 2v4h-4"/></svg> Refresh';
 }
 
 // ── OVERVIEW ──────────────────────────────────────────────────
@@ -2114,7 +2337,7 @@ function renderSummaryCards(s) {
   document.getElementById('s-cost').textContent    = '$'+(usData.total_cost||0).toLocaleString('en',{maximumFractionDigits:0});
   document.getElementById('s-count').textContent   = s.us ? (s.us.holdings_count||0) : s.holdings_count;
   const pnl=(usData.total_unrealized_pnl||0), up=pnl>=0;
-  document.getElementById('s-pnl').innerHTML = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="${up?'2,9 6,3 10,9':'2,3 6,9 10,3'}"/></svg> ${up?'+':''}$${Math.abs(pnl).toLocaleString('en',{maximumFractionDigits:0})} (${up?'+':''}${(usData.total_unrealized_pnl_pct||0).toFixed(1)}%)`;
+  document.getElementById('s-pnl').innerHTML = `<svg class="ico" width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="${up?'2,9 6,3 10,9':'2,3 6,9 10,3'}"/></svg> ${up?'+':''}$${Math.abs(pnl).toLocaleString('en',{maximumFractionDigits:0})} (${up?'+':''}${(usData.total_unrealized_pnl_pct||0).toFixed(1)}%)`;
   document.getElementById('s-pnl').className = 'stat-change '+(up?'up':'down');
   document.getElementById('s-ret').textContent = (up?'+':'')+(usData.total_unrealized_pnl_pct||0).toFixed(1)+'%';
   document.getElementById('s-ret').className = 'stat-change '+(up?'up':'down');
@@ -2206,12 +2429,12 @@ function renderHoldings(holdings) {
 
 function renderSectorChart(allocation) {
   const labels=Object.keys(allocation), values=Object.values(allocation);
-  const colors=['#141413','#1f7a54','#8f6f86','#cf4500','#c0392b','#bb8a45'];
+  const SECTOR_PAL=[0,2,1,3,4,5];   // 這張原本的色序是黑、綠、紫…（跟配置圖的第 2、3 色對調），照舊
   const ctx=document.getElementById('sectorChart').getContext('2d');
   if(secChart) secChart.destroy();
-  secChart=new Chart(ctx,{type:'doughnut',data:{labels:labels.map((k,i)=>`${k} ${values[i]}%`),datasets:[{data:values,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8,color:'#696969'}}}}});
+  secChart=new Chart(ctx,{type:'doughnut',data:{labels:labels.map((k,i)=>`${k} ${values[i]}%`),datasets:[{data:values,backgroundColor:c=>CT.pal[SECTOR_PAL[c.dataIndex%SECTOR_PAL.length]],borderWidth:2,borderColor:()=>CT.card}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8}}}}});
   const list=document.getElementById('sectorList'); list.innerHTML='';
-  labels.forEach((k,i)=>{list.innerHTML+=`<div class="alloc-item"><div class="alloc-dot" style="background:${colors[i%colors.length]}"></div><div class="alloc-name">${k}</div><div class="alloc-pct">${values[i]}%</div></div>`;});
+  labels.forEach((k,i)=>{list.innerHTML+=`<div class="alloc-item"><div class="alloc-dot" style="background:${palVar(SECTOR_PAL[i%SECTOR_PAL.length])}"></div><div class="alloc-name">${k}</div><div class="alloc-pct">${values[i]}%</div></div>`;});
 }
 
 async function renderNetWorthChart(period) {
@@ -2240,10 +2463,11 @@ async function renderNetWorthChart(period) {
   }
 
   document.getElementById('trendSub').textContent=`${dates[0]} — ${dates[dates.length-1]}`;
-  const _grad=ctx.createLinearGradient(0,0,0,(ctx.canvas&&ctx.canvas.height)||260);
-  _grad.addColorStop(0,'rgba(207,69,0,0.30)'); _grad.addColorStop(1,'rgba(207,69,0,0)');
+  // 漸層在畫的時候才建：才拿得到圖的實際高度，顏色也跟著主題（CT.accent）
+  const _grad=c=>{const a=c.chart.chartArea; if(!a) return 'transparent'; const g=c.chart.ctx.createLinearGradient(0,a.top,0,a.bottom);
+    g.addColorStop(0,withAlpha(CT.accent,.30)); g.addColorStop(1,withAlpha(CT.accent,0)); return g;};
   const _lastIdx=prices.length-1;
-  nwChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'Portfolio',data:prices,borderColor:'#141413',backgroundColor:_grad,fill:true,tension:0.4,borderWidth:2.4,pointRadius:prices.map((_,i)=>i===_lastIdx?4.5:0),pointHoverRadius:5,pointBackgroundColor:'#141413',pointBorderColor:'#fff',pointBorderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1100,easing:'easeOutQuart'},interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},crosshair:true,tooltip:{displayColors:false,callbacks:{label:c=>'$'+Math.round(c.raw).toLocaleString('en')}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:7,font:{size:11},color:'#9a9691'}},y:{grid:{color:'#ece7e1'},ticks:{callback:v=>v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'K':'$'+Math.round(v),font:{size:11},color:'#9a9691'}}}}});
+  nwChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'Portfolio',data:prices,borderColor:()=>CT.ink,backgroundColor:_grad,fill:true,tension:0.4,borderWidth:2.4,pointRadius:prices.map((_,i)=>i===_lastIdx?4.5:0),pointHoverRadius:5,pointBackgroundColor:()=>CT.ink,pointBorderColor:()=>CT.card,pointBorderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1100,easing:'easeOutQuart'},interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},crosshair:true,tooltip:{displayColors:false,callbacks:{label:c=>'$'+Math.round(c.raw).toLocaleString('en')}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:7,font:{size:11},color:()=>CT.soft}},y:{grid:{color:()=>CT.grid},ticks:{callback:v=>v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'K':'$'+Math.round(v),font:{size:11},color:()=>CT.soft}}}}});
   document.getElementById('trendLoading').style.display='none';
 }
 
@@ -2270,7 +2494,7 @@ function setTrendMode(mode){
   else renderNetWorthChart(_trendPeriod);
 }
 
-// 板塊配色複用既有 ALLOC_COLORS（sector 圓餅圖同一組色盤，色系一致）；series[0]=最大板塊→色盤首色主藍
+// 板塊配色用 --pal 色盤（跟配置圓餅圖同一組，色系一致）；series[0]=最大板塊→色盤首色主藍
 const _allocDemo = {
   dates:['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06'],
   series:[
@@ -2328,36 +2552,36 @@ function _drawAllocSVG(data){
   // 網格 + y 標籤
   [0,25,50,75,100].forEach(g=>{
     const y=Y(g);
-    svg.appendChild(el('line',{x1:P.l,y1:y,x2:P.l+plotW,y2:y,stroke:'#efeae4','stroke-width':1}));
-    const t=el('text',{x:P.l-8,y:y+4,'text-anchor':'end','font-size':11,fill:'#9a9691'}); t.textContent=g+'%'; svg.appendChild(t);
+    svg.appendChild(el('line',{x1:P.l,y1:y,x2:P.l+plotW,y2:y,style:'stroke:var(--border)','stroke-width':1}));
+    const t=el('text',{x:P.l-8,y:y+4,'text-anchor':'end','font-size':11,style:'fill:var(--light)'}); t.textContent=g+'%'; svg.appendChild(t);
   });
   // 每層堆疊面積
   series.forEach((s,k)=>{
-    const color=ALLOC_COLORS[k%ALLOC_COLORS.length];
+    const color=palVar(k);   // SVG 屬性不一定吃 var()，所以下面顏色一律寫在 style 裡
     const lower = k===0 ? new Array(n).fill(0) : cum.map(c=>c[k-1]);
     const upper = cum.map(c=>c[k]);
     let pts='';
     for(let i=0;i<n;i++) pts+=`${X(i)},${Y(upper[i])} `;
     for(let i=n-1;i>=0;i--) pts+=`${X(i)},${Y(lower[i])} `;
-    svg.appendChild(el('polygon',{points:pts.trim(),fill:color,stroke:'#fff','stroke-width':0.8}));
+    svg.appendChild(el('polygon',{points:pts.trim(),style:`fill:${color};stroke:var(--white)`,'stroke-width':0.8}));
     // 右側 band 標籤（最後一點該層中點）
     const midPct=(lower[n-1]+upper[n-1])/2;
     const bandH=Y(lower[n-1])-Y(upper[n-1]);
     if(bandH>=12){  // 太薄不標，避免疊字
-      const t=el('text',{x:X(n-1)+10,y:Y(midPct)+4,'font-size':11.5,'font-weight':600,fill:'#141413'});
+      const t=el('text',{x:X(n-1)+10,y:Y(midPct)+4,'font-size':11.5,'font-weight':600,style:'fill:var(--dark)'});
       t.textContent=`${s.name} ${Math.round(series[k].data[n-1]||0)}%`; svg.appendChild(t);
     }
   });
   // x 軸日期（最多 ~6 個等距）
   const step=Math.max(1,Math.ceil(n/6));
   for(let i=0;i<n;i+=step){
-    const t=el('text',{x:X(i),y:P.t+plotH+20,'text-anchor':'middle','font-size':11,fill:'#696969'});
+    const t=el('text',{x:X(i),y:P.t+plotH+20,'text-anchor':'middle','font-size':11,style:'fill:var(--mid)'});
     t.textContent=_fmtAllocDate(dates[i]); svg.appendChild(t);
   }
   // 圖例
   series.forEach((s,k)=>{
     const d=document.createElement('div'); d.style.cssText='display:flex;align-items:center;gap:6px';
-    d.innerHTML=`<span style="width:11px;height:11px;border-radius:3px;background:${ALLOC_COLORS[k%ALLOC_COLORS.length]};display:inline-block"></span>${s.name}`;
+    d.innerHTML=`<span style="width:11px;height:11px;border-radius:3px;background:${palVar(k)};display:inline-block"></span>${s.name}`;
     legend.appendChild(d);
   });
 }
@@ -2384,7 +2608,7 @@ function renderAiInsight(summary) {
 
 // ── PORTFOLIO PAGE ────────────────────────────────────────────
 let allocChart, allocChartTW;
-const ALLOC_COLORS=['#141413','#8f6f86','#1f7a54','#cf4500','#c0392b','#bb8a45','#b5623a','#7d8a45','#9a9691'];
+// 配置圖色盤：2026-09-29 起改用 CSS 的 --pal-0~8（canvas 用 CT.pal[i]、HTML／SVG 用 palVar(i)），原本的 ALLOC_COLORS 常數已拿掉
 
 // 渲染單一幣別群組的配置圖 + 持倉明細列表，回傳 Chart 實例供下次刷新時 destroy
 function renderAllocGroup(canvasId, listId, holdings, total, prevChart) {
@@ -2392,10 +2616,10 @@ function renderAllocGroup(canvasId, listId, holdings, total, prevChart) {
   if(prevChart) prevChart.destroy();
   const labels=holdings.map(h=>`${h.symbol} ${((h.market_value/total)*100).toFixed(0)}%`);
   const data=holdings.map(h=>h.market_value);
-  const chart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:ALLOC_COLORS,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:8,color:'#696969'}}}}});
+  const chart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:c=>CT.pal[c.dataIndex%CT.pal.length],borderWidth:2,borderColor:()=>CT.card}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:8}}}}});
 
   const list=document.getElementById(listId); list.innerHTML='';
-  holdings.forEach((h,i)=>{const pct=((h.market_value/total)*100).toFixed(1);list.innerHTML+=`<div class="alloc-item"><div class="alloc-dot" style="background:${ALLOC_COLORS[i%ALLOC_COLORS.length]}"></div><div><div class="alloc-name">${h.symbol}</div><div class="alloc-sub">${h.name||''}</div></div><div class="alloc-bar-wrap"><div class="alloc-bar"><div class="alloc-bar-fill" style="width:${Math.min(pct*100/30,100)}%;background:${ALLOC_COLORS[i%ALLOC_COLORS.length]}"></div></div></div><div class="alloc-pct">${pct}%</div></div>`;});
+  holdings.forEach((h,i)=>{const pct=((h.market_value/total)*100).toFixed(1);list.innerHTML+=`<div class="alloc-item"><div class="alloc-dot" style="background:${palVar(i)}"></div><div><div class="alloc-name">${h.symbol}</div><div class="alloc-sub">${h.name||''}</div></div><div class="alloc-bar-wrap"><div class="alloc-bar"><div class="alloc-bar-fill" style="width:${Math.min(pct*100/30,100)}%;background:${palVar(i)}"></div></div></div><div class="alloc-pct">${pct}%</div></div>`;});
   return chart;
 }
 
@@ -2492,11 +2716,11 @@ function renderCombinedDonut(segs){
   const ctx=document.getElementById('allocCombinedChart').getContext('2d');
   if(allocCombinedChart) allocCombinedChart.destroy();
   const labels=segs.map(s=>`${s.label} ${s.pct.toFixed(0)}%`);
-  allocCombinedChart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:segs.map(s=>s.pct),backgroundColor:ALLOC_COLORS,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:8,color:'#696969'}}}}});
+  allocCombinedChart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:segs.map(s=>s.pct),backgroundColor:c=>CT.pal[c.dataIndex%CT.pal.length],borderWidth:2,borderColor:()=>CT.card}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:8}}}}});
   const list=document.getElementById('allocList'); list.innerHTML='';
   document.getElementById('allocListTW').style.display='none';
   const max=Math.max(...segs.map(s=>s.pct),1);
-  segs.forEach((s,i)=>{ list.innerHTML+=`<div class="alloc-item"><div class="alloc-dot" style="background:${ALLOC_COLORS[i%ALLOC_COLORS.length]}"></div><div><div class="alloc-name">${s.label}</div><div class="alloc-sub"></div></div><div class="alloc-bar-wrap"><div class="alloc-bar"><div class="alloc-bar-fill" style="width:${Math.min(s.pct/max*100,100)}%;background:${ALLOC_COLORS[i%ALLOC_COLORS.length]}"></div></div></div><div class="alloc-pct">${s.pct.toFixed(1)}%</div></div>`; });
+  segs.forEach((s,i)=>{ list.innerHTML+=`<div class="alloc-item"><div class="alloc-dot" style="background:${palVar(i)}"></div><div><div class="alloc-name">${s.label}</div><div class="alloc-sub"></div></div><div class="alloc-bar-wrap"><div class="alloc-bar"><div class="alloc-bar-fill" style="width:${Math.min(s.pct/max*100,100)}%;background:${palVar(i)}"></div></div></div><div class="alloc-pct">${s.pct.toFixed(1)}%</div></div>`; });
 }
 
 function renderAllocLens(){
@@ -2780,7 +3004,7 @@ function buildTechChips() {
     c.appendChild(document.createTextNode(sym));
     c.onclick=()=>{curTechSym=sym;buildTechChips();loadTechnical(sym,curTechTF)};
     const x=document.createElement('span');               // 每顆都可刪
-    x.className='chip-x'; x.textContent='×'; x.title='移除';
+    x.className='chip-x'; x.innerHTML=ico('x'); x.title='移除';
     x.onclick=(e)=>{e.stopPropagation();removeTechSym(sym);};
     c.appendChild(x);
     div.appendChild(c);
@@ -2862,16 +3086,16 @@ async function loadTechnical(symbol, period) {
   }
   const ctx=document.getElementById('priceChart').getContext('2d');
   if(pChart) pChart.destroy();
-  pChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'股價',data:prices,borderColor:'#141413',backgroundColor:'rgba(207,69,0,0.05)',fill:true,tension:0.3,pointRadius:(c)=>c.dataIndex===prices.length-1?4:0,pointBackgroundColor:'#141413',pointBorderColor:'#fff',pointBorderWidth:1.5,borderWidth:2},{label:'20日均線',data:sma20,borderColor:'#cf4500',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},{label:'50日均線',data:sma50,borderColor:'#c0392b',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#696969'}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${cs}${c.raw?.toFixed(2)??'—'}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9a9691'}},y:{grid:{color:'#ece7e1'},ticks:{callback:v=>cs+v.toFixed(0),font:{size:11},color:'#9a9691'}}}}});
+  pChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'股價',data:prices,borderColor:()=>CT.ink,backgroundColor:'rgba(207,69,0,0.05)',fill:true,tension:0.3,pointRadius:(c)=>c.dataIndex===prices.length-1?4:0,pointBackgroundColor:()=>CT.ink,pointBorderColor:()=>CT.card,pointBorderWidth:1.5,borderWidth:2},{label:'20日均線',data:sma20,borderColor:'#cf4500',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},{label:'50日均線',data:sma50,borderColor:'#c0392b',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${cs}${c.raw?.toFixed(2)??'—'}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:()=>CT.soft}},y:{grid:{color:()=>CT.grid},ticks:{callback:v=>cs+v.toFixed(0),font:{size:11},color:()=>CT.soft}}}}});
 
   const ctx2=document.getElementById('rsiChart').getContext('2d');
   if(rChart) rChart.destroy();
-  rChart=new Chart(ctx2,{type:'line',data:{labels:dates,datasets:[{label:'RSI',data:rsi,borderColor:'#141413',fill:false,tension:0.3,pointRadius:0,borderWidth:2},{label:'超買線(70)',data:Array(dates.length).fill(70),borderColor:'rgba(192,57,43,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1},{label:'超賣線(30)',data:Array(dates.length).fill(30),borderColor:'rgba(31,122,84,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16,color:'#696969'}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9a9691'}},y:{min:0,max:100,grid:{color:'#ece7e1'},ticks:{font:{size:11},color:'#9a9691'}}}}});
+  rChart=new Chart(ctx2,{type:'line',data:{labels:dates,datasets:[{label:'RSI',data:rsi,borderColor:()=>CT.ink,fill:false,tension:0.3,pointRadius:0,borderWidth:2},{label:'超買線(70)',data:Array(dates.length).fill(70),borderColor:'rgba(192,57,43,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1},{label:'超賣線(30)',data:Array(dates.length).fill(30),borderColor:'rgba(31,122,84,.5)',borderDash:[4,3],pointRadius:0,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:16}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:()=>CT.soft}},y:{min:0,max:100,grid:{color:()=>CT.grid},ticks:{font:{size:11},color:()=>CT.soft}}}}});
 
   const volColors=prices.map((p,i)=>i===0?'rgba(207,69,0,.6)':p>=prices[i-1]?'rgba(31,122,84,.65)':'rgba(192,57,43,.65)');
   const ctx3=document.getElementById('volumeChart').getContext('2d');
   if(vChart) vChart.destroy();
-  vChart=new Chart(ctx3,{type:'bar',data:{labels:dates,datasets:[{label:'Volume',data:volumes,backgroundColor:volColors}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:'#9a9691'}},y:{grid:{color:'#ece7e1'},ticks:{callback:v=>(v/1e6).toFixed(0)+'M',font:{size:11},color:'#9a9691'}}}}});
+  vChart=new Chart(ctx3,{type:'bar',data:{labels:dates,datasets:[{label:'Volume',data:volumes,backgroundColor:volColors}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11},color:()=>CT.soft}},y:{grid:{color:()=>CT.grid},ticks:{callback:v=>(v/1e6).toFixed(0)+'M',font:{size:11},color:()=>CT.soft}}}}});
 
   const lastRSI=rsi.filter(v=>v!=null).pop();
   const lastSMA20=sma20.filter(v=>v!=null).pop();
@@ -3681,7 +3905,7 @@ function renderPerStockRebalance(holdings){
     g.forEach(e=>{
       const p=_rb2.pct[e.sym]||0, target=gTarget*p/100, gap=target-e.curTwd, v=rb2Val(e.sym);
       let pill;
-      if(Math.abs(gap)<=Math.max(2500,budget*0.005)) pill=`<span class="rb2-pill hold">持平 ✓</span>`;
+      if(Math.abs(gap)<=Math.max(2500,budget*0.005)) pill=`<span class="rb2-pill hold">持平 ${ico('check',10)}</span>`;
       else if(gap>0) pill=`<span class="rb2-pill buy">+ NT$${nf(gap)}</span>`;
       else pill=`<span class="rb2-pill over">超 NT$${nf(-gap)}</span>`;
       rowsHtml+=`<tr>
@@ -3831,7 +4055,7 @@ function renderWatchlist(){
   if(cBuy) cBuy.textContent=`只看想買（${buyN}）`;
   const tbody=document.getElementById('watchlistTbody'); tbody.innerHTML='';
   const aMap={'買入':'tag-green','持有':'tag-amber','觀察':'tag-blue'};
-  if(!items.length){ tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;color:var(--mid);padding:24px">${_wlFilter==='buy'?'還沒有標記為「想買」的標的，點右側 ☆ 加入藍圖':'觀察清單是空的'}</td></tr>`; return; }
+  if(!items.length){ tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;color:var(--mid);padding:24px">${_wlFilter==='buy'?'還沒有標記為「想買」的標的，點右側「想買」加入藍圖':'觀察清單是空的'}</td></tr>`; return; }
   items.forEach(w=>{
     const up=(w.change_pct||0)>=0;
     // 依標的判斷幣別：優先用後端 currency，否則以 .TW/.TWO 或 4-6 位數字代號視為台股（NT$）
@@ -4248,8 +4472,8 @@ function _bscFoot(s) {
     <div class="bsc-actions">
       <span class="bsc-analyzed">${analyzed}</span>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
-        <button class="bsc-btn" onclick="bosRefresh('${s.symbol}')" title="重抓最新財報數據（免費，不叫 Claude）">↻ 重抓財報</button>
-        ${s.moat ? `<button class="bsc-btn" onclick="bosReanalyze('${s.symbol}')" title="用 Claude 重評護城河與風險（會花費）">⟳ 護城河重評</button>` : ''}
+        <button class="bsc-btn" onclick="bosRefresh('${s.symbol}')" title="重抓最新財報數據（免費，不叫 Claude）">${ico('refresh')}重抓財報</button>
+        ${s.moat ? `<button class="bsc-btn" onclick="bosReanalyze('${s.symbol}')" title="用 Claude 重評護城河與風險（會花費）">${ico('sparkle')}護城河重評</button>` : ''}
         <button class="bsc-btn" onclick="addToWatchlist('${s.symbol}','${nameEsc}',this,'BOS')">加入關注</button>
       </div>
     </div>
@@ -4267,7 +4491,7 @@ function renderBosScorecard(s) {
 
   const top = `<div class="bsc-top">
     <div style="min-width:0">
-      <div class="bsc-sym">${s.symbol}${mkt ? `<span class="bsc-mkt">${mkt}</span>` : ''}<button class="dgm-pin ${_bosPins.has(s.symbol)?'on':''}" title="${_bosPins.has(s.symbol)?'取消釘選':'釘選（常駐頁面）'}" onclick="bosTogglePin('${s.symbol}')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 3v2l-1 1v4l3 3v2h-5v5l-1 1-1-1v-5H5v-2l3-3V6L7 5V3z"/></svg></button></div>
+      <div class="bsc-sym">${s.symbol}${mkt ? `<span class="bsc-mkt">${mkt}</span>` : ''}<button class="dgm-pin ${_bosPins.has(s.symbol)?'on':''}" title="${_bosPins.has(s.symbol)?'取消釘選':'釘選（常駐頁面）'}" onclick="bosTogglePin('${s.symbol}')">${ico('pin')}</button></div>
       <div class="bsc-nm">${_esc(s.name)}${s.sector ? ' · ' + _esc(s.sector) : ''}</div>
       <div class="bsc-src">${s.data_source || ''} · ${s.data_years || '?'} 年資料</div>
     </div>
@@ -4275,8 +4499,8 @@ function renderBosScorecard(s) {
   </div>`;
 
   let stale = '';
-  if (s.stale_financials) stale += `<div class="dgm-banner fin" onclick="bosRefresh('${s.symbol}')">↻ 新財報已出（${s.financial_period}）· 重抓數據<span class="cost">免費</span></div>`;
-  if (s.stale_moat) stale += `<div class="dgm-banner moat" onclick="bosReanalyze('${s.symbol}')">⟳ 護城河分析已滿 12 個月 · 建議重評<span class="cost">用 Claude</span></div>`;
+  if (s.stale_financials) stale += `<div class="dgm-banner fin" onclick="bosRefresh('${s.symbol}')">${ico('refresh')} 新財報已出（${s.financial_period}）· 重抓數據<span class="cost">免費</span></div>`;
+  if (s.stale_moat) stale += `<div class="dgm-banner moat" onclick="bosReanalyze('${s.symbol}')">${ico('sparkle')} 護城河分析已滿 12 個月 · 建議重評<span class="cost">用 Claude</span></div>`;
 
   const edItems = (s.edfri?.items || []).map(it =>
     `<div class="bsc-row"><div class="bsc-k"><b>${it.code} · ${it.name}</b><span class="bsc-why">${_esc(it.reason)}</span></div>${_bscPt(it.score)}</div>`
@@ -4351,7 +4575,7 @@ function renderBosScorecard(s) {
 
   // 財報未過閘門、你手動要求仍分析 → 頂部留警示，避免弱財報股被誤當乾淨標的
   const gateWarn = s.gate_overridden
-    ? `<div style="margin:2px 0 0;padding:7px 11px;background:var(--red-lt);color:var(--red);font-size:12px;font-weight:600;border-radius:8px">⚠ 財報未過閘門（${s.edfri?.total}/5 ＜ 3）· 此為你手動要求的分析例外</div>`
+    ? `<div style="margin:2px 0 0;padding:7px 11px;background:var(--red-lt);color:var(--red);font-size:12px;font-weight:600;border-radius:8px;display:flex;align-items:center;gap:6px">${ico('warn',13)} 財報未過閘門（${s.edfri?.total}/5 ＜ 3）· 此為你手動要求的分析例外</div>`
     : '';
   return `<div class="bsc" id="bsc-${s.symbol}">${top}${gateWarn}${_bscComp(s)}${stale}${edfriSec}${moatSec}${riskSec}${verdict}${valSec}${_bscFoot(s)}</div>`;
 }
@@ -4578,7 +4802,7 @@ function renderDgmScorecard(s) {
   const top = `<div class="bsc-top">
     <div style="min-width:0">
       <div class="bsc-sym">${s.symbol}${mkt?`<span class="bsc-mkt">${mkt}</span>`:''}
-        <button class="dgm-pin ${pinned?'on':''}" title="${pinned?'取消釘選':'釘選（常駐頁面）'}" onclick="dgmTogglePin('${s.symbol}')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 3v2l-1 1v4l3 3v2h-5v5l-1 1-1-1v-5H5v-2l3-3V6L7 5V3z"/></svg></button></div>
+        <button class="dgm-pin ${pinned?'on':''}" title="${pinned?'取消釘選':'釘選（常駐頁面）'}" onclick="dgmTogglePin('${s.symbol}')">${ico('pin')}</button></div>
       <div class="bsc-nm">${_esc(s.name)}${s.sector?' · '+_esc(s.sector):''}</div>
       <div class="bsc-src">${s.data_source||''} · ${s.data_years||'?'} 年資料</div>
     </div>
@@ -4589,8 +4813,8 @@ function renderDgmScorecard(s) {
   </div>`;
 
   let banners = '';
-  if (s.stale_financials) banners += `<div class="dgm-banner fin" onclick="dgmRefresh('${s.symbol}')">↻ 新財報已出（${s.financial_period}）· 重抓數據<span class="cost">免費</span></div>`;
-  if (s.stale_moat) banners += `<div class="dgm-banner moat" onclick="dgmReanalyze('${s.symbol}')">⟳ 護城河分析已滿 12 個月 · 建議重評<span class="cost">用 Claude</span></div>`;
+  if (s.stale_financials) banners += `<div class="dgm-banner fin" onclick="dgmRefresh('${s.symbol}')">${ico('refresh')} 新財報已出（${s.financial_period}）· 重抓數據<span class="cost">免費</span></div>`;
+  if (s.stale_moat) banners += `<div class="dgm-banner moat" onclick="dgmReanalyze('${s.symbol}')">${ico('sparkle')} 護城河分析已滿 12 個月 · 建議重評<span class="cost">用 Claude</span></div>`;
 
   const axisQ = _dgmAxis('q', '軸一', '企業品質 · FREEBIRDS', fb.total, fb.max||13, fb.items, qC);
   const axisT = _dgmAxis('t', '軸二', '買入時機 · TIMING', tm.total, tm.max||10, tm.items, tC);
@@ -4631,8 +4855,8 @@ function renderDgmScorecard(s) {
 
   const foot = `<div class="bsc-foot"><div class="bsc-actions"><span class="bsc-analyzed">${s.ai&&s.analyzed_at?'護城河分析於 '+String(s.analyzed_at).slice(0,10):'軸三未分析'}</span>
     <div style="display:flex;gap:7px;flex-wrap:wrap">
-      <button class="bsc-btn" onclick="dgmRefresh('${s.symbol}')" title="重抓最新財報數據（免費，不叫 Claude）">↻ 重抓財報</button>
-      ${s.ai?`<button class="bsc-btn" onclick="dgmReanalyze('${s.symbol}')" title="用 Claude 重評護城河（會花費）">⟳ 護城河重評</button>`:''}
+      <button class="bsc-btn" onclick="dgmRefresh('${s.symbol}')" title="重抓最新財報數據（免費，不叫 Claude）">${ico('refresh')}重抓財報</button>
+      ${s.ai?`<button class="bsc-btn" onclick="dgmReanalyze('${s.symbol}')" title="用 Claude 重評護城河（會花費）">${ico('sparkle')}護城河重評</button>`:''}
       <button class="bsc-btn" onclick="addToWatchlist('${s.symbol}','${nameEsc}',this,'DGM')">加入關注</button>
     </div></div></div>`;
 
@@ -5316,7 +5540,7 @@ function renderCashFlows(flows) {
       <div style="width:34px;height:34px;min-width:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;background:${bg};color:${fg}">${ic}</div>
       <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">${title}</div><div style="font-size:11px;color:var(--light);margin-top:2px">${sub}</div></div>
       <div style="font-size:13px;font-weight:700;white-space:nowrap;color:${amtCol}">${amt}</div>
-      <span onclick="deleteCashFlow('${f.id}')" title="刪除" style="color:var(--light);cursor:pointer;padding:4px;font-size:16px;line-height:1">×</span>
+      <button class="icon-btn danger" onclick="deleteCashFlow('${f.id}')" title="刪除" aria-label="刪除">${ico('x')}</button>
     </div>`;
   }).join('');
   el.innerHTML = rows + '<div style="font-size:11px;color:var(--light);padding:11px 16px;background:var(--bg);line-height:1.5">餘額已自動扣掉股票買賣（買進扣現金、賣出加現金）。此清單含入金／出金／換匯／股息；股息計入現金與報酬、但不計入本金。</div>';
@@ -5454,16 +5678,16 @@ function runCalculator() {
     data:{
       labels,
       datasets:[
-        {label:'帳戶價值',data:values,borderColor:'#141413',backgroundColor:'rgba(207,69,0,0.08)',fill:true,tension:0.4,pointRadius:3,borderWidth:2},
-        {label:'總投入',  data:invested,borderColor:'#9a9691',backgroundColor:'transparent',fill:false,tension:0.4,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},
+        {label:'帳戶價值',data:values,borderColor:()=>CT.ink,backgroundColor:'rgba(207,69,0,0.08)',fill:true,tension:0.4,pointRadius:3,borderWidth:2},
+        {label:'總投入',  data:invested,borderColor:()=>CT.soft,backgroundColor:'transparent',fill:false,tension:0.4,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},
       ]
     },
     options:{
       responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'top',labels:{font:{size:11}}},tooltip:{callbacks:{label:c=>'$'+Math.round(c.raw).toLocaleString('en')}}},
       scales:{
-        x:{grid:{display:false},ticks:{font:{size:11},color:'#9a9691'}},
-        y:{grid:{color:'#ece7e1'},ticks:{callback:v=>v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'K':'$'+Math.round(v),font:{size:11},color:'#9a9691'}}
+        x:{grid:{display:false},ticks:{font:{size:11},color:()=>CT.soft}},
+        y:{grid:{color:()=>CT.grid},ticks:{callback:v=>v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'K':'$'+Math.round(v),font:{size:11},color:()=>CT.soft}}
       }
     }
   });
@@ -5860,12 +6084,12 @@ applyMobileTableLabels();
         if(!act.length) return;
         const {ctx,chartArea}=chart, x=act[0].element.x, y=act[0].element.y;
         ctx.save();
-        ctx.strokeStyle='rgba(207,69,0,0.35)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+        ctx.strokeStyle=withAlpha(CT.accent,.35); ctx.lineWidth=1; ctx.setLineDash([4,4]);
         ctx.beginPath(); ctx.moveTo(x,chartArea.top); ctx.lineTo(x,chartArea.bottom); ctx.stroke();
         ctx.setLineDash([]);
-        ctx.fillStyle='rgba(207,69,0,0.16)'; ctx.beginPath(); ctx.arc(x,y,9,0,6.2832); ctx.fill();
-        ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x,y,4.5,0,6.2832); ctx.fill();
-        ctx.fillStyle='#141413'; ctx.beginPath(); ctx.arc(x,y,3,0,6.2832); ctx.fill();
+        ctx.fillStyle=withAlpha(CT.accent,.16); ctx.beginPath(); ctx.arc(x,y,9,0,6.2832); ctx.fill();
+        ctx.fillStyle=CT.card; ctx.beginPath(); ctx.arc(x,y,4.5,0,6.2832); ctx.fill();
+        ctx.fillStyle=CT.ink; ctx.beginPath(); ctx.arc(x,y,3,0,6.2832); ctx.fill();
         ctx.restore();
       }
     });
