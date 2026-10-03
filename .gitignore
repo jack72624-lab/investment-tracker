@@ -4,3 +4,5 @@ CHANGELOG.md
 # 這兩個只留本機（2026-10-03 排資料夾時補）：CLAUDE.md 本來就寫「不進 git」，docs/ 是設計樣板和舊部署說明
 CLAUDE.md
 docs/
+# 後端（有自己的 Git，裡面的 .env 有金鑰）：2026-10-03 補，以前只靠「別 git add backend/」那條守則擋
+backend/
