@@ -1,1 +1,6 @@
 backend/.git
+# 開發歷史（含 Railway API_KEY 等，絕不進 public repo）
+CHANGELOG.md
+# 這兩個只留本機（2026-10-03 排資料夾時補）：CLAUDE.md 本來就寫「不進 git」，docs/ 是設計樣板和舊部署說明
+CLAUDE.md
+docs/
